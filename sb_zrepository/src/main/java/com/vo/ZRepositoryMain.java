@@ -470,7 +470,7 @@ public class ZRepositoryMain {
 //		System.out.println("fieldNameArray = " + Arrays.toString(fieldNameArray));
 		final List<String> fieldNameList = Lists.newArrayList(fieldNameArray)
 				.stream()
-				.filter(x -> StrUtil.isNotBlank(x))
+				.filter(StrUtil::isNotBlank)
 				.map(x -> x.length() == 1 ? x.toLowerCase() : Character.toLowerCase(x.charAt(0)) + x.substring(1))
 				.collect(Collectors.toList());
 
@@ -506,7 +506,7 @@ public class ZRepositoryMain {
 
 	private static List<String> getDeclaredFieldName(final Class<?> typeClass) {
 		final Field[] fs = typeClass.getDeclaredFields();
-		final List<String> fieldNameList = Arrays.asList(fs).stream().map(f -> f.getName()).collect(Collectors.toList());
+		final List<String> fieldNameList = Arrays.asList(fs).stream().map(Field::getName).collect(Collectors.toList());
 		return fieldNameList;
 	}
 
@@ -533,7 +533,7 @@ public class ZRepositoryMain {
 				aL.add(temp);
 				from = i;
 			}
-			if (i == ch.length - 1) {
+			if (i == (ch.length - 1)) {
 				final String temp2 = zRepositoryMethodName.substring(from,  ch.length);
 //				System.out.println("temp2 = " + temp2);
 				aL.add(temp2);
@@ -593,7 +593,7 @@ public class ZRepositoryMain {
 
 			final ZWrite write = method.getAnnotation(ZWrite.class);
 			final ZRead read = method.getAnnotation(ZRead.class);
-			if (write != null && read != null) {
+			if ((write != null) && (read != null)) {
 				throw new IllegalArgumentException("方法[" + method.getName() + "] 不能同时存在 "
 						+ ZWrite.class.getCanonicalName() + " 和 " + ZRead.class.getCanonicalName());
 			}
@@ -836,13 +836,13 @@ public class ZRepositoryMain {
 					joiner.add(parameter.getName());
 				}
 				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan("+modeString+",classType,sql," + joiner.toString()	+ ");";
+				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+						+ joiner.toString() + ");";
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
 		return "";
 	}
-
 
 	private static String GROUP_findByXXLessThanEquals(final Method method, final String key) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXLessThanEquals);
@@ -1080,7 +1080,7 @@ public class ZRepositoryMain {
 		}
 
 		if (zidList.size() != 1) {
-			final String fsA = zidList.stream().map(f -> f.getName()).collect(Collectors.joining(","));
+			final String fsA = zidList.stream().map(Field::getName).collect(Collectors.joining(","));
 			throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
 					+ " 只能有一个 " + ZID.class.getSimpleName() + " 字段，现有有两个：" + fsA);
 		}
