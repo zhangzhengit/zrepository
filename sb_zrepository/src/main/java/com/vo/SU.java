@@ -1,5 +1,6 @@
 package com.vo;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -149,8 +150,8 @@ public class SU {
 				: sqlFinal.substring(0, limitI).replace("select * ", "select count(*) ");
 		final Long countR = count(mode, cls, countSQL, zc);
 
-		final long pages = countR.longValue() % size == 0 ? countR.longValue() / size
-				: countR.longValue() / size + 1;
+		final long pages = (countR.longValue() % size) == 0 ? countR.longValue() / size
+				: (countR.longValue() / size) + 1;
 		final Page<T> pageR = new Page(size, Long.valueOf(String.valueOf(page)), pages, countR, ImmutableList.copyOf(rL));
 		return pageR;
 	}
@@ -187,8 +188,7 @@ public class SU {
 		final Field[] fs = t.getClass().getDeclaredFields();
 //		final ArrayList<Field> fList = Lists.newArrayList(fs);
 		final StringBuilder column =new StringBuilder();
-		for (int i = 0; i < fs.length; i++) {
-			final Field field = fs[i];
+		for (final Field field : fs) {
 			field.setAccessible(true);
 
 			try {
@@ -601,37 +601,170 @@ public class SU {
 			e1.printStackTrace();
 		}
 
-		final String sqlFinal = gSaveSql(cls, t, sql);
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = connection.prepareStatement(sqlFinal);
-			final boolean execute = ps.execute(sqlFinal, Statement.RETURN_GENERATED_KEYS);
-			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sqlFinal, t);
-			}
-			rs = ps.getGeneratedKeys();
-			if (rs.next()) {
-				final Object id = rs.getObject(1);
-				final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
-				final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-				final T findByIdNew = findById(mode, id, cls, selectById, zc);
-				return findByIdNew;
+		final boolean hasArray = hasArray(cls);
+		if (hasArray) {
+
+
+			final StringJoiner arg = new StringJoiner(",");
+			final StringJoiner v = new StringJoiner(",");
+			final Field[] fs = cls.getDeclaredFields();
+			int fieldCount = 0;
+			for (final Field field : fs) {
+				if (field.isAnnotationPresent(ZID.class)) {
+					continue;
+				}
+				fieldCount++;
+
+				final String dbFieldname = ZFieldConverter.toDbField(field.getName());
+				arg.add(dbFieldname);
+				field.setAccessible(true);
+				try {
+					final Object v2 = field.get(t);
+					if (v2 instanceof String) {
+						v.add("'" + String.valueOf(v2) + "'");
+					} else if (v2 instanceof Date) {
+						// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
+						final String vD = DateUtil.format((Date)v2, DatePattern.NORM_DATETIME_FORMAT);
+						v.add("'" + vD + "'");
+					} else {
+						v.add(String.valueOf(v2));
+					}
+
+
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
 			}
 
-		} catch (final SQLException e) {
-			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
+			final StringJoiner joiner = new StringJoiner(",");
+			for(int i =1;i<=fieldCount;i++) {
+				final StringJoiner add = joiner.add("?");
 			}
-		} finally {
-			close(ps);
-			INSTANCE.returnZConnectionAndCommit(zc);
+
+
+			final String sql2 = sql.replace("F", arg.toString()).replace("A", joiner.toString());
+			PreparedStatement ps = null;
+			try {
+				if (ZDP.getShowSql()) {
+					LOG.info("[{}],[{}]", sql2, t);
+				}
+				ps = connection.prepareStatement(sql2,Statement.RETURN_GENERATED_KEYS);
+				int i = 0;
+				for (final Field field : fs) {
+					if (field.isAnnotationPresent(ZID.class)) {
+						continue;
+					}
+					i++;
+
+					final String dbFieldname = ZFieldConverter.toDbField(field.getName());
+					arg.add(dbFieldname);
+					field.setAccessible(true);
+					try {
+						final Object v2 = field.get(t);
+						if (v2 instanceof String) {
+//							v.add("'" + String.valueOf(v2) + "'");
+							ps.setString(i, "'" + String.valueOf(v2) + "'");
+
+						} else if (v2 instanceof Date) {
+							// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
+							final String vD = DateUtil.format((Date)v2, DatePattern.NORM_DATETIME_FORMAT);
+//							v.add("'" + vD + "'");
+							ps.setString(i, "'" + vD + "'");
+						} else if (v2.getClass().isArray()) {
+							final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+							ps.setBlob(i, inputStream);
+
+//							v.add(String.valueOf(v2));
+						    // 执行 SQL 语句
+						}
+
+
+					} catch (IllegalArgumentException | IllegalAccessException e) {
+						e.printStackTrace();
+					}
+				}
+				final int executeUpdate = ps.executeUpdate();
+				final ResultSet rs = ps.getGeneratedKeys();
+				try {
+
+					if (rs.next()) {
+						final Object id = rs.getObject(1);
+						final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
+						final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
+						final T findByIdNew = findById(mode, id, cls, selectById, zc);
+						return findByIdNew;
+					}
+				} finally {
+					rs.close();
+				}
+
+			} catch (final SQLException e) {
+				e.printStackTrace();
+				try {
+					connection.rollback();
+				} catch (final SQLException e1) {
+					e1.printStackTrace();
+				}
+			} finally {
+				close(ps);
+				INSTANCE.returnZConnectionAndCommit(zc);
+			}
+
+		} else {
+
+			// 普通的，无二进类型的
+			final String sqlFinal = gSaveSql(cls, t, sql);
+			PreparedStatement ps = null;
+			ResultSet rs = null;
+			try {
+				ps = connection.prepareStatement(sqlFinal);
+
+				if (ZDP.getShowSql()) {
+					LOG.info("[{}],[{}]", sqlFinal, t);
+				}
+				final boolean execute = ps.execute(sqlFinal, Statement.RETURN_GENERATED_KEYS);
+				rs = ps.getGeneratedKeys();
+				try {
+
+					if (rs.next()) {
+						final Object id = rs.getObject(1);
+						final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
+						final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
+						final T findByIdNew = findById(mode, id, cls, selectById, zc);
+						return findByIdNew;
+					}
+				} finally {
+					rs.close();
+				}
+
+			} catch (final SQLException e) {
+				e.printStackTrace();
+				try {
+					connection.rollback();
+				} catch (final SQLException e1) {
+					e1.printStackTrace();
+				}
+			} finally {
+				close(ps);
+				INSTANCE.returnZConnectionAndCommit(zc);
+			}
 		}
 
+
 		return null;
+	}
+
+	private static <T> boolean hasArray(final Class<T> cls) {
+		boolean hasArray = false;
+		final Field[] fs = cls.getDeclaredFields();
+		for (final Field f : fs) {
+			final boolean array1 = f.getType().isArray();
+			hasArray = hasArray || array1;
+		}
+		if (hasArray) {
+			System.out.println("YOU ARRAY");
+		}
+		return hasArray;
 	}
 
 	private static ZConnection getZCAndSetAutoCommitFALSE(final Mode mode) {
@@ -657,6 +790,22 @@ public class SU {
 	}
 
 	private static <T> String gSaveSql(final Class<T> cls, final T t, final String sql) {
+
+//		boolean hasArray = false;
+//		final Field[] fs = cls.getDeclaredFields();
+//		for (final Field f : fs) {
+//			final boolean array1 = f.getType().isArray();
+//			hasArray = hasArray || array1;
+//		}
+//		if (hasArray) {
+//			System.out.println("YOU ARRAY");
+//			return null;
+//		}
+
+		return save0(cls, t, sql);
+	}
+
+	private static <T> String save0(final Class<T> cls, final T t, final String sql) {
 		final Field[] fs = cls.getDeclaredFields();
 
 		final StringJoiner arg = new StringJoiner(",");

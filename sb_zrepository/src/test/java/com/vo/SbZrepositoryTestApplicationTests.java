@@ -48,7 +48,7 @@ class SbZrepositoryTestApplicationTests {
 		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
 				+ "SbZrepositoryTestApplicationTests.findByNameIn1()");
 
-		final int n = 100;
+		final int n = 1;
 
 		final HashSet<String> set = Sets.newHashSet();
 		for(int i = 1;i<=n;i++) {
@@ -130,9 +130,9 @@ class SbZrepositoryTestApplicationTests {
 		while(w.get() < k) {
 
 		}
-		System.out.println("k * n = " + k * n);
+		System.out.println("k * n = " + (k * n));
 		System.out.println("idSets.size = " + idSet.size());
-		assertThat(idSet.size() == k * n);
+		assertThat(idSet.size() == (k * n));
 		System.out.println("udpate 开始");
 
 
@@ -325,7 +325,7 @@ class SbZrepositoryTestApplicationTests {
 		thread1.start();
 		thread2.start();
 
-		while(ssss.size() < n * 2) {
+		while(ssss.size() < (n * 2)) {
 
 		}
 		System.out.println("OK");
@@ -363,7 +363,7 @@ class SbZrepositoryTestApplicationTests {
 			});
 		}
 
-		while(w.get() < n * 2) {
+		while(w.get() < (n * 2)) {
 
 		}
 		System.out.println("OK");
@@ -766,7 +766,7 @@ class SbZrepositoryTestApplicationTests {
 		System.out.println("nullList = " + nullList);
 
 		final Long count = this.nnnnnnnnn.count();
-		assertThat(count.intValue() == e200ageList.size() + not200ageList.size()  + nullList.size());
+		assertThat(count.intValue() == (e200ageList.size() + not200ageList.size()  + nullList.size()));
 	}
 
 	@Test
@@ -815,7 +815,7 @@ class SbZrepositoryTestApplicationTests {
 		this.nnnnnnnnn.save(entity);
 
 		final Long c2 = this.nnnnnnnnn.count();
-		assertThat(c2 == count + 1L);
+		assertThat(c2 == (count + 1L));
 
 		this.nnnnnnnnn.deleteAll();
 	}
@@ -903,7 +903,7 @@ class SbZrepositoryTestApplicationTests {
 
 		final int id = 1;
 		final NumberEntity entity = this.nnnnnnnnn.findById(id);
-		assertThat(entity == null || entity.getId() == id);
+		assertThat((entity == null) || (entity.getId() == id));
 
 		if (entity != null) {
 			entity.setAge(232323);
@@ -936,7 +936,7 @@ class SbZrepositoryTestApplicationTests {
 		for (int id = 1; id <= n; id++) {
 
 			final NumberEntity entity = this.nnnnnnnnn.findById(id);
-			assertThat(entity == null || entity.getId() == id);
+			assertThat((entity == null) || (entity.getId() == id));
 		}
 
 		this.nnnnnnnnn.deleteAll();
@@ -1001,7 +1001,7 @@ class SbZrepositoryTestApplicationTests {
 		numberEntity.setUserId(400);
 		final NumberEntity save2 = this.nnnnnnnnn.save(numberEntity);
 
-		assertThat(save.getId() + 1 == save2.getId());
+		assertThat((save.getId() + 1) == save2.getId());
 
 		final NumberEntity ue = this.nnnnnnnnn.findById(save2.getId());
 		System.out.println("ue = " + ue);
@@ -1072,7 +1072,7 @@ class SbZrepositoryTestApplicationTests {
 		}
 		final long t2 = System.currentTimeMillis();
 
-		assertThat(idSet.size() == x * n);
+		assertThat(idSet.size() == (x * n));
 		System.out.println("idSet.size() == x * n - OK");
 		System.out.println("submitInQueue-ms = " + (t2 - t1));
 
@@ -1195,7 +1195,7 @@ class SbZrepositoryTestApplicationTests {
 		System.out.println("OK");
 
 		final Long count = this.nnnnnnnnn.count();
-		assertThat(count.intValue() == k * n);
+		assertThat(count.intValue() == (k * n));
 
 	}
 

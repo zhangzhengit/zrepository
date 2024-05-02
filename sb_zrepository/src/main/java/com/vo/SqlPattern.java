@@ -36,7 +36,7 @@ public class SqlPattern {
 
 				P.add(c);
 			}
-			if (i + 1 >= ca.length) {
+			if ((i + 1) >= ca.length) {
 				final String s2 = P.get();
 				pl.add(s2);
 //				System.out.println("一个关键词 = " + s2);
@@ -85,6 +85,7 @@ public class SqlPattern {
 		// FIXME 2023年11月6日 上午8:36:24 zhanghen: 暂时Is改为is
 		// 防止类似findByIsDelete方法被误判。修改逻辑：IsDelete之类要作为一个字段名称，而不是去掉Is把delete作为名称
 		SQL_KEYWORD.add("is");
+		SQL_KEYWORD.add("Is");
 		SQL_KEYWORD.add("Null");
 		SQL_KEYWORD.add("counting");
 		SQL_KEYWORD.add("count");
