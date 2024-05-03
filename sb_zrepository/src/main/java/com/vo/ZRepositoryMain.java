@@ -34,7 +34,6 @@ import com.vo.anno.ZWrite;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
-import com.vo.core.Page;
 import com.vo.core.ZClass;
 import com.vo.core.ZField;
 import com.vo.core.ZLog2;
@@ -55,6 +54,8 @@ import cn.hutool.core.util.StrUtil;
  *
  */
 public class ZRepositoryMain {
+
+	private static final String EMTPY = "";
 
 	public static final String TABLE_NAME = "TABLE_NAME";
 
@@ -440,34 +441,31 @@ public class ZRepositoryMain {
 
 		final List<String> fnLIst = getDeclaredFieldName(typeClass);
 
-//		System.out.println("methodName = " + methodName);
-		final List<String> alList = splitMethodNameToArray(methodName);
-//		System.out.println("fnLIst = \n");
-		System.out.println(fnLIst);
-//		System.out.println("alList = \n");
-//		System.out.println(alList);
-
 		// findByUserId 分成[find, By, User, Id] ，从前往后计算是否sql关键字，否则按照entity字段处理
 
 		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
+
 
 		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
 		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
 		skList.sort(Comparator.comparing(String::length).reversed());
 
-		String mn2 = methodName;
+		final D d = findFieldName(typeClass, methodName);
+		String sKeyword = d.getSqlKeyword();
 		for (final String sk : skList) {
-			mn2 = mn2.replace(sk, "-");
-//			System.out.println("sk = " + sk);
-//			System.out.println("mn2 = " + mn2);
+			sKeyword = sKeyword.replace(sk, EMTPY);
 		}
 
-//		System.out.println("alList-removeAll-sqlKeyword = \n");
-//		System.out.println(alList);
+		// 只剩SQL关键字的方法名称替换掉所有的SQL关键字后，必须是""
+		if (!EMTPY.equals(sKeyword)) {
+			// FIXME 2023年8月26日 下午5:50:54 zhanghen: TODO 提示信息再详细一点
+			throw new IllegalArgumentException(ZRepository.class.getSimpleName() + " 子类自定义方法声明错误，methodName = "
+					+ methodName + "，" + "请确认方法名由SQL关键字和@ZEntity类中的字段组成，" + "方法名称命名规则见 "
+					+ MethodRegex.class.getSimpleName() + " 中以 GROUP_ 开头的常量。");
+		}
 
-//		System.out.println("mn2 = " + mn2);
-		final String[] fieldNameArray = mn2.split("-");
-//		System.out.println("fieldNameArray = " + Arrays.toString(fieldNameArray));
+		final List<String> fieldNameArray = d.getFiledName();
+
 		final List<String> fieldNameList = Lists.newArrayList(fieldNameArray)
 				.stream()
 				.filter(StrUtil::isNotBlank)
@@ -486,16 +484,13 @@ public class ZRepositoryMain {
 			}
 		}
 
-//		System.out.println("fieldNameList = " + fieldNameList);
 		String sqlA = sql;
 		for (final String fieldName : fieldNameList) {
 			final String dbColumnName = ZFieldConverter.toDbField(fieldName);
 			sqlA = sqlA.replaceFirst("@", dbColumnName);
 		}
-//		System.out.println("sql = " + sql);
-//		System.out.println("sqlA = " + sqlA);
 
-		// 仍然包含 @
+		// 仍然包含 @，则说明参数和字段数目对不上
 		if (sqlA.contains("@")) {
 			throw new IllegalArgumentException("请检查自定义方法名称，methodName = " + methodName);
 		}
@@ -637,7 +632,7 @@ public class ZRepositoryMain {
 
 			final String body = "String sql = \""+sql+"\";";
 
-			final String body2 = "";
+			final String body2 = EMTPY;
 //			final String methodS = "return " + SU.class.getCanonicalName() + ".findById(id,classType,sql);";
 			final String methodS = getSuMethod(method.getName(), method);
 
@@ -768,7 +763,7 @@ public class ZRepositoryMain {
 			break;
 		}
 
-		return "";
+		return EMTPY;
 	}
 
 
@@ -802,7 +797,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -821,7 +816,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -841,7 +836,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 	private static String GROUP_findByXXLessThanEquals(final Method method, final String key) {
@@ -859,7 +854,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -878,7 +873,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -899,7 +894,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -919,7 +914,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 	private static String gROUP_findByXXLike(final Method method, final String key) {
@@ -938,7 +933,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 	private static String gROUP_findByXXLessThan(final Method method, final String key) {
@@ -957,7 +952,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -976,7 +971,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 
@@ -995,7 +990,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 	private static String gROUP_findByXX(final Method method, final String key) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXX);
@@ -1012,7 +1007,7 @@ public class ZRepositoryMain {
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return "";
+		return EMTPY;
 	}
 
 	/**
@@ -1115,15 +1110,38 @@ public class ZRepositoryMain {
 
 			try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
 				System.out.println("tablename = " + tableName);
+
+				int columnsCount = 0;
+				final List<String> columnNameList = Lists.newArrayList();
+
 				while (columns.next()) {
+					columnsCount++;
 					final String columnName = columns.getString("COLUMN_NAME");
+					columnNameList.add(columnName);
 					final String columnType = columns.getString("TYPE_NAME");
 
 					System.out.println("Column Name: " + columnName);
 					System.out.println("Column Type: " + columnType);
 					System.out.println("-----------------------");
+					
+					// FIXME 2024年5月3日 下午8:47:21 zhangzhen: 继续判断，db和entity中每个字段都必须完全匹配(或entity可以包含db？)
+				}
 
-					// FIXME 2023年9月4日 下午8:09:58 zhanghen:  TODO 写一个db类型和java类型对应关系，所有typeClass.field都必须名称和类型完全匹配，否则抛异常
+				if (fs.length != columnsCount) {
+
+					final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
+							.collect(Collectors.toList());
+
+					if (fieldNameList.size() > columnNameList.size()) {
+						fieldNameList.removeAll(columnNameList);
+						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
+								+ "]中存在数据表[" + tableName + "]中不存在的字段" + fieldNameList + EMTPY;
+						throw new IllegalArgumentException(m);
+					}
+					columnNameList.removeAll(fieldNameList);
+					final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
+							+ typeClass.getSimpleName() + "]不存在的字段" + columnNameList + EMTPY;
+					throw new IllegalArgumentException(m);
 				}
 			}
 
@@ -1197,4 +1215,45 @@ public class ZRepositoryMain {
 		}
 	}
 
+	private static D findFieldName(final Class<?> typeClass, final String methodName) {
+
+		final D d = new D();
+		d.setMethodName(methodName);
+
+		String m = methodName;
+		final Field[] fs = typeClass.getDeclaredFields();
+
+		Arrays.sort(fs, (o1, o2) -> {
+
+			final String name1 = o1.getName();
+			final String name2 = o2.getName();
+
+			final String upFieldName1 = String.valueOf(name1.charAt(0)).toUpperCase() + name1.substring(1);
+			final String upFieldName2 = String.valueOf(name2.charAt(0)).toUpperCase() + name2.substring(1);
+
+			final int i1 = methodName.indexOf(upFieldName1);
+			final int i2 = methodName.indexOf(upFieldName2);
+
+			final int v = Integer.compare(i1, i2);
+
+			return v;
+		});
+
+		for (final Field f : fs) {
+			final String name = f.getName();
+
+			final String upFieldName = String.valueOf(name.charAt(0)).toUpperCase() + name.substring(1);
+
+			if (m.contains(upFieldName)) {
+				d.addFiledName(name);
+			}
+
+			m = m.replace(upFieldName, EMTPY);
+		}
+
+		d.setSqlKeyword(m);
+		return d;
+	}
+
 }
+

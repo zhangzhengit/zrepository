@@ -16,6 +16,8 @@ import com.vo.core.Page;
  *
  *
  */
+// FIXME 2024年5月3日 下午8:41:30 zhangzhen: findByIsDelete 这种方法，isDelete为int类型，生成的sql 是 is_delete = null,
+// 这种情况是否合理？是否根据column类型来确定用 is null 或者 = null?
 public interface ZRepository<T, ID> {
 	// FIXME 2023年9月11日 下午8:35:46 zhanghen: TODO
 	//	1、子接口中自定义方法的返回值，可以自定义返回类型中的T，做到隐藏敏感字段和去除非必要的select 字段

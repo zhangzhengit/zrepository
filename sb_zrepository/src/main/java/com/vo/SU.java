@@ -662,20 +662,22 @@ public class SU {
 					try {
 						final Object v2 = field.get(t);
 						if (v2 instanceof String) {
-//							v.add("'" + String.valueOf(v2) + "'");
-							ps.setString(i, "'" + String.valueOf(v2) + "'");
-
+							final String value = "'" + String.valueOf(v2) + "'";
+							ps.setString(i, value);
 						} else if (v2 instanceof Date) {
 							// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
-							final String vD = DateUtil.format((Date)v2, DatePattern.NORM_DATETIME_FORMAT);
-//							v.add("'" + vD + "'");
+							final String vD = DateUtil.format((Date) v2, DatePattern.NORM_DATETIME_FORMAT);
 							ps.setString(i, "'" + vD + "'");
-						} else if (v2.getClass().isArray()) {
-							final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-							ps.setBlob(i, inputStream);
-
-//							v.add(String.valueOf(v2));
-						    // 执行 SQL 语句
+						} else {
+							if (v2 == null) {
+								ps.setObject(i, null);
+								continue;
+							}
+							if (v2.getClass().isArray()) {
+								// blob类型
+								final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+								ps.setBlob(i, inputStream);
+							}
 						}
 
 
