@@ -780,6 +780,7 @@ public class ZRepositoryMain {
 	 */
 	private static String modeString(final Method method) {
 		if (method.isAnnotationPresent(ZRead.class)) {
+			// FIXME 2024年5月3日 下午10:08:56 zhangzhen: TODO 返回值不要写死
 			return "com.vo.conn.Mode.READ";
 		}
 		return "com.vo.conn.Mode.WRITE";
