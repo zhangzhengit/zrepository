@@ -55,6 +55,10 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
+	private static final String TYPE_NAME = "TYPE_NAME";
+
+	private static final String COLUMN_NAME = "COLUMN_NAME";
+
 	private static final String EMTPY = "";
 
 	public static final String TABLE_NAME = "TABLE_NAME";
@@ -1102,6 +1106,20 @@ public class ZRepositoryMain {
 		final String tableName = typeClass.getAnnotation(ZEntity.class).tableName();
 
 		final Field[] fs = typeClass.getDeclaredFields();
+		final List<Field> fieldList = Lists.newArrayList(fs);
+		final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
+				.collect(Collectors.toList());
+
+		final Optional<Field> findAny = fieldList.stream()
+				.filter(fn -> DBType.JAVA.contains(fn.getType().getCanonicalName())).findAny();
+		if (findAny.isPresent()) {
+			final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName() + "] 中的字段 ["
+					+ findAny.get().getName() + "] 不允许使用基本类型 ："
+					+ "" + findAny.get().getType().getCanonicalName() + " " + findAny.get().getName()
+					+ " 请改为引用类型"
+					;
+			throw new IllegalArgumentException(m);
+		}
 
 		final Connection connection = zConnection.getConnection();
 		try {
@@ -1109,38 +1127,49 @@ public class ZRepositoryMain {
 			final DatabaseMetaData metaData = connection.getMetaData();
 
 			try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
-				System.out.println("tablename = " + tableName);
+				System.out.println("开始校验[" + zConnection.getMode().name() + "]数据表 = " + tableName);
 
 				int columnsCount = 0;
 				final List<String> columnNameList = Lists.newArrayList();
 
 				while (columns.next()) {
 					columnsCount++;
-					final String columnName = columns.getString("COLUMN_NAME");
+					final String columnName = columns.getString(COLUMN_NAME);
 					columnNameList.add(columnName);
-					final String columnType = columns.getString("TYPE_NAME");
+					final String columnType = columns.getString(TYPE_NAME);
 
-					System.out.println("Column Name: " + columnName);
-					System.out.println("Column Type: " + columnType);
-					System.out.println("-----------------------");
-					
-					// FIXME 2024年5月3日 下午8:47:21 zhangzhen: 继续判断，db和entity中每个字段都必须完全匹配(或entity可以包含db？)
+					final String javaFieldName = ZFieldConverter.toJavaField(columnName);
+					final Optional<Field> o = fieldList.stream().filter(fn -> fn.getName().equals(javaFieldName)).findFirst();
+
+					if (!o.isPresent()) {
+						final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
+								+ typeClass.getSimpleName() + "]不存在的字段" + columnName;
+						throw new IllegalArgumentException(m);
+					}
+
+					final boolean match = DBType.match(o.get().getType().getCanonicalName(), columnType);
+					if (!match) {
+						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
+								+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
+								+ "] 与数据表[" + tableName + "] 的字段 [" + columnName + "] 类型 [" + columnType + "] 不匹配";
+						throw new IllegalArgumentException(m);
+					}
 				}
 
-				if (fs.length != columnsCount) {
-
-					final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
-							.collect(Collectors.toList());
+				if (fieldNameList.size() != columnsCount) {
+					final List<String> cnl = columnNameList.stream().map(ZFieldConverter::toJavaField).collect(Collectors.toList());
 
 					if (fieldNameList.size() > columnNameList.size()) {
-						fieldNameList.removeAll(columnNameList);
+
+
+						fieldNameList.removeAll(cnl);
 						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
 								+ "]中存在数据表[" + tableName + "]中不存在的字段" + fieldNameList + EMTPY;
 						throw new IllegalArgumentException(m);
 					}
-					columnNameList.removeAll(fieldNameList);
+					cnl.removeAll(fieldNameList);
 					final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
-							+ typeClass.getSimpleName() + "]不存在的字段" + columnNameList + EMTPY;
+							+ typeClass.getSimpleName() + "]不存在的字段" + cnl + EMTPY;
 					throw new IllegalArgumentException(m);
 				}
 			}
@@ -1171,7 +1200,7 @@ public class ZRepositoryMain {
 						+ " " + ZID.class.getSimpleName() + " 字段 " + name + " 在数据库中不存在");
 			}
 
-			final String columnName = primaryKeys.getString("COLUMN_NAME");
+			final String columnName = primaryKeys.getString(COLUMN_NAME);
 //			System.out.println("tableName = " + tableName + "\t" + "主键列名：" + columnName);
 			if (!Objects.equals(name, columnName)) {
 				throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()

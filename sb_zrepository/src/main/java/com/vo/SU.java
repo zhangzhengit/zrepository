@@ -661,25 +661,32 @@ public class SU {
 					field.setAccessible(true);
 					try {
 						final Object v2 = field.get(t);
-						if (v2 instanceof String) {
+
+						// FIXME 2024年5月3日 下午9:31:08 zhangzhen: 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
+						// Field.get 的v为null就setnull就行了
+						if (v2 == null) {
+							ps.setObject(i, null);
+							continue;
+						}
+
+						// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
+						if (v2 instanceof Boolean) {
+							final boolean equals = Boolean.TRUE.equals(v2);
+							final byte vb = (byte) (equals ? 1 : 0);
+							ps.setInt(i, vb);
+
+						} else if (v2 instanceof String) {
 							final String value = "'" + String.valueOf(v2) + "'";
 							ps.setString(i, value);
 						} else if (v2 instanceof Date) {
 							// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
 							final String vD = DateUtil.format((Date) v2, DatePattern.NORM_DATETIME_FORMAT);
 							ps.setString(i, "'" + vD + "'");
-						} else {
-							if (v2 == null) {
-								ps.setObject(i, null);
-								continue;
-							}
-							if (v2.getClass().isArray()) {
-								// blob类型
-								final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-								ps.setBlob(i, inputStream);
-							}
+						} else if (v2.getClass().isArray()) {
+							// blob类型
+							final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+							ps.setBlob(i, inputStream);
 						}
-
 
 					} catch (IllegalArgumentException | IllegalAccessException e) {
 						e.printStackTrace();
@@ -1044,10 +1051,17 @@ public class SU {
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 			final Field field = cls.getDeclaredField(javaFieldName);
 			field.setAccessible(true);
-//			field.set(t, columValue);
 
 			final Object handValue = handValue(t, columValue, field);
-			field.set(t, handValue);
+
+			if (field.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+				field.set(t, handValue == null ? null
+						: (Integer.valueOf(1).equals(handValue) ? Boolean.TRUE : Boolean.FALSE));
+			} else {
+
+				field.set(t, handValue);
+			}
+
 		}
 		return t;
 	}
