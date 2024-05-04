@@ -28,8 +28,6 @@ public class MethodRegex {
 
 	public static final String GROUP_page = "page";
 
-	// FIXME 2023年9月6日 下午9:33:19 zhanghen: TODO  asc/desc实现出来
-	// asc
 	public static final String GROUP_pageByXX_orderByXX = "pageBy(.*)OrderBy(.*)";
 	public static final String GROUP_pageByXXAndXX_orderByXX = "pageBy(.*)And(.*)OrderBy(.*)";
 	public static final String GROUP_pageByXXAndXXAndXX_orderByXX = "pageBy(.*)And(.*)And(.*)OrderBy(.*)";
