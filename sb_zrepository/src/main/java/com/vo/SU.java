@@ -767,18 +767,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = cls.newInstance();
-				for (int i = 0; i < count; i++) {
-					final Object columValue = rs.getObject(i + 1);
-					final String columnName = metaData.getColumnLabel(i + 1);
-					final String javaFieldName = ZFieldConverter.toJavaField(columnName);
-					final Field field = cls.getDeclaredField(javaFieldName);
-					field.setAccessible(true);
-
-					final Object handValue = handValue(t, columValue, field);
-					field.set(t, handValue);
-				}
-
+				final T t = newT(cls, rs, metaData, count);
 				r.add(t);
 			}
 			INSTANCE.returnZConnectionAndCommit(zc);
