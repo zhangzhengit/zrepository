@@ -8,9 +8,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Sets;
+import com.vo.ScanPackage;
 import com.vo.SqlResult;
 import com.vo.ZRSqlMap;
 import com.vo.ZRepository;
@@ -35,30 +38,41 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 
 	private final AtomicBoolean gZRepository = new AtomicBoolean(false);
 
+	@Value(value = "${zrepository.scanPackageName}")
+	private Set<String> scanPackageName;
+
 	@Override
 	public boolean postProcessAfterInstantiation(final Object bean, final String beanName) throws BeansException {
 
 		if (!this.gZRepository.get()) {
-			// FIXME 2023年9月5日 下午8:46:00 zhanghen: 改为@value 取值
-			final String packageName = "com";
-			ZRepositoryStarter.gZRepository(packageName);
-			this.gZRepository.set(true);
 
+			if (CollUtil.isEmpty(this.scanPackageName)) {
+				throw new IllegalArgumentException("zrepository.scanPackageName 未配置！");
+			}
+
+			ScanPackage.set(this.scanPackageName);
+			final String[] array = this.scanPackageName.toArray(new String[0]);
+
+			ZRepositoryStarter.gZRepository(array);
+			this.gZRepository.set(true);
 			return InstantiationAwareBeanPostProcessor.super.postProcessAfterInstantiation(bean, beanName);
 		}
 
 		return InstantiationAwareBeanPostProcessor.super.postProcessAfterInstantiation(bean, beanName);
 	}
 
-	private static void gZRepository(final String packageName) {
+	private static void gZRepository(final String... packageName) {
 
-		final Map<Class, ZClass> clsMap = startZRepository(packageName);
-		final Set<Entry<Class, ZClass>> es = clsMap.entrySet();
-		for (final Entry<Class, ZClass> entry : es) {
+		for (final String p : packageName) {
 
-			LOG.info("开始注入实现类[{}]", entry.getValue().getName());
-			BFPP.beanFactory.registerSingleton(entry.getKey().getName(), entry.getValue().newInstance());
-			LOG.info("注入实现类[{}]成功", entry.getValue().getName());
+			final Map<Class, ZClass> clsMap = startZRepository(p);
+			final Set<Entry<Class, ZClass>> es = clsMap.entrySet();
+			for (final Entry<Class, ZClass> entry : es) {
+
+				LOG.info("开始注入实现类[{}]", entry.getValue().getName());
+				BFPP.beanFactory.registerSingleton(entry.getKey().getName(), entry.getValue().newInstance());
+				LOG.info("注入实现类[{}]成功", entry.getValue().getName());
+			}
 		}
 	}
 
@@ -70,6 +84,8 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 	 *
 	 */
 	public static Map<Class, ZClass> startZRepository(final String packageName) {
+		ScanPackage.set(Sets.newHashSet(packageName));
+
 		LOG.info("ZRepositoryStarter启动");
 		LOG.info("ZRepositoryStarter开始扫描[{}]的子接口", ZRepository.class.getCanonicalName());
 		// 1 查找ZRepository的子接口
@@ -87,7 +103,7 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 		// 2 给ZRepository的子接口的每个方法生成 SQL
 		final List<SqlResult> sqlForZRSubclassList = ZRepositoryMain.generateSqlForZRSubclass(zrSubinterfaceSet);
 		for (final SqlResult sqlResult : sqlForZRSubclassList) {
-			ZRSqlMap.put(sqlResult.getZRepositorySubClassName()	, sqlResult.getMethodName(), sqlResult.getSqlFinal());
+			ZRSqlMap.put(sqlResult.getZRepositorySubClassName(), sqlResult.getMethodName(), sqlResult.getSqlFinal());
 		}
 
 		// 3 给ZRepository的子接口生成动态代理类，ZClass

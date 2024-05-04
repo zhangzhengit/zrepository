@@ -66,110 +66,6 @@ public class ZRepositoryMain {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static final String _Z_CLASS = "_ZClass";
-	// private static final ZCPool INSTANCE = ZCPool.getInstance();
-
-//	public static void main(final String[] args) throws SQLException, InstantiationException, IllegalAccessException, NoSuchFieldException, SecurityException {
-//		start();
-
-//		final Set<Class<?>> scanZEntity = scanZEntity();
-//		System.out.println("scanZEntity.size = " + scanZEntity.size());
-
-//		final Mode mode = Mode.READ;
-//		if(mode == Mode.READ) {
-//			final String string = "com.vo.conn.Mode.READ";
-//			System.out.println(string);
-//		}
-
-//		final UserRepository_ZClass zc = new UserRepository_ZClass();
-//		final int n = 100;
-//		final long t1 = System.currentTimeMillis();
-//		final ArrayList<UserEntity> list = Lists.newArrayList();
-//		for (int x = 1; x <= n; x++) {
-//			final UserEntity uuu = new UserEntity();
-//			uuu.setAge(x);
-//			uuu.setOrderCount(x);
-//			uuu.setStatus(1);
-//			uuu.setName("zhang-" + x);
-//
-//			list.add(uuu);
-//		}
-//		final List<Integer> saveAll = zc.saveAll(list);
-//		System.out.println("saveAll.size = " + saveAll.size());
-
-
-//		final Long countingByAge = zc.countingByAge(1);
-//		System.out.println("countingByAge = " + countingByAge);
-//
-//		System.out.println("findByNameLike.size = " + findByNameLike.size());
-//		for (final UserEntity userEntity : findByNameLike) {
-//			System.out.println(userEntity);
-//		}
-//		System.out.println("findByNameLike.size = " + findByNameLike.size());
-//		final List findByIdLessThan = zc.findByIdLessThan(9);
-//		System.out.println("findByIdLessThan.size = " + findByIdLessThan.size());
-//		for (final Object object : findByIdLessThan) {
-//			System.out.println(object);
-//		}
-//		System.out.println("findByIdLessThan.size = " + findByIdLessThan.size());
-
-//		final List findByAgeLessThan = zc.findByAgeLessThan(232);
-//		System.out.println("findByAgeLessThan.size = " + findByAgeLessThan.size());
-//		for (final Object object : findByAgeLessThan) {
-//			System.out.println(object);
-//		}
-//		System.out.println("findByAgeLessThan.size = " + findByAgeLessThan.size());
-
-//		final List<UserEntity> findByNameInAndAgeIn = zc.findByNameInAndAgeIn(Lists.newArrayList("ww","bb"), Lists.newArrayList(1,2,3));
-//		System.out.println("findByNameInAndAgeIn = " + findByNameInAndAgeIn);
-
-
-//		final List<UserEntity> findByNameIn = zc.findByNameIn(Lists.newArrayList("zhang","list"));
-//		System.out.println("findByNameIn = " + findByNameIn);
-
-//		final List findByAgeIn = zc.findByAgeIn(Lists.newArrayList(2,3,1));
-//		System.out.println("findByAgeIn = " + findByAgeIn);
-
-//		final List findByAgeAndName = zc.findByAgeAndName(2, "zhang");
-//		System.out.println("findByAgeAndName = " + findByAgeAndName);
-
-//		final UserEntity e = new UserEntity();
-//		e.setAge(333);
-//		e.setName("333");
-//		final UserEntity save = zc.save(e);
-//		System.out.println("save = " + save);
-
-//		final List findAll = zc.findAll();
-//		System.out.println("findAll = " + findAll.size());
-
-
-//		final UserEntity findById = zc.findById(1);
-//		System.out.println("findByIdid = 1 = " + findById);
-//
-//		final List<?> in = zc.findByIdIn(Lists.newArrayList(1,2));
-//		System.out.println("findByIdIn.size = " + in.size());
-//		for (final Object object : in) {
-//			System.out.println( "\t" + object);
-//		}
-//		System.out.println("findByIdIn.size = " + in.size());
-
-//
-////		final UserEntity findById = SU.findById(1, UserEntity.class, "select * from user where id = ?");
-////		System.out.println("findById = " + findById);
-
-//		final ZE ze = ZES.newZE();
-//
-//		final int n = 10;
-//
-//		final long t1 = System.currentTimeMillis();
-//		for (int i = 1; i <= n; i++) {
-//			test_select_1(UserEntity.class);
-//		}
-//		final long t2 = System.currentTimeMillis();
-//		System.out.println("n = " + n + "\t ms = " + (t2-t1));
-//		INSTANCE.shutdown();
-//	}
-
-
 
 	public static <T> List<T> test_select_1(final Class<T> cls) throws SQLException, InstantiationException,
 			IllegalAccessException, NoSuchFieldException, SecurityException {
@@ -316,9 +212,18 @@ public class ZRepositoryMain {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
-		// FIXME 2023年6月17日 下午6:46:40 zhanghen: com 改为属性配置
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage("com.vo");
-		return clsSet;
+		final Set<String> set = ScanPackage.get();
+
+		if (CollUtil.isEmpty(set)) {
+			throw new IllegalArgumentException(ScanPackage.class.getCanonicalName() + " 扫描的包名未设置！");
+		}
+
+		final Set<Class<?>> r = Sets.newHashSet();
+		for (final String p : set) {
+			final Set<Class<?>> clsSet = ClassUtil.scanPackage(p);
+			r.addAll(clsSet);
+		}
+		return r;
 	}
 
 
@@ -1132,7 +1037,8 @@ public class ZRepositoryMain {
 			connection.setAutoCommit(false);
 			final DatabaseMetaData metaData = connection.getMetaData();
 
-			try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
+			final String catalog = findCatalog(zConnection.getUrl());
+			try (ResultSet columns = metaData.getColumns(catalog, null, tableName, null)) {
 				System.out.println("开始校验[" + zConnection.getMode().name() + "]数据表 = " + tableName);
 
 				int columnsCount = 0;
@@ -1293,6 +1199,22 @@ public class ZRepositoryMain {
 
 		d.setSqlKeyword(m);
 		return d;
+	}
+
+	private static String findCatalog(final String url) {
+		// FIXME 2024年5月4日 下午6:19:00 zhangzhen: 在程序启动时就严格校验url
+		// jdbc:mysql://192.168.1.10:3306/learn?useSSL=false&characterEncoding=utf8
+
+		final String jdbc = "jdbc:mysql://";
+		final String start = "/";
+		final String end = "?";
+
+		final int i = url.indexOf(jdbc);
+		final int s = url.indexOf(start,i + jdbc.length());
+		final int e = url.indexOf(end,s + 1);
+		final String x = url.substring(s +start.length() , e);
+
+		return x;
 	}
 
 }
