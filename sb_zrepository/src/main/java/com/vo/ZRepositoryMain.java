@@ -1086,8 +1086,8 @@ public class ZRepositoryMain {
 
 		final String name = zidList.get(0).getName();
 
-		connnection(typeClass, name, ZCPool.getInstance().getZConnection(Mode.WRITE));
-		connnection(typeClass, name, ZCPool.getInstance().getZConnection(Mode.READ));
+		checkZEntityPrimaryKey(typeClass, name, ZCPool.getInstance().getZConnection(Mode.WRITE));
+		checkZEntityPrimaryKey(typeClass, name, ZCPool.getInstance().getZConnection(Mode.READ));
 
 		checkZEntityFiled(typeClass, ZCPool.getInstance().getZConnection(Mode.WRITE));
 		checkZEntityFiled(typeClass, ZCPool.getInstance().getZConnection(Mode.READ));
@@ -1107,8 +1107,6 @@ public class ZRepositoryMain {
 
 		final Field[] fs = typeClass.getDeclaredFields();
 		final List<Field> fieldList = Lists.newArrayList(fs);
-		final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
-				.collect(Collectors.toList());
 
 		final Optional<Field> notSupport = fieldList.stream().filter(f -> !DBType.typeSupport(f.getType().getCanonicalName())).findAny();
 		if (notSupport.isPresent()) {
@@ -1167,20 +1165,24 @@ public class ZRepositoryMain {
 					}
 				}
 
+				final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
+						.collect(Collectors.toList());
+
 				if (fieldNameList.size() != columnsCount) {
-					final List<String> cnl = columnNameList.stream().map(ZFieldConverter::toJavaField).collect(Collectors.toList());
+					final List<String> cnl = columnNameList.stream().map(ZFieldConverter::toJavaField)
+							.collect(Collectors.toList());
 
 					if (fieldNameList.size() > columnNameList.size()) {
-
-
 						fieldNameList.removeAll(cnl);
 						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
 								+ "]中存在数据表[" + tableName + "]中不存在的字段" + fieldNameList + EMTPY;
 						throw new IllegalArgumentException(m);
 					}
+
 					cnl.removeAll(fieldNameList);
 					final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
 							+ typeClass.getSimpleName() + "]不存在的字段" + cnl + EMTPY;
+
 					throw new IllegalArgumentException(m);
 				}
 			}
@@ -1200,8 +1202,10 @@ public class ZRepositoryMain {
 
 
 
-	private static void c(final Class<?> typeClass, final String name, final DatabaseMetaData metaDataREAD) {
+	private static void checkPrimaryKey(final Class<?> typeClass, final String name, final DatabaseMetaData metaDataREAD) {
+
 		ResultSet primaryKeys = null;
+
 		try {
 
 			final String tableName = typeClass.getAnnotation(ZEntity.class).tableName();
@@ -1212,7 +1216,6 @@ public class ZRepositoryMain {
 			}
 
 			final String columnName = primaryKeys.getString(COLUMN_NAME);
-//			System.out.println("tableName = " + tableName + "\t" + "主键列名：" + columnName);
 			if (!Objects.equals(name, columnName)) {
 				throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
 						+ " " + ZID.class.getSimpleName() + " 字段名称与数据库主键名称不一致，" + ZID.class.getSimpleName() + " 名称："
@@ -1235,14 +1238,14 @@ public class ZRepositoryMain {
 
 	static HashSet<Class> cc = Sets.newHashSet();
 
-	private static void connnection(final Class<?> typeClass, final String name, final ZConnection zConnection) {
+	private static void checkZEntityPrimaryKey(final Class<?> typeClass, final String name, final ZConnection zConnection) {
 		final Connection connection = zConnection.getConnection();
 		try {
 			connection.setAutoCommit(false);
 
 			final DatabaseMetaData metaData = connection.getMetaData();
 
-			c(typeClass, name, metaData);
+			checkPrimaryKey(typeClass, name, metaData);
 		} catch (final SQLException e) {
 			e.printStackTrace();
 			try {
