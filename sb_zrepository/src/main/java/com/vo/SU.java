@@ -41,7 +41,6 @@ import com.vo.core.ZLog2;
 import com.vo.transaction.ZTransactionAspect;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 
@@ -55,6 +54,7 @@ import cn.hutool.core.date.DateUtil;
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 public class SU {
 
+	private static final String COLUMN = "COLUMN";
 	private static final String LIMIT = "limit";
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	private static final ZDatasourceProperties ZDP = ZDatasourcePropertiesLoader.getInstance();
@@ -80,7 +80,7 @@ public class SU {
 			connection.setAutoCommit(false);
 
 			final Map<String, Object> fMap = getNotNullFieldMap(t);
-			final String sqlFinal = sql.replace("COLUMN", "").replace("where", "");
+			final String sqlFinal = sql.replace(COLUMN, "").replace("where", "");
 			if (CollUtil.isEmpty(fMap)) {
 				return page0(mode, cls, size, page, zc, sqlFinal, true);
 			}
@@ -102,7 +102,7 @@ public class SU {
 				builder.append(" and ");
 			}
 			final String x = builder.replace(builder.length()-5, builder.length(), "").toString();
-			final String sqlFinalX = sql.replace("COLUMN", x);
+			final String sqlFinalX = sql.replace(COLUMN, x);
 
 			return page0(mode, cls, size, page, zc, sqlFinalX, false);
 
@@ -188,78 +188,47 @@ public class SU {
 
 	public static <T> T update(final Mode mode, final Class<T> cls, final T t, final String sql) {
 		final Field[] fs = t.getClass().getDeclaredFields();
-//		final ArrayList<Field> fList = Lists.newArrayList(fs);
-		final StringBuilder column =new StringBuilder();
-		for (final Field field : fs) {
-			field.setAccessible(true);
 
-			try {
-				final Object fV = field.get(t);
-
-				final String dbName = ZFieldConverter.toDbField(field.getName());
-				column.append(dbName).append('=');
-				if (fV != null) {
-					if (fV instanceof String) {
-						column.append("'").append(fV).append("'");
-					} else if (fV instanceof Date) {
-						// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
-						final String vD = DateUtil.format((Date) fV, DatePattern.NORM_DATETIME_FORMAT);
-						column.append("'").append(vD).append("'");
-					} else {
-						column.append(fV);
-					}
-				} else {
-					column.append(" null");
-				}
-				column.append(',');
-
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-
-		}
-
-		if (column.length() <= 0) {
-			// XXX T 所有字段值都是null， 是不执行update，还是抛异常？
-			return t;
-		}
-
-		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
+		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
+				.findAny();
 		if (!zidO.isPresent()) {
 			throw new IllegalArgumentException(
 					"无 " + ZID.class.getSimpleName() + " 标记的属性，t = " + t.getClass().getCanonicalName());
 		}
 
-		final Field idField = zidO.get();
-
-		idField.setAccessible(true);
-		Object idValue = null;
-		try {
-			idValue = idField.get(t);
-		} catch (IllegalArgumentException | IllegalAccessException e1) {
-			e1.printStackTrace();
-		}
-
+		final Object idValue = getUpdateIdValue(t, zidO);
 		if (Objects.isNull(idValue)) {
 			throw new IllegalArgumentException("update方法参数 t 的 " + ZID.class.getSimpleName() + " 字段不能为空！t = " + t);
 		}
 
-		final String sqlFinal = sql.replace("COLUMN", column.replace(column.length()-1, column.length(), ""));
+		// update blobt set COLUMN where id = ?;
+		final String gUpdateColumn = gUpdateColumn(t, fs);
+
+		final String sqlF = sql.replace(COLUMN, gUpdateColumn);
 
 		final ZConnection zc = ZCPool.getInstance().getZConnection(mode);
 
+		final Connection connection = zc.getConnection();
 		try {
-			zc.getConnection().setAutoCommit(false);
+			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
 			e1.printStackTrace();
 		}
 		PreparedStatement ps  = null;
 		try {
-			ps = zc.getConnection().prepareStatement(sqlFinal);
-			ps.setObject(1, idValue);
+			ps = connection.prepareStatement(sqlF);
+
+			for (int i = 0; i < (fs.length); i++) {
+				final Field f = fs[i];
+				f.setAccessible(true);
+				addPS(t, ps, i + 1, f, SUMode.UPDATE);
+			}
+
+			// 最后面的where id = ？ 赋值
+			ps.setObject(fs.length + 1, idValue);
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sqlFinal, idValue);
+				LOG.info("[{}],[{}],[{}]", sqlF, t,idValue);
 			}
 
 			final int executeUpdate = ps.executeUpdate();
@@ -267,7 +236,7 @@ public class SU {
 		} catch (final Exception e) {
 			e.printStackTrace();
 			try {
-				zc.getConnection().rollback();
+				connection.rollback();
 			} catch (final SQLException e1) {
 				e1.printStackTrace();
 			}
@@ -277,6 +246,19 @@ public class SU {
 		}
 		// XXX 直接返回T可以吗？
 		return t;
+	}
+
+	private static <T> Object getUpdateIdValue(final T t, final Optional<Field> zidO) {
+		final Field idField = zidO.get();
+
+		idField.setAccessible(true);
+		Object idValue = null;
+		try {
+			idValue = idField.get(t);
+		} catch (IllegalArgumentException | IllegalAccessException e1) {
+			e1.printStackTrace();
+		}
+		return idValue;
 	}
 
 	public static <T> boolean deleteAll(final Mode mode, final Class<T> cls, final String sql) {
@@ -635,68 +617,7 @@ public class SU {
 				}
 				i++;
 
-				final String dbFieldname = ZFieldConverter.toDbField(field.getName());
-				arg.add(dbFieldname);
-				field.setAccessible(true);
-
-				try {
-					final Object v2 = field.get(t);
-					// FIXME 2024年5月3日 下午9:31:08 zhangzhen:
-					// 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
-					// Field.get 的v为null就setnull就行了
-					if (v2 == null) {
-						ps.setObject(i, null);
-						continue;
-					}
-
-					final String fn = field.getType().getCanonicalName();
-
-					// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
-					if (fn.equals(Boolean.class.getCanonicalName())) {
-						final boolean equals = Boolean.TRUE.equals(v2);
-						final byte vb = (byte) (equals ? 1 : 0);
-						ps.setByte(i, vb);
-					} else if (fn.equals(Character.class.getCanonicalName())) {
-						// char 类型直接用String
-						ps.setString(i, String.valueOf(v2));
-					} else if (fn.equals(Byte.class.getCanonicalName())) {
-						ps.setByte(i, (Byte) v2);
-					} else if (fn.equals(Short.class.getCanonicalName())) {
-						ps.setShort(i, (Short) v2);
-					} else if (fn.equals(Integer.class.getCanonicalName())) {
-						ps.setInt(i, (Integer) v2);
-					} else if (fn.equals(Long.class.getCanonicalName())) {
-						ps.setLong(i, (Long) v2);
-					} else if (fn.equals(Float.class.getCanonicalName())) {
-						ps.setFloat(i, (Float) v2);
-					} else if (fn.equals(Double.class.getCanonicalName())) {
-						ps.setDouble(i, (Double) v2);
-					} else if (fn.equals(String.class.getCanonicalName())) {
-						final String value = "'" + String.valueOf(v2) + "'";
-						ps.setString(i, value);
-					} else if (fn.equals(BigDecimal.class.getCanonicalName())) {
-						ps.setBigDecimal(i, (BigDecimal) v2);
-					} else if (v2.getClass().isArray()) {
-						// blob类型
-						final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-						ps.setBlob(i, inputStream);
-					} else if (fn.equals(Date.class.getCanonicalName())) {
-						// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
-						// 日期时间的字段，新增注解：表示插入的格式
-						ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
-					} else if (fn.equals(Time.class.getCanonicalName())) {
-						ps.setTime(i, (Time) v2);
-					} else if (fn.equals(Timestamp.class.getCanonicalName())) {
-						ps.setTimestamp(i, (Timestamp) v2);
-					} else {
-						// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
-						// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
-//							throw new IllegalArgumentException("size 必须大于0！size = " + size);
-					}
-
-				} catch (IllegalArgumentException | IllegalAccessException e) {
-					e.printStackTrace();
-				}
+				addPS(t, ps, i, field, SUMode.SAVE);
 			}
 			final int executeUpdate = ps.executeUpdate();
 			final ResultSet rs = ps.getGeneratedKeys();
@@ -723,6 +644,74 @@ public class SU {
 		} finally {
 			close(ps);
 			INSTANCE.returnZConnectionAndCommit(zc);
+		}
+
+		return null;
+	}
+
+	private static <T> Object addPS(final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
+			throws SQLException {
+		final String dbFieldname = ZFieldConverter.toDbField(field.getName());
+		field.setAccessible(true);
+
+		try {
+			final Object v2 = field.get(t);
+			// FIXME 2024年5月3日 下午9:31:08 zhangzhen:
+			// 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
+			// Field.get 的v为null就setnull就行了
+			System.out.println("set " + field.getName() + " = " + v2);
+			if (v2 == null) {
+				ps.setObject(i, null);
+				return dbFieldname;
+			}
+
+			final String fn = field.getType().getCanonicalName();
+
+			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
+			if (fn.equals(Boolean.class.getCanonicalName())) {
+				final boolean equals = Boolean.TRUE.equals(v2);
+				final byte vb = (byte) (equals ? 1 : 0);
+				ps.setByte(i, vb);
+			} else if (fn.equals(Character.class.getCanonicalName())) {
+				// char 类型直接用String
+				ps.setString(i, String.valueOf(v2));
+			} else if (fn.equals(Byte.class.getCanonicalName())) {
+				ps.setByte(i, (Byte) v2);
+			} else if (fn.equals(Short.class.getCanonicalName())) {
+				ps.setShort(i, (Short) v2);
+			} else if (fn.equals(Integer.class.getCanonicalName())) {
+				ps.setInt(i, (Integer) v2);
+			} else if (fn.equals(Long.class.getCanonicalName())) {
+				ps.setLong(i, (Long) v2);
+			} else if (fn.equals(Float.class.getCanonicalName())) {
+				ps.setFloat(i, (Float) v2);
+			} else if (fn.equals(Double.class.getCanonicalName())) {
+				ps.setDouble(i, (Double) v2);
+			} else if (fn.equals(String.class.getCanonicalName())) {
+				ps.setString(i, String.valueOf(v2));
+			} else if (fn.equals(BigDecimal.class.getCanonicalName())) {
+				ps.setBigDecimal(i, (BigDecimal) v2);
+			} else if (v2.getClass().isArray()) {
+				// blob类型
+				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+				ps.setBlob(i, inputStream);
+			} else if (fn.equals(Date.class.getCanonicalName())) {
+				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
+				// 日期时间的字段，新增注解：表示插入的格式
+				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+			} else if (fn.equals(Time.class.getCanonicalName())) {
+				ps.setTime(i, (Time) v2);
+			} else if (fn.equals(Timestamp.class.getCanonicalName())) {
+				ps.setTimestamp(i, (Timestamp) v2);
+			} else {
+				// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
+				// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
+//							throw new IllegalArgumentException("size 必须大于0！size = " + size);
+			}
+
+			return v2;
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
 		}
 
 		return null;
@@ -1535,4 +1524,40 @@ public class SU {
 			}
 		}
 	}
+
+	/**
+	 * 给update方法生成 COLUMN 部分，不管t中字段是否null，都生成 column = ?的形式，在后续的ps.setXX时区分null
+	 *
+	 * @param <T>
+	 * @param t
+	 * @param fs
+	 * @return
+	 */
+	private static <T> String gUpdateColumn(final T t, final Field[] fs) {
+		final StringBuilder column =new StringBuilder();
+		for (int i = 0; i < fs.length; i++) {
+			final Field f = fs[i];
+
+			// update语句，即使是id也生成：id = ？
+//			if (f.isAnnotationPresent(ZID.class)) {
+//				continue;
+//			}
+
+			f.setAccessible(true);
+			try {
+				final Object value = f.get(t);
+				final String dbName = ZFieldConverter.toDbField(f.getName());
+				column.append(dbName).append('=').append('?');
+				if (i < (fs.length - 1)) {
+					column.append(',');
+				}
+
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return column.toString();
+	}
+
 }
