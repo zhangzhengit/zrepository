@@ -296,7 +296,8 @@ public class ZRepositoryMain {
 	 */
 	public static Set<Class<?>> scanZRepositorySubinterface(final String packageName) {
 
-		checkZEntityField(packageName);
+		// FIXME 2024年5月4日 下午2:32:49 zhangzhen: 暂时允许字段中出现sql关键字
+//		checkZEntityField(packageName);
 
 		final Set<Class<?>> zrSubclassSet = Sets.newHashSet();
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
@@ -1108,6 +1109,17 @@ public class ZRepositoryMain {
 		final List<Field> fieldList = Lists.newArrayList(fs);
 		final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
 				.collect(Collectors.toList());
+
+		final Optional<Field> notSupport = fieldList.stream().filter(f -> !DBType.typeSupport(f.getType().getCanonicalName())).findAny();
+		if (notSupport.isPresent()) {
+			final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName() + "] 中的字段 ["
+					+ notSupport.get().getName()
+					+ "] 的类型 ["
+					+ notSupport.get().getType().getCanonicalName()
+					+ "] 不支持"
+					;
+			throw new IllegalArgumentException(m);
+		}
 
 		final Optional<Field> findAny = fieldList.stream()
 				.filter(fn -> DBType.JAVA.contains(fn.getType().getCanonicalName())).findAny();

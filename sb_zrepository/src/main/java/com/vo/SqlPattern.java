@@ -49,14 +49,6 @@ public class SqlPattern {
 
 	}
 
-	public static List<String> getField(final ArrayList<String> pList) {
-
-		final List<String> fieldNameLIst = pList.stream().filter(p -> !SQL_KEYWORD.contains(p))
-				.collect(Collectors.toList());
-		return fieldNameLIst;
-
-	}
-
 	/**
 	 * ZRepository 声明式方法的关键字
 	 */
@@ -82,8 +74,7 @@ public class SqlPattern {
 		SQL_KEYWORD.add("All");
 		SQL_KEYWORD.add("Less");
 		SQL_KEYWORD.add("Than");
-		// FIXME 2023年11月6日 上午8:36:24 zhanghen: 暂时Is改为is
-		// 防止类似findByIsDelete方法被误判。修改逻辑：IsDelete之类要作为一个字段名称，而不是去掉Is把delete作为名称
+
 		SQL_KEYWORD.add("is");
 		SQL_KEYWORD.add("Is");
 		SQL_KEYWORD.add("Null");

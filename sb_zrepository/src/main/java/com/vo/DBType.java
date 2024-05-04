@@ -29,6 +29,17 @@ public class DBType {
 	}
 
 	/**
+	 * java中的字段类型名称是否支持
+	 *
+	 * @param typeName
+	 * @return
+	 */
+	public static boolean typeSupport(final String typeName) {
+		final Collection<String> v = JAVA_MYSQL.get(typeName);
+		return !v.isEmpty();
+	}
+
+	/**
 	 * java类型和mysql类型是否匹配
 	 *
 	 * @param javaType

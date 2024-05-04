@@ -10,6 +10,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -591,7 +593,7 @@ public class SU {
 		return sql2;
 	}
 
-	public  static <T> T save(final Mode mode, final Class<T> cls, final T t, final String sql) {
+	public static <T> T save(final Mode mode, final Class<T> cls, final T t, final String sql) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 
@@ -601,179 +603,128 @@ public class SU {
 			e1.printStackTrace();
 		}
 
-		final boolean hasArray = hasArray(cls);
-		if (hasArray) {
+		final StringJoiner arg = new StringJoiner(",");
+		final Field[] fs = cls.getDeclaredFields();
+		int fieldCount = 0;
+		for (final Field field : fs) {
+			if (field.isAnnotationPresent(ZID.class)) {
+				continue;
+			}
+			fieldCount++;
+			final String dbFieldname = ZFieldConverter.toDbField(field.getName());
+			arg.add(dbFieldname);
+		}
 
+		final StringJoiner joiner = new StringJoiner(",");
+		for (int i = 1; i <= fieldCount; i++) {
+			final StringJoiner add = joiner.add("?");
+		}
 
-			final StringJoiner arg = new StringJoiner(",");
-			final StringJoiner v = new StringJoiner(",");
-			final Field[] fs = cls.getDeclaredFields();
-			int fieldCount = 0;
+		final String sql2 = sql.replace("F", arg.toString()).replace("A", joiner.toString());
+		PreparedStatement ps = null;
+		try {
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}],[{}]", sql2, t);
+			}
+			ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
+			int i = 0;
 			for (final Field field : fs) {
 				if (field.isAnnotationPresent(ZID.class)) {
 					continue;
 				}
-				fieldCount++;
+				i++;
 
 				final String dbFieldname = ZFieldConverter.toDbField(field.getName());
 				arg.add(dbFieldname);
 				field.setAccessible(true);
+
 				try {
 					final Object v2 = field.get(t);
-					if (v2 instanceof String) {
-						v.add("'" + String.valueOf(v2) + "'");
-					} else if (v2 instanceof Date) {
-						// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
-						final String vD = DateUtil.format((Date)v2, DatePattern.NORM_DATETIME_FORMAT);
-						v.add("'" + vD + "'");
-					} else {
-						v.add(String.valueOf(v2));
+					// FIXME 2024年5月3日 下午9:31:08 zhangzhen:
+					// 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
+					// Field.get 的v为null就setnull就行了
+					if (v2 == null) {
+						ps.setObject(i, null);
+						continue;
 					}
 
+					final String fn = field.getType().getCanonicalName();
+
+					// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
+					if (fn.equals(Boolean.class.getCanonicalName())) {
+						final boolean equals = Boolean.TRUE.equals(v2);
+						final byte vb = (byte) (equals ? 1 : 0);
+						ps.setByte(i, vb);
+					} else if (fn.equals(Character.class.getCanonicalName())) {
+						// char 类型直接用String
+						ps.setString(i, String.valueOf(v2));
+					} else if (fn.equals(Byte.class.getCanonicalName())) {
+						ps.setByte(i, (Byte) v2);
+					} else if (fn.equals(Short.class.getCanonicalName())) {
+						ps.setShort(i, (Short) v2);
+					} else if (fn.equals(Integer.class.getCanonicalName())) {
+						ps.setInt(i, (Integer) v2);
+					} else if (fn.equals(Long.class.getCanonicalName())) {
+						ps.setLong(i, (Long) v2);
+					} else if (fn.equals(Float.class.getCanonicalName())) {
+						ps.setFloat(i, (Float) v2);
+					} else if (fn.equals(Double.class.getCanonicalName())) {
+						ps.setDouble(i, (Double) v2);
+					} else if (fn.equals(String.class.getCanonicalName())) {
+						final String value = "'" + String.valueOf(v2) + "'";
+						ps.setString(i, value);
+					} else if (fn.equals(BigDecimal.class.getCanonicalName())) {
+						ps.setBigDecimal(i, (BigDecimal) v2);
+					} else if (v2.getClass().isArray()) {
+						// blob类型
+						final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+						ps.setBlob(i, inputStream);
+					} else if (fn.equals(Date.class.getCanonicalName())) {
+						// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
+						// 日期时间的字段，新增注解：表示插入的格式
+						ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+					} else if (fn.equals(Time.class.getCanonicalName())) {
+						ps.setTime(i, (Time) v2);
+					} else if (fn.equals(Timestamp.class.getCanonicalName())) {
+						ps.setTimestamp(i, (Timestamp) v2);
+					} else {
+						// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
+						// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
+//							throw new IllegalArgumentException("size 必须大于0！size = " + size);
+					}
 
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
-
-			final StringJoiner joiner = new StringJoiner(",");
-			for(int i =1;i<=fieldCount;i++) {
-				final StringJoiner add = joiner.add("?");
-			}
-
-
-			final String sql2 = sql.replace("F", arg.toString()).replace("A", joiner.toString());
-			PreparedStatement ps = null;
+			final int executeUpdate = ps.executeUpdate();
+			final ResultSet rs = ps.getGeneratedKeys();
 			try {
-				if (ZDP.getShowSql()) {
-					LOG.info("[{}],[{}]", sql2, t);
-				}
-				ps = connection.prepareStatement(sql2,Statement.RETURN_GENERATED_KEYS);
-				int i = 0;
-				for (final Field field : fs) {
-					if (field.isAnnotationPresent(ZID.class)) {
-						continue;
-					}
-					i++;
 
-					final String dbFieldname = ZFieldConverter.toDbField(field.getName());
-					arg.add(dbFieldname);
-					field.setAccessible(true);
-					try {
-						final Object v2 = field.get(t);
-
-						// FIXME 2024年5月3日 下午9:31:08 zhangzhen: 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
-						// Field.get 的v为null就setnull就行了
-						if (v2 == null) {
-							ps.setObject(i, null);
-							continue;
-						}
-
-						// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
-						if (v2 instanceof Boolean) {
-							final boolean equals = Boolean.TRUE.equals(v2);
-							final byte vb = (byte) (equals ? 1 : 0);
-							ps.setInt(i, vb);
-
-						} else if (v2 instanceof String) {
-							final String value = "'" + String.valueOf(v2) + "'";
-							ps.setString(i, value);
-						} else if (v2 instanceof Date) {
-							// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
-							final String vD = DateUtil.format((Date) v2, DatePattern.NORM_DATETIME_FORMAT);
-							ps.setString(i, "'" + vD + "'");
-						} else if (v2.getClass().isArray()) {
-							// blob类型
-							final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-							ps.setBlob(i, inputStream);
-						}
-
-					} catch (IllegalArgumentException | IllegalAccessException e) {
-						e.printStackTrace();
-					}
-				}
-				final int executeUpdate = ps.executeUpdate();
-				final ResultSet rs = ps.getGeneratedKeys();
-				try {
-
-					if (rs.next()) {
-						final Object id = rs.getObject(1);
-						final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
-						final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-						final T findByIdNew = findById(mode, id, cls, selectById, zc);
-						return findByIdNew;
-					}
-				} finally {
-					rs.close();
-				}
-
-			} catch (final SQLException e) {
-				e.printStackTrace();
-				try {
-					connection.rollback();
-				} catch (final SQLException e1) {
-					e1.printStackTrace();
+				if (rs.next()) {
+					final Object id = rs.getObject(1);
+					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
+					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
+					final T findByIdNew = findById(mode, id, cls, selectById, zc);
+					return findByIdNew;
 				}
 			} finally {
-				close(ps);
-				INSTANCE.returnZConnectionAndCommit(zc);
+				rs.close();
 			}
 
-		} else {
-
-			// 普通的，无二进类型的
-			final String sqlFinal = gSaveSql(cls, t, sql);
-			PreparedStatement ps = null;
-			ResultSet rs = null;
+		} catch (final SQLException e) {
+			e.printStackTrace();
 			try {
-				ps = connection.prepareStatement(sqlFinal);
-
-				if (ZDP.getShowSql()) {
-					LOG.info("[{}],[{}]", sqlFinal, t);
-				}
-				final boolean execute = ps.execute(sqlFinal, Statement.RETURN_GENERATED_KEYS);
-				rs = ps.getGeneratedKeys();
-				try {
-
-					if (rs.next()) {
-						final Object id = rs.getObject(1);
-						final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
-						final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-						final T findByIdNew = findById(mode, id, cls, selectById, zc);
-						return findByIdNew;
-					}
-				} finally {
-					rs.close();
-				}
-
-			} catch (final SQLException e) {
-				e.printStackTrace();
-				try {
-					connection.rollback();
-				} catch (final SQLException e1) {
-					e1.printStackTrace();
-				}
-			} finally {
-				close(ps);
-				INSTANCE.returnZConnectionAndCommit(zc);
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
 			}
+		} finally {
+			close(ps);
+			INSTANCE.returnZConnectionAndCommit(zc);
 		}
-
 
 		return null;
-	}
-
-	private static <T> boolean hasArray(final Class<T> cls) {
-		boolean hasArray = false;
-		final Field[] fs = cls.getDeclaredFields();
-		for (final Field f : fs) {
-			final boolean array1 = f.getType().isArray();
-			hasArray = hasArray || array1;
-		}
-		if (hasArray) {
-			System.out.println("YOU ARRAY");
-		}
-		return hasArray;
 	}
 
 	private static ZConnection getZCAndSetAutoCommitFALSE(final Mode mode) {
@@ -796,57 +747,6 @@ public class SU {
 			e.printStackTrace();
 		}
 		return zc;
-	}
-
-	private static <T> String gSaveSql(final Class<T> cls, final T t, final String sql) {
-
-//		boolean hasArray = false;
-//		final Field[] fs = cls.getDeclaredFields();
-//		for (final Field f : fs) {
-//			final boolean array1 = f.getType().isArray();
-//			hasArray = hasArray || array1;
-//		}
-//		if (hasArray) {
-//			System.out.println("YOU ARRAY");
-//			return null;
-//		}
-
-		return save0(cls, t, sql);
-	}
-
-	private static <T> String save0(final Class<T> cls, final T t, final String sql) {
-		final Field[] fs = cls.getDeclaredFields();
-
-		final StringJoiner arg = new StringJoiner(",");
-		final StringJoiner v = new StringJoiner(",");
-		for (final Field field : fs) {
-			if (field.isAnnotationPresent(ZID.class)) {
-				continue;
-			}
-
-			final String dbFieldname = ZFieldConverter.toDbField(field.getName());
-			arg.add(dbFieldname);
-			field.setAccessible(true);
-			try {
-				final Object v2 = field.get(t);
-				if (v2 instanceof String) {
-					v.add("'" + String.valueOf(v2) + "'");
-				} else if (v2 instanceof Date) {
-					// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO 日期时间的字段，新增注解：表示插入的格式
-					final String vD = DateUtil.format((Date)v2, DatePattern.NORM_DATETIME_FORMAT);
-					v.add("'" + vD + "'");
-				} else {
-					v.add(String.valueOf(v2));
-				}
-
-
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
-
-		final String sql2 = sql.replace("F", arg.toString()).replace("A", v.toString());
-		return sql2;
 	}
 
 	public static <T> List<T> findAll(final Mode mode, final Class<T> cls, final String sql) {
@@ -1044,26 +944,49 @@ public class SU {
 
 	private static <T> T newT(final Class<T> cls, final ResultSet rs, final ResultSetMetaData metaData, final int count)
 			throws InstantiationException, IllegalAccessException, SQLException, NoSuchFieldException {
-		final T t = cls.newInstance();
+		final T object = cls.newInstance();
 		for (int i = 0; i < count; i++) {
 			final Object columValue = rs.getObject(i + 1);
 			final String columnName = metaData.getColumnLabel(i + 1);
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
-			final Field field = cls.getDeclaredField(javaFieldName);
-			field.setAccessible(true);
+			final Field ffffff = cls.getDeclaredField(javaFieldName);
+			ffffff.setAccessible(true);
 
-			final Object handValue = handValue(t, columValue, field);
+			final Object value = handValue(object, columValue, ffffff);
+			if (value == null) {
+				continue;
+			}
 
-			if (field.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-				field.set(t, handValue == null ? null
-						: (Integer.valueOf(1).equals(handValue) ? Boolean.TRUE : Boolean.FALSE));
+			final String cn = ffffff.getType().getCanonicalName();
+			if (cn.equals(Byte.class.getCanonicalName())) {
+				ffffff.set(object, Byte.valueOf(String.valueOf(value)));
+			} else if (cn.equals(Short.class.getCanonicalName())) {
+				ffffff.set(object, Short.valueOf(String.valueOf(value)));
+			} else if (cn.equals(Integer.class.getCanonicalName())) {
+				ffffff.set(object, Integer.valueOf(String.valueOf(value)));
+			} else if (cn.equals(Long.class.getCanonicalName())) {
+				ffffff.set(object, Long.valueOf(String.valueOf(value)));
+			} else if (cn.equals(Float.class.getCanonicalName())) {
+				ffffff.set(object, Float.valueOf(String.valueOf(value)));
+			} else if (cn.equals(Double.class.getCanonicalName())) {
+				ffffff.set(object, Double.valueOf(String.valueOf(value)));
+			} else if (cn.equals(BigDecimal.class.getCanonicalName())) {
+				ffffff.set(object, new BigDecimal(String.valueOf(value)));
+			} else if (cn.equals(Boolean.class.getCanonicalName())) {
+				ffffff.set(object,
+						value == null ? null : (Integer.valueOf(1).equals(value) ? Boolean.TRUE : Boolean.FALSE));
+			} else if (cn.equals(Character.class.getCanonicalName())){
+				ffffff.set(object, Character.valueOf(String.valueOf(value).charAt(0)));
+			} else if (cn.equals(String.class.getCanonicalName())){
+				ffffff.set(object, String.valueOf(value));
 			} else {
-
-				field.set(t, handValue);
+				if (ffffff.getClass().isArray()){
+				}
+				ffffff.set(object, value);
 			}
 
 		}
-		return t;
+		return object;
 	}
 
 	public static <T> List<T> findByXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
