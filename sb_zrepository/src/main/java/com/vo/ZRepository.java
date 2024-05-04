@@ -35,6 +35,7 @@ public interface ZRepository<T, ID> {
 	 * @return
 	 *
 	 */
+	// FIXME 2024年5月4日 下午10:46:33 zhangzhen: TODO :支持了blob类型后，page还要改，包括其他方法都要重新仔细测试
 	Page<T> page(T t, Integer page, Integer size);
 
 	/**
