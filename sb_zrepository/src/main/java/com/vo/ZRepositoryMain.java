@@ -367,7 +367,7 @@ public class ZRepositoryMain {
 					final Class<?> typeClass = Class.forName(type);
 					final ZEntity zEntity = typeClass.getAnnotation(ZEntity.class);
 
-					checkZEntityZID(typeClass);
+					checkZEntity(typeClass);
 
 					final String zrSubClassName = zrSubClass.getCanonicalName();
 					final String methodName = m.getName();
@@ -399,8 +399,6 @@ public class ZRepositoryMain {
 	 *
 	 */
 	private static void checkZEntity_TableNameExist(final String tableName, final ZConnection zc) {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZRepositoryMain.checkZEntity_TableNameExist()");
 
 		ResultSet rs = null;
 		final Connection connection = zc.getConnection();
@@ -1048,13 +1046,12 @@ public class ZRepositoryMain {
 	}
 
 	/**
-	 * 校验 @ZEntity 类必须有 @ZID 注解，并且字段是主键
+	 * 校验 @ZEntity 标记的类： 必须有 @ZID 注解并且字段是主键、必须每个字段类型和名称都和数据表中匹配 等等
 	 *
 	 * @param typeClass
-	 * @param p TODO
 	 *
 	 */
-	private synchronized static void checkZEntityZID(final Class<?> typeClass) {
+	private synchronized static void checkZEntity(final Class<?> typeClass) {
 
 		if (cc.contains(typeClass)) {
 			return;

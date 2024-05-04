@@ -13,6 +13,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class SqlResult {
+
 	/**
 	 * ZRepository 子类名称
 	 */

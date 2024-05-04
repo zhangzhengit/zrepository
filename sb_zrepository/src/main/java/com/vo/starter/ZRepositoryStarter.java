@@ -8,9 +8,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Component;
 
 import com.vo.SqlResult;
@@ -37,9 +35,6 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 
 	private final AtomicBoolean gZRepository = new AtomicBoolean(false);
 
-	@Autowired
-	private DefaultListableBeanFactory defaultListableBeanFactory;
-
 	@Override
 	public boolean postProcessAfterInstantiation(final Object bean, final String beanName) throws BeansException {
 
@@ -61,7 +56,6 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 		final Set<Entry<Class, ZClass>> es = clsMap.entrySet();
 		for (final Entry<Class, ZClass> entry : es) {
 
-//			final String x = classNameToJavaFieldName(zClass.getName());
 			LOG.info("开始注入实现类[{}]", entry.getValue().getName());
 			BFPP.beanFactory.registerSingleton(entry.getKey().getName(), entry.getValue().newInstance());
 			LOG.info("注入实现类[{}]成功", entry.getValue().getName());
@@ -101,18 +95,4 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 		return clsMap;
 	}
 
-	private static String classNameToJavaFieldName(final String className) {
-		final String zc = ZRepositoryMain._Z_CLASS;
-		final int i = className.lastIndexOf(zc);
-		if (i > -1) {
-			final String s = className.substring(0, i);
-			final char[] ca = s.toCharArray();
-			ca[0] = Character.toLowerCase(ca[0]);
-
-			final String r = new String(ca);
-			return r;
-		}
-
-		return null;
-	}
 }
