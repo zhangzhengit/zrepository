@@ -780,12 +780,10 @@ public class ZRepositoryMain {
 	 */
 	private static String modeString(final Method method) {
 		if (method.isAnnotationPresent(ZRead.class)) {
-			// FIXME 2024年5月3日 下午10:08:56 zhangzhen: TODO 返回值不要写死
-			return "com.vo.conn.Mode.READ";
+			return Mode.class.getCanonicalName() + "." + Mode.READ.name();
 		}
-		return "com.vo.conn.Mode.WRITE";
+		return Mode.class.getCanonicalName() + "." + Mode.WRITE.name();
 	}
-
 
 	private static String gROUP_findByXXXEndingWith(final Method method, final String key) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXXEndingWith);
