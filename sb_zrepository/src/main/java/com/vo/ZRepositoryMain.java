@@ -582,7 +582,7 @@ public class ZRepositoryMain {
 		return zClass;
 	}
 
-	private static Set<ZMethod> addZMethod(final Class myZRClass) {
+	private static Set<ZMethod> addZMethod(final Class<?> myZRClass) {
 		final Method[] ms = myZRClass.getMethods();
 
 		final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(myZRClass);
