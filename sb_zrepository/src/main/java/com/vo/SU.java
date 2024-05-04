@@ -461,6 +461,7 @@ public class SU {
 		return false;
 	}
 
+	// FIXME 2024年5月4日 下午9:10:32 zhangzhen:TODO  支持了blob类型后，saveAll会NPE？继续测试
 	public static <T> List<Object> saveAll(final Mode mode, final Class<T> cls, final String sqlParam,
 			final List<T> tList) {
 
