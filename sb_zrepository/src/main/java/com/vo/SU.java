@@ -489,7 +489,7 @@ public class SU {
 					p0.add(p1);
 					ps.addBatch();
 				}
-				// TODO p0可能会太长
+				// FIXME 2024年5月5日 下午3:19:24 zhangzhen:  p0可能会太长，考虑打印什么，还是直接不打印参数?
 				LOG.info("[{}],[{}]", sql, p0);
 			} else {
 				for (final T t : tList) {

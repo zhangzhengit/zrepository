@@ -235,6 +235,11 @@ public class ZRepositoryMain {
 			try {
 				final Class<?> typeClass = Class.forName(type);
 				final ZEntity zEntity = typeClass.getAnnotation(ZEntity.class);
+				if (zEntity == null) {
+					final String m = typeClass.getCanonicalName() + " 类缺少" + "@ " + ZEntity.class.getCanonicalName()
+							+ " 注解";
+					throw new IllegalArgumentException(m);
+				}
 
 				checkZEntity_TableNameExist(zEntity.tableName(), ZCPool.getInstance().getZConnection(Mode.WRITE));
 				checkZEntity_TableNameExist(zEntity.tableName(), ZCPool.getInstance().getZConnection(Mode.READ));
