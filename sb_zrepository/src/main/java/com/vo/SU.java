@@ -471,46 +471,25 @@ public class SU {
 
 			ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
+			for (final T t : tList) {
+				int index = 1;
+				for (final Field f : declaredFields) {
+					if (f.isAnnotationPresent(ZID.class)) {
+						continue;
+					}
+					addPS(t, ps, index, f, SUMode.SAVE);
+					index++;
+				}
+				ps.addBatch();
+			}
+
 			if (ZDP.getShowSql()) {
-				final ArrayList<ArrayList<Object>> p0 = Lists.newArrayList();
-				for (final T t : tList) {
-					final ArrayList<Object> p1 = Lists.newArrayList();
-					int i = 1;
-					for (final Field field : cls.getDeclaredFields()) {
-						if (field.isAnnotationPresent(ZID.class)) {
-							continue;
-						}
-						field.setAccessible(true);
-						final Object value = field.get(t);
-						ps.setObject(i, value);
-						i++;
-						p1.add(value);
-					}
-					p0.add(p1);
-					ps.addBatch();
-				}
-				// FIXME 2024年5月5日 下午3:19:24 zhangzhen:  p0可能会太长，考虑打印什么，还是直接不打印参数?
-				LOG.info("[{}],[{}]", sql, p0);
-			} else {
-				for (final T t : tList) {
-					int i = 1;
-					for (final Field field : cls.getDeclaredFields()) {
-						if (field.isAnnotationPresent(ZID.class)) {
-							continue;
-						}
-						field.setAccessible(true);
-						final Object value = field.get(t);
-						ps.setObject(i, value);
-						i++;
-					}
-					ps.addBatch();
-				}
+				LOG.info("批量插入{}条数据 - [{}]", tList.size(),sql);
 			}
 
 			ps.executeBatch();
 
 			rs = ps.getGeneratedKeys();
-
 
 			final Field idField = zid.get();
 			final Class<?> type = idField.getType();
@@ -659,7 +638,6 @@ public class SU {
 			// FIXME 2024年5月3日 下午9:31:08 zhangzhen:
 			// 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
 			// Field.get 的v为null就setnull就行了
-			System.out.println("set " + field.getName() + " = " + v2);
 			if (v2 == null) {
 				ps.setObject(i, null);
 				return dbFieldname;
@@ -693,8 +671,11 @@ public class SU {
 				ps.setBigDecimal(i, (BigDecimal) v2);
 			} else if (v2.getClass().isArray()) {
 				// blob类型
-				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-				ps.setBlob(i, inputStream);
+				// FIXME 2024年5月5日 下午9:14:57 zhangzhen: saveAll 时，setBlob和setBinaryStream都会导致ps.excuteBatch NPE,所有在此用setObject
+				ps.setObject(i, v2);
+//				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+//				ps.setBlob(i, inputStream);
+//				ps.setBinaryStream(i, inputStream);
 			} else if (fn.equals(Date.class.getCanonicalName())) {
 				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
 				// 日期时间的字段，新增注解：表示插入的格式

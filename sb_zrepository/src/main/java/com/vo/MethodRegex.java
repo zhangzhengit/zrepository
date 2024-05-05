@@ -167,9 +167,9 @@ public class MethodRegex {
 		REGEX_MAP_DELETEBYID.put(deleteByIdIn, "delete from TABLE_NAME where @ in (?)");
 
 		// saveAll
-		REGEX_MAP_SAVEALL.put(saveAll, "insert into TABLE_NAME (F) values(A)");
+		REGEX_MAP_SAVEALL.put(saveAll, "insert into TABLE_NAME (F) values (A)");
 		// save
-		REGEX_MAP_SAVE.put(save, "insert into TABLE_NAME (F) values(A);");
+		REGEX_MAP_SAVE.put(save, "insert into TABLE_NAME (F) values (A);");
 
 		// update
 		REGEX_MAP_UPDATE.put(GROUP_UPDATE, "update TABLE_NAME set COLUMN where id = ?; ");
