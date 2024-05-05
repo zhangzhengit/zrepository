@@ -18,7 +18,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD })
 public @interface ZQuery {
-// FIXME 2023年6月16日 下午8:03:51 zhanghen: 解析这个
+
+	// FIXME 2023年6月16日 下午8:03:51 zhanghen: 解析这个
+	/**
+	 * 自定义SQL
+	 *
+	 * @return
+	 */
+	// FIXME 2024年5月5日 下午10:22:47 zhangzhen: 先支持完整的原生sql
 	String sql();
 
 }

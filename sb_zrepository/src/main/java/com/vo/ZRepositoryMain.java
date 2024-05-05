@@ -270,7 +270,8 @@ public class ZRepositoryMain {
 			for (final Method m : ms) {
 				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getCanonicalName(), m.getName());
 
-				final Entry<String, String> check = MethodRegex.check(m.getName(), m);
+				final MethodSQL methodSQL = MethodRegex.check(m.getName(), m);
+//				final Entry<String, String> check = MethodRegex.check(m.getName(), m);
 
 				final String type = typeArray[0];
 				try {
@@ -281,12 +282,12 @@ public class ZRepositoryMain {
 
 					final String zrSubClassName = zrSubClass.getCanonicalName();
 					final String methodName = m.getName();
-					final String sqlTemplate = check.getValue();
+					final String sqlTemplate = methodSQL.getSqlTemplate();
 
 					final String tableName = zEntity.tableName();
 					final String sqlTemplateTemp = sqlTemplate.replace(TABLE_NAME, tableName);
 
-					final String sqlFinal = checkMethodName(typeClass, methodName, sqlTemplateTemp);
+					final String sqlFinal = checkMethodName(typeClass, methodName, sqlTemplateTemp, methodSQL);
 
 					final SqlResult result = new SqlResult(zrSubClassName, methodName, sqlFinal);
 
@@ -345,19 +346,24 @@ public class ZRepositoryMain {
 	 * @param typeClass  @ZEntity标记的类
 	 * @param methodName ZRepository 子类中的自定义的findByXX的方法名称,如findByUserId
 	 * @param sql        sql模板，如：select * from user where @ = ?
+	 * @param methodSQL TODO
 	 * @return 返回可用于java.sql.PreparedStatement 的SQL语句， 如 : select * from user where
 	 *         id = ?
 	 *
 	 */
-	private static String checkMethodName(final Class<?> typeClass,final String methodName, final String sql) {
-		// methodName 从每个大写字母分开分成一个数组，如findByUserId 分成[find, By, User, Id]
+	private static String checkMethodName(final Class<?> typeClass, final String methodName, final String sql,
+			final MethodSQL methodSQL) {
+		if (methodSQL.isZQuery()) {
+			return methodSQL.getSqlTemplate();
+		}
 
+
+		// methodName 从每个大写字母分开分成一个数组，如findByUserId 分成[find, By, User, Id]
 		final List<String> fnLIst = getDeclaredFieldName(typeClass);
 
 		// findByUserId 分成[find, By, User, Id] ，从前往后计算是否sql关键字，否则按照entity字段处理
 
 		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
-
 
 		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
 		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
@@ -543,6 +549,12 @@ public class ZRepositoryMain {
 			zmSet.add(zm);
 			final String sql = ZRSqlMap.get(myZRClass.getCanonicalName(), zm.getName());
 
+			// FIXME 2024年5月5日 下午10:45:55 zhangzhen: debug 用，记得删除掉
+			// 开始
+			if("selectIdLimit5".equals(method.getName())) {
+				final int x = 20;
+			}
+			// 结束
 			final String body = "String sql = \""+sql+"\";";
 
 			final String body2 = EMTPY;
@@ -613,65 +625,74 @@ public class ZRepositoryMain {
 		default:
 
 			// default  ZR的子类声明的方法
-			final Entry<String, String> check = MethodRegex.check(methodName, method);
+			final MethodSQL methodSQL = MethodRegex.check(methodName, method);
+//			final Entry<String, String> check = MethodRegex.check(methodName, method);
 //			System.out.println("getSuMethod-check = " + check);
-			final String key = check.getKey();
+			final String methodname = methodSQL.getMethodName();
 
-			if (key.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
-				return gROUP_findByXXOrderByXXDescLimit(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
+				return gROUP_findByXXOrderByXXDescLimit(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
-				return gROUP_findByXXOrderByXXLimit(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
+				return gROUP_findByXXOrderByXXLimit(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
-				return gROUP_findByXXXEndingWith(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
+				return gROUP_findByXXXEndingWith(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
-				return gROUP_findByXXXStartingWith(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
+				return gROUP_findByXXXStartingWith(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXGreaterThan)) {
-				return gROUP_findByXXGreaterThan(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)) {
+				return gROUP_findByXXGreaterThan(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXLessThanEquals)) {
-				return GROUP_findByXXLessThanEquals(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)) {
+				return GROUP_findByXXLessThanEquals(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByxx_in)) {
-				return gROUP_findByxx_in(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
+				return gROUP_findByxx_in(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXLessThan)) {
-				return gROUP_findByXXLessThan(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXLessThan)) {
+				return gROUP_findByXXLessThan(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_CountingByXXX)) {
-				return gROUP_CountingByXXX(method, key);
+			if (methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
+				return gROUP_CountingByXXX(method, methodname);
 			}
 //
-			if (key.matches(MethodRegex.GROUP_findByXXIsNull)) {
+			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,sql);";
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXLike)) {
-				return gROUP_findByXXLike(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
+				return gROUP_findByXXLike(method, methodname);
 			}
 
-			if (key.matches(MethodRegex.GROUP_count)) {
+			if (methodname.matches(MethodRegex.GROUP_count)) {
 				return "return " + SU.class.getCanonicalName() + ".count(" + modeString + ",classType,sql);";
 			}
 
-			if (key.matches(MethodRegex.GROUP_findByXXAndXX)) {
-				return gROUP_findByXXAndXX(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXXAndXX)) {
+				return gROUP_findByXXAndXX(method, methodname);
 			}
 			// 最短的排最后
-			if (key.matches(MethodRegex.GROUP_findByXX)) {
-				return gROUP_findByXX(method, key);
+			if (methodname.matches(MethodRegex.GROUP_findByXX)) {
+				return gROUP_findByXX(method, methodname);
 			}
+
+			// 最后面是@ZQuery自定义方法
+			if(methodSQL.isZQuery()) {
+				final String sqlTemplate = methodSQL.getSqlTemplate();
+				final String x = zQuery(method, methodSQL.getSqlTemplate());
+				return x;
+			}
+
 
 			break;
 		}
@@ -904,11 +925,39 @@ public class ZRepositoryMain {
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
 		return EMTPY;
 	}
-	private static String gROUP_findByXX(final Method method, final String key) {
+
+	private static String zQuery(final Method method, final String sqlTemplate) {
+		final StringJoiner joiner = new StringJoiner(",");
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
+		final String modeString = modeString(method);
+
+		final String u = sqlTemplate.trim().toUpperCase();
+		String subClassMethodName = null ;
+		if (u.startsWith("SELECT")) {
+			subClassMethodName = "zQuerySelect";
+		} else if (u.startsWith("UPDATE")) {
+			subClassMethodName = "zQueryUpdate";
+		} else if (u.startsWith("DELETE")) {
+			subClassMethodName = "zQueryDelete";
+		} else if (u.startsWith("INSERT")) {
+			subClassMethodName = "zQueryInsert";
+		} else {
+			throw new IllegalArgumentException(
+					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
+		}
+
+		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+	}
+
+	private static String gROUP_findByXX(final Method method, final String methodname) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXX);
 		final Set<Entry<String, String>> entrySet = hh.entrySet();
 		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
+			if (methodname.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
 				final StringJoiner joiner = new StringJoiner(",");
 				for (final Parameter parameter : parameters2) {

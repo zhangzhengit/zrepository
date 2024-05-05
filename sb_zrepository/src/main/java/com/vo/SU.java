@@ -1530,4 +1530,26 @@ public class SU {
 		return column.toString();
 	}
 
+	public static  <T> List<T> zQuerySelect(final Mode mode, final Class<T> cls, final String sql) {
+		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
+			// FIXME 2024年5月5日 下午11:04:15 zhangzhen: 这四个方法先考虑好返回类型怎么确定，是根据自定义方法的返回类型来确定吗
+
+		return Collections.emptyList();
+	}
+
+	public static  <T> List<T> zQueryUpdate(final Mode mode, final Class<T> cls, final String sql) {
+		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
+		return Collections.emptyList();
+	}
+
+	public static  <T> List<T> zQueryDelete(final Mode mode, final Class<T> cls, final String sql) {
+		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
+		return Collections.emptyList();
+	}
+
+	public static  <T> List<T> zQueryInsert(final Mode mode, final Class<T> cls, final String sql) {
+		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
+		return Collections.emptyList();
+	}
+
 }

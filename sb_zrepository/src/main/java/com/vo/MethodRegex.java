@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 
-import groovy.lang.GrabConfig;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * ZRepository 方法命名规则的正则表达式
@@ -242,8 +242,30 @@ public class MethodRegex {
 	}
 
 
-	public static Entry<String, String> check(final String methodName, final Method method) {
-		final String find = methodName;
+	public static MethodSQL check(final String methodName, final Method method) {
+
+		// FIXME 2024年5月5日 下午10:09:22 zhangzhen: 优先看是否有@ZQuery注解，有则执行自定义SQL，否则再按命名规则来解析
+		// FIXME 2023年6月16日 下午8:03:40 zhanghen: 写这里，处理 @ZQuery
+		final ZQuery zQuery = method.getAnnotation(ZQuery.class);
+		if (zQuery != null) {
+			final String sql = zQuery.sql();
+			if (StrUtil.isBlank(sql)) {
+				final String m = "@" + ZQuery.class.getSimpleName() + "方法 [" + methodName
+						+ "] "
+						+ "sql属性必须设置，当前未设置，当前值为 ["
+						+ sql + "]"
+						;
+				throw new IllegalArgumentException(m);
+			}
+
+
+			final int x = 20;
+
+//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
+//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
+
+			return new MethodSQL(true,methodName, zQuery.sql());
+		}
 
 		final Collection<HashMap<String, String>> values = R_M.values();
 
@@ -251,26 +273,14 @@ public class MethodRegex {
 
 			final Set<Entry<String, String>> es = hashMap.entrySet();
 			for (final Entry<String, String> entry : es) {
-//				System.out.println("find = " + find);
-//				System.out.println("entry.getKey() = " + entry.getKey());
-				if (find.matches(entry.getKey())) {
-//					System.out.println(find);
-//					System.out.println("匹配 k = \t" + entry.getKey());
-//					System.out.println(entry.getValue());
-
-//					System.out.println("MMMMMMMMMMMMMMMM k = " + entry.getKey());
-					return entry;
+				if (methodName.matches(entry.getKey())) {
+					return new MethodSQL(false,entry.getKey(), entry.getValue());
 				}
-
 			}
 		}
 
-		final boolean isZQ = method.isAnnotationPresent(ZQuery.class);
-		if (!isZQ) {
-			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
-		}
-		// FIXME 2023年6月16日 下午8:03:40 zhanghen: 写这里，处理 @ZQuery
-		return null;
+		// FIXME 2024年5月5日 下午10:14:22 zhangzhen: 抛异常，提示详细一点，先随手写一下
+		throw new IllegalArgumentException("方式声明不支持 : " + methodName);
 	}
 
 	public static ArrayList<String> getFieldFromMethodname(final String methdoName) {
