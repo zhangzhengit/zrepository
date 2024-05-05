@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 /**
  *
- * 自定义sql
+ * 自定义SQL，用在ZRepository的子接口的方法上，方法上有本注解，则优先按自定义SQL来查询，不按[声明式方法]来查询
  *
  * @author zhangzhen
  * @date 2023年6月16日
@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD })
+@Target({ElementType.METHOD })
 public @interface ZQuery {
 // FIXME 2023年6月16日 下午8:03:51 zhanghen: 解析这个
 	String sql();
