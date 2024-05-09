@@ -32,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.vo.anno.UserRepositoryTest1;
 import com.vo.anno.ZEntity;
 import com.vo.anno.ZRead;
+import com.vo.anno.ZTransient;
 import com.vo.anno.ZWrite;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
@@ -1149,16 +1150,31 @@ public class ZRepositoryMain {
 
 					if (fieldNameList.size() > columnNameList.size()) {
 						fieldNameList.removeAll(cnl);
-						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
-								+ "]中存在数据表[" + tableName + "]中不存在的字段" + fieldNameList + EMTPY;
+
+						final List<Field> c = fieldList.stream().filter(f -> fieldNameList.contains(f.getName()))
+								.collect(Collectors.toList());
+
+						final long noZTransientFieldCount = c.stream().filter(f -> !f.isAnnotationPresent(ZTransient.class))
+								.count();
+
+						if (noZTransientFieldCount > 0) {
+							final String m = "@" + ZEntity.class
+									.getSimpleName() + "类[" + typeClass.getSimpleName()
+									+ "]中存在数据表[" + tableName + "]中不存在的字段" + fieldNameList + EMTPY
+									+ "，如需与数据表字段对应，请在数据表中加入此字段；如不需与数据表对应，请在字段上加入@" + ZTransient.class.getCanonicalName() + " 注解"
+									;
+							throw new IllegalArgumentException(m);
+						}
+
+					} else if (fieldNameList.size() < columnNameList.size()) {
+
+						cnl.removeAll(fieldNameList);
+						final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
+								+ typeClass.getSimpleName() + "]不存在的字段" + cnl + EMTPY;
+
 						throw new IllegalArgumentException(m);
 					}
 
-					cnl.removeAll(fieldNameList);
-					final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
-							+ typeClass.getSimpleName() + "]不存在的字段" + cnl + EMTPY;
-
-					throw new IllegalArgumentException(m);
 				}
 			}
 
@@ -1174,7 +1190,6 @@ public class ZRepositoryMain {
 		}
 
 	}
-
 
 
 	private static void checkPrimaryKey(final Class<?> typeClass, final String name, final DatabaseMetaData metaDataREAD) {

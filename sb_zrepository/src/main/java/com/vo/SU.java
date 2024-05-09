@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vo.anno.ZEntity;
+import com.vo.anno.ZTransient;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
@@ -42,7 +43,6 @@ import com.vo.transaction.ZTransactionAspect;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * @see ZRepository 接口和其子接口里的方法的具体实现
@@ -220,15 +220,21 @@ public class SU {
 		PreparedStatement ps  = null;
 		try {
 			ps = connection.prepareStatement(sqlF);
-
+			int zTransientCount = 0;
+			int index = 0;
 			for (int i = 0; i < (fs.length); i++) {
 				final Field f = fs[i];
+				if (f.isAnnotationPresent(ZTransient.class)) {
+					zTransientCount++;
+					continue;
+				}
 				f.setAccessible(true);
-				addPS(t, ps, i + 1, f, SUMode.UPDATE);
+				index++;
+				addPS(t, ps, index, f, SUMode.UPDATE);
 			}
 
 			// 最后面的where id = ？ 赋值
-			ps.setObject(fs.length + 1, idValue);
+			ps.setObject((fs.length + 1) -zTransientCount , idValue);
 
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}],[{}]", sqlF, t,idValue);
@@ -477,7 +483,7 @@ public class SU {
 			for (final T t : tList) {
 				int index = 1;
 				for (final Field f : declaredFields) {
-					if (f.isAnnotationPresent(ZID.class)) {
+					if (f.isAnnotationPresent(ZID.class) || f.isAnnotationPresent(ZTransient.class)) {
 						continue;
 					}
 					addPS(t, ps, index, f, SUMode.SAVE);
@@ -545,7 +551,7 @@ public class SU {
 		final StringJoiner arg = new StringJoiner(",");
 		final StringJoiner v = new StringJoiner(",");
 		for (final Field field : cls.getDeclaredFields()) {
-			if (field.isAnnotationPresent(ZID.class)) {
+			if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
 				continue;
 			}
 
@@ -572,7 +578,7 @@ public class SU {
 		final Field[] fs = cls.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
-			if (field.isAnnotationPresent(ZID.class)) {
+			if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
 				continue;
 			}
 			fieldCount++;
@@ -594,11 +600,11 @@ public class SU {
 			ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
 			int i = 0;
 			for (final Field field : fs) {
-				if (field.isAnnotationPresent(ZID.class)) {
+				if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
 					continue;
 				}
-				i++;
 
+				i++;
 				addPS(t, ps, i, field, SUMode.SAVE);
 			}
 			final int executeUpdate = ps.executeUpdate();
@@ -631,19 +637,20 @@ public class SU {
 		return null;
 	}
 
-	private static <T> Object addPS(final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
+	private static <T> boolean addPS(final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
 			throws SQLException {
 		final String dbFieldname = ZFieldConverter.toDbField(field.getName());
 		field.setAccessible(true);
 
 		try {
+
 			final Object v2 = field.get(t);
 			// FIXME 2024年5月3日 下午9:31:08 zhangzhen:
 			// 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
 			// Field.get 的v为null就setnull就行了
 			if (v2 == null) {
 				ps.setObject(i, null);
-				return dbFieldname;
+				return false;
 			}
 
 			final String fn = field.getType().getCanonicalName();
@@ -693,12 +700,12 @@ public class SU {
 //							throw new IllegalArgumentException("size 必须大于0！size = " + size);
 			}
 
-			return v2;
+			return true;
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
 
-		return null;
+		return false;
 	}
 
 	private static ZConnection getZCAndSetAutoCommitFALSE(final Mode mode) {
@@ -1511,6 +1518,9 @@ public class SU {
 		for (int i = 0; i < fs.length; i++) {
 			final Field f = fs[i];
 
+			if (f.isAnnotationPresent(ZTransient.class)) {
+				continue;
+			}
 			// update语句，即使是id也生成：id = ？
 //			if (f.isAnnotationPresent(ZID.class)) {
 //				continue;
