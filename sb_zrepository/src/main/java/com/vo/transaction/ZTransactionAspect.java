@@ -63,7 +63,6 @@ public class ZTransactionAspect {
 		try {
 			final Object v = proceedingJoinPoint.proceed();
 			connection.commit();
-			connection.setAutoCommit(true);
 			return v;
 		} catch (final Throwable e) {
 			try {
@@ -73,11 +72,6 @@ public class ZTransactionAspect {
 			}
 			e.printStackTrace();
 		} finally {
-			try {
-				connection.setAutoCommit(true);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
 			ZCPool.getInstance().returnZConnectionAndCommit(zc);
 		}
 
