@@ -1,6 +1,5 @@
 package com.vo;
 
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -43,6 +42,7 @@ import com.vo.transaction.ZTransactionAspect;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * @see ZRepository 接口和其子接口里的方法的具体实现
@@ -1530,11 +1530,62 @@ public class SU {
 		return column.toString();
 	}
 
-	public static  <T> List<T> zQuerySelect(final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> List<T> zQuerySelect(final Mode mode, final Object object, final String sql, final Object... arg)
+			throws InstantiationException {
 		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
-			// FIXME 2024年5月5日 下午11:04:15 zhangzhen: 这四个方法先考虑好返回类型怎么确定，是根据自定义方法的返回类型来确定吗
+		// FIXME 2024年5月5日 下午11:04:15 zhangzhen:
+		// 这四个方法先考虑好返回类型怎么确定，是根据自定义方法的返回类型来确定吗
 
-		return Collections.emptyList();
+		final Class cls = (Class) object;
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final Connection connection = zc.getConnection();
+
+		try {
+			connection.setAutoCommit(false);
+		} catch (final SQLException e1) {
+			e1.printStackTrace();
+		}
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
+			}
+			ps = connection.prepareStatement(sql);
+			if (arg != null) {
+				int n = 1;
+				for (final Object a1 : arg) {
+					ps.setObject(n, a1);
+					n++;
+				}
+			}
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final List<T> ra = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = (T) newT(cls, rs, metaData, count);
+				ra.add(t);
+			}
+
+			return ra;
+		} catch (SQLException | SecurityException | IllegalAccessException | NoSuchFieldException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			INSTANCE.returnZConnectionAndCommit(zc);
+			close(rs, ps);
+		}
+
+		return null;
 	}
 
 	public static  <T> List<T> zQueryUpdate(final Mode mode, final Class<T> cls, final String sql) {

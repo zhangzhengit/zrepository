@@ -3,6 +3,8 @@ package com.vo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -932,6 +934,8 @@ public class ZRepositoryMain {
 			joiner.add(parameter.getName());
 		}
 
+        final Class classType = getClassType(method);
+
 		final String modeString = modeString(method);
 
 		final String u = sqlTemplate.trim().toUpperCase();
@@ -949,8 +953,26 @@ public class ZRepositoryMain {
 					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
 		}
 
-		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		return "return " + SU.class.getCanonicalName()
+				+ "." + subClassMethodName + "(" + modeString + "," + classType.getCanonicalName()
+				+ ",sql," + joiner.toString() + ");";
+	}
+
+	private static Class getClassType(final Method method) {
+
+		final Type returnType = method.getGenericReturnType();
+		if (returnType instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) returnType;
+            final Type[] typeArguments = parameterizedType.getActualTypeArguments();
+            if (typeArguments.length > 0) {
+                final Type typeArgument = typeArguments[0];
+                if (typeArgument instanceof Class) {
+                    final Class<?> typeClass = (Class<?>) typeArgument;
+                    return typeClass;
+                }
+            }
+        }
+		return null;
 	}
 
 	private static String gROUP_findByXX(final Method method, final String methodname) {
