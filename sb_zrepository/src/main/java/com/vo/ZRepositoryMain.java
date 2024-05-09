@@ -551,19 +551,12 @@ public class ZRepositoryMain {
 			zmSet.add(zm);
 			final String sql = ZRSqlMap.get(myZRClass.getCanonicalName(), zm.getName());
 
-			// FIXME 2024年5月5日 下午10:45:55 zhangzhen: debug 用，记得删除掉
-			// 开始
-			if("selectIdLimit5".equals(method.getName())) {
-				final int x = 20;
-			}
 			// 结束
 			final String body = "String sql = \""+sql+"\";";
 
 			final String body2 = EMTPY;
-//			final String methodS = "return " + SU.class.getCanonicalName() + ".findById(id,classType,sql);";
 			final String methodS = getSuMethod(method.getName(), method);
 
-//			final String body = sql;
 			zm.setBody("\t" +body + "\n\t" + body2  + "\n\t" + methodS);
 		}
 		return zmSet;
