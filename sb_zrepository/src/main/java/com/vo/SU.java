@@ -1535,10 +1535,6 @@ public class SU {
 
 	public static <T> List<T> zQuerySelect(final Mode mode, final Object object, final String sql, final Object... arg)
 			throws InstantiationException {
-		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
-		// FIXME 2024年5月5日 下午11:04:15 zhangzhen:
-		// 这四个方法先考虑好返回类型怎么确定，是根据自定义方法的返回类型来确定吗
-
 		final Class cls = (Class) object;
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
