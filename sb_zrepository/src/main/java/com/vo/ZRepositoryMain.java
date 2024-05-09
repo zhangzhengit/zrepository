@@ -953,14 +953,15 @@ public class ZRepositoryMain {
 					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
 		}
 
-		return "return " + SU.class.getCanonicalName()
-				+ "." + subClassMethodName + "(" + modeString + "," + classType.getCanonicalName()
-				+ ",sql," + joiner.toString() + ");";
+		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + ","
+				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return r;
 	}
 
 	private static Class getClassType(final Method method) {
 
 		final Type returnType = method.getGenericReturnType();
+		// 如果有泛型参数，如List<MyEntity>
 		if (returnType instanceof ParameterizedType) {
             final ParameterizedType parameterizedType = (ParameterizedType) returnType;
             final Type[] typeArguments = parameterizedType.getActualTypeArguments();
@@ -972,7 +973,9 @@ public class ZRepositoryMain {
                 }
             }
         }
-		return null;
+
+		final Class<?> returnType2 = method.getReturnType();
+		return returnType2;
 	}
 
 	private static String gROUP_findByXX(final Method method, final String methodname) {

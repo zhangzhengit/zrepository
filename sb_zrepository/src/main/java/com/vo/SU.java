@@ -54,6 +54,7 @@ import cn.hutool.core.util.StrUtil;
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 public class SU {
 
+	private static final int NO_UPDATE = -1;
 	private static final String COLUMN = "COLUMN";
 	private static final String LIMIT = "limit";
 	private static final ZLog2 LOG = ZLog2.getInstance();
@@ -1588,9 +1589,48 @@ public class SU {
 		return null;
 	}
 
-	public static  <T> List<T> zQueryUpdate(final Mode mode, final Class<T> cls, final String sql) {
-		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
-		return Collections.emptyList();
+	public static int zQueryUpdate(final Mode mode, final Object object, final String sql,
+			final Object... arg) throws IllegalAccessException {
+
+		final Class cls = (Class) object;
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final Connection connection = zc.getConnection();
+
+		try {
+			connection.setAutoCommit(false);
+		} catch (final SQLException e1) {
+			e1.printStackTrace();
+		}
+
+		PreparedStatement prepareStatement = null;
+		try {
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
+			}
+			prepareStatement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+			if (arg != null) {
+				int n = 1;
+				for (final Object a1 : arg) {
+					prepareStatement.setObject(n, a1);
+					n++;
+				}
+			}
+			final int executeUpdate = prepareStatement.executeUpdate();
+			return executeUpdate;
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			INSTANCE.returnZConnectionAndCommit(zc);
+			close(prepareStatement);
+		}
+
+		return NO_UPDATE;
 	}
 
 	public static  <T> List<T> zQueryDelete(final Mode mode, final Class<T> cls, final String sql) {
