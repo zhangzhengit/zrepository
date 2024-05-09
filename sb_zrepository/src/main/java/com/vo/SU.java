@@ -54,6 +54,7 @@ import cn.hutool.core.util.StrUtil;
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 public class SU {
 
+	private static final int NO_DELETE_OR_DELETE = -1;
 	private static final int NO_DELETE = -1;
 	private static final int NO_UPDATE = -1;
 	private static final String COLUMN = "COLUMN";
@@ -1593,6 +1594,12 @@ public class SU {
 	public static int zQueryUpdate(final Mode mode, final Object object, final String sql,
 			final Object... arg) throws IllegalAccessException {
 
+		final Integer updateOrDelete = updateOrDelete(mode, object, sql, arg);
+
+		return updateOrDelete;
+	}
+
+	private static Integer updateOrDelete(final Mode mode, final Object object, final String sql, final Object... arg) {
 		final Class cls = (Class) object;
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
@@ -1631,51 +1638,15 @@ public class SU {
 			close(prepareStatement);
 		}
 
-		return NO_UPDATE;
+		return NO_DELETE_OR_DELETE;
 	}
 
 	public static <T> Integer zQueryDelete(final Mode mode, final Object object, final String sql,
 			final Object... arg) {
 
-		final Class cls = (Class) object;
+		final Integer updateOrDelete = updateOrDelete(mode, object, sql, arg);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
-		final Connection connection = zc.getConnection();
-
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
-
-		PreparedStatement prepareStatement = null;
-		try {
-			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
-			}
-			prepareStatement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
-			if (arg != null) {
-				int n = 1;
-				for (final Object a1 : arg) {
-					prepareStatement.setObject(n, a1);
-					n++;
-				}
-			}
-			final int executeUpdate = prepareStatement.executeUpdate();
-			return executeUpdate;
-		} catch (SQLException | SecurityException e) {
-			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
-		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
-			close(prepareStatement);
-		}
-
-		return NO_DELETE;
+		return updateOrDelete;
 	}
 
 	public static  <T> List<T> zQueryInsert(final Mode mode, final Class<T> cls, final String sql) {
