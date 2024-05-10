@@ -43,6 +43,7 @@ import com.vo.transaction.ZTransactionAspect;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * @see ZRepository 接口和其子接口里的方法的具体实现
@@ -1559,6 +1560,14 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+
+			final int argcount = StrUtil.count(sql, '?');
+			if (argcount != arg.length) {
+				final String message = "@" + ZQuery.class.getCanonicalName() + " 自定义SQL参数个数[" + argcount
+						+ "]和方法传入的参数个数[" + arg.length + "]不匹配";
+				throw new ZQuerySQLException(message);
+			}
+
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
 			}

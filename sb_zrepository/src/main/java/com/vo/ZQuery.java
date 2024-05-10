@@ -26,6 +26,10 @@ import java.lang.annotation.Target;
  *
  */
 // FIXME 2024年5月9日 下午11:30:48 zhangzhen: 到此为止，只简单测试了select 和update的 1 2 3 4 个参数的方法，继续测试：
+
+// FIXME 2024年5月10日 下午9:07:42 zhangzhen: MYSQL 不支持 Array array = connection.createArrayOf("VARCHAR", valueArray) 这个操作，报错 SQLFeatureNotSupportedException？
+//通义说的，这行代码是chatgpt给我的
+
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD })
