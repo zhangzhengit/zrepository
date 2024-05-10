@@ -1256,19 +1256,27 @@ public class ZRepositoryMain {
 		String m = methodName;
 		final Field[] fs = typeClass.getDeclaredFields();
 
+		// 现在问题:ZEntity 有字段 time 和 timestamp ，在此会处理 findBystamp，因为time在前。
+		// 但显然不能要求用户自定义字段的顺序必须怎样，所以在此重排字段顺序
+		// fs name.length 排序看是否解决问题
+
 		Arrays.sort(fs, (o1, o2) -> {
 
+//			final String name1 = o1.getName();
+//			final String name2 = o2.getName();
+//
+//			final String upFieldName1 = String.valueOf(name1.charAt(0)).toUpperCase() + name1.substring(1);
+//			final String upFieldName2 = String.valueOf(name2.charAt(0)).toUpperCase() + name2.substring(1);
+//
+//			final int i1 = methodName.indexOf(upFieldName1);
+//			final int i2 = methodName.indexOf(upFieldName2);
+//
+//			final int v = Integer.compare(i1, i2);
+//
+//			return v;
 			final String name1 = o1.getName();
 			final String name2 = o2.getName();
-
-			final String upFieldName1 = String.valueOf(name1.charAt(0)).toUpperCase() + name1.substring(1);
-			final String upFieldName2 = String.valueOf(name2.charAt(0)).toUpperCase() + name2.substring(1);
-
-			final int i1 = methodName.indexOf(upFieldName1);
-			final int i2 = methodName.indexOf(upFieldName2);
-
-			final int v = Integer.compare(i1, i2);
-
+			final int v = Integer.compare(name2.length(), name1.length());
 			return v;
 		});
 

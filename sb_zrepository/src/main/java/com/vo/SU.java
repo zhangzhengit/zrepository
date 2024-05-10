@@ -1025,12 +1025,22 @@ public class SU {
 			connection.setAutoCommit(false);
 			// "select * from user where id = ?"
 			final String s = sql;
-			ps = connection.prepareStatement(s);
-			ps.setObject(1, fieldValue);
 
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
+			ps = connection.prepareStatement(s);
+
+			if (fieldValue.getClass().equals(Character.class)) {
+				// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
+				ps.setString(1, String.valueOf(String.valueOf(fieldValue).charAt(0)));
+			} else if (fieldValue.getClass().equals(Float.class)) {
+				// FIXME 2024年5月10日 下午10:22:39 zhangzhen: Mysql float依然不行，查不出数据
+				ps.setFloat(1, (Float) fieldValue);
+			} else {
+				ps.setObject(1, fieldValue);
+			}
+
 
 			rs = ps.executeQuery();
 

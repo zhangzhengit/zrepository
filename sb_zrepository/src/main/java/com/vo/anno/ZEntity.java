@@ -14,6 +14,9 @@ import java.lang.annotation.Target;
  * @date 2023年6月15日
  *
  */
+// FIXME 2024年5月10日 下午10:18:36 zhangzhen: mysql float 类型 where column = value 查不出数据
+// 考虑怎么做，是限制用mysql时ZEntity不允许使用float？还是在jdbc层面处理？
+
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
