@@ -54,7 +54,7 @@ import cn.hutool.core.util.StrUtil;
  */
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 public class SU {
-
+// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
 	private static final int NO_DELETE_OR_DELETE = -1;
 	private static final int NO_DELETE = -1;
 	private static final int NO_UPDATE = -1;
@@ -337,7 +337,7 @@ public class SU {
 			}
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sqlT, idList);
+				LOG.info("根据主键批量删除 - [{}]个主键值 - [{}]", idList.size(), sql);
 			}
 
 			final int executeUpdate = ps.executeUpdate();
@@ -826,7 +826,7 @@ public class SU {
 			final String s2 = s.replace("?", param);
 			ps = connection.prepareStatement(s2);
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, param);
+				LOG.info("根据主键批量查询 - [{}]个主键值 - [{}]", idList.size(), s);
 			}
 
 			rs = ps.executeQuery();
