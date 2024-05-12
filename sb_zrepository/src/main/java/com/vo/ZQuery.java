@@ -30,6 +30,8 @@ import java.lang.annotation.Target;
 // FIXME 2024年5月10日 下午9:07:42 zhangzhen: MYSQL 不支持 Array array = connection.createArrayOf("VARCHAR", valueArray) 这个操作，报错 SQLFeatureNotSupportedException？
 //通义说的，这行代码是chatgpt给我的
 
+// FIXME 2024年5月12日 下午8:43:07 zhangzhen: 自定义 select where xx in (?) 即上面createArrayOf的的问题。还有问题
+
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD })
