@@ -1030,7 +1030,7 @@ public class SU {
 				// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
 				ps.setString(1, String.valueOf(String.valueOf(fieldValue).charAt(0)));
 			} else if (fieldValue.getClass().equals(Float.class)) {
-				// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。继续测试有何问题
+				// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。 TODO 继续测试有何问题
 				ps.setDouble(1, Float.parseFloat(String.valueOf(fieldValue)));
 			} else {
 				ps.setObject(1, fieldValue);
