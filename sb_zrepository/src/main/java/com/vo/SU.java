@@ -118,7 +118,7 @@ public class SU {
 				e.printStackTrace();
 			}
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zc);
+			returnZC(zc);
 		}
 
 		return null;
@@ -251,8 +251,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zc);
 			close(ps);
+			returnZC(zc);
 		}
 		// XXX 直接返回T可以吗？
 		return t;
@@ -303,7 +303,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(ps);
 		}
 
@@ -352,12 +352,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-//			try {
-//				connection.commit();
-//			} catch (final SQLException e1) {
-//				e1.printStackTrace();
-//			}
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(ps);
 		}
 
@@ -400,7 +395,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 			close(ps);
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 		}
 
 		return false;
@@ -446,7 +441,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -541,7 +536,7 @@ public class SU {
 			}
 
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -632,7 +627,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 		}
 
 		return null;
@@ -762,7 +757,7 @@ public class SU {
 				final T t = newT(cls, rs, metaData, count);
 				r.add(t);
 			}
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			return r;
 
 		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
@@ -774,7 +769,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -804,7 +799,7 @@ public class SU {
 
 	public static <T> List<T> findByIdIn(final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
 
-		final ZConnection zc = INSTANCE.getZConnection(mode);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -849,7 +844,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -901,7 +896,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -909,7 +904,7 @@ public class SU {
 	}
 
 	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
-		final ZConnection zc = INSTANCE.getZConnection(mode);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		return findById(mode, id, cls, sql, zc);
 	}
 
@@ -1007,7 +1002,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1035,8 +1030,8 @@ public class SU {
 				// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
 				ps.setString(1, String.valueOf(String.valueOf(fieldValue).charAt(0)));
 			} else if (fieldValue.getClass().equals(Float.class)) {
-				// FIXME 2024年5月10日 下午10:22:39 zhangzhen: Mysql float依然不行，查不出数据
-				ps.setFloat(1, (Float) fieldValue);
+				// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。继续测试有何问题
+				ps.setDouble(1, Float.parseFloat(String.valueOf(fieldValue)));
 			} else {
 				ps.setObject(1, fieldValue);
 			}
@@ -1063,7 +1058,7 @@ public class SU {
 			}
 			e.printStackTrace();
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1134,7 +1129,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, statement);
 		}
 
@@ -1181,7 +1176,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 		return Collections.emptyList();
@@ -1226,7 +1221,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 
 			close(rs, ps);
 		}
@@ -1273,7 +1268,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 		return Collections.emptyList();
@@ -1318,11 +1313,15 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
 		return Collections.emptyList();
+	}
+
+	private static void returnZC(final ZConnection zc) {
+		INSTANCE.returnZConnectionAndCommit(zc);
 	}
 
 	public static <T> List<T> findByXXIsNull(final Mode mode, final Class<T> cls, final String sql) {
@@ -1362,7 +1361,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1403,7 +1402,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1448,7 +1447,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1496,7 +1495,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1585,7 +1584,7 @@ public class SU {
 			if (arg != null) {
 				int n = 1;
 				for (final Object a1 : arg) {
-					ps.setObject(n, a1);
+ 					ps.setObject(n, a1);
 					n++;
 				}
 			}
@@ -1609,7 +1608,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(rs, ps);
 		}
 
@@ -1659,7 +1658,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			INSTANCE.returnZConnectionAndCommit(zc);
+			returnZC(zc);
 			close(prepareStatement);
 		}
 
