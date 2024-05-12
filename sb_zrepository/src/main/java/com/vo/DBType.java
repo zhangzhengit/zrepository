@@ -16,6 +16,8 @@ import com.google.common.collect.Sets;
  */
 public class DBType {
 
+	// FIXME 2024年5月13日 上午12:34:27 zhangzhen: TODO aliyun 已启动 pgsql，开始写pgsql相关的
+
 	/**
 	 * java > mysql
 	 */
