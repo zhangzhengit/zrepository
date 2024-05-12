@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD })
 // FIXME 2023年9月4日 下午7:56:01 zhanghen: TODO 加一个属性值，可以指定对应的列名，然后可以类的字段名称可以和列名不一致，通过属性值指定列名
 public @interface ZID {
 
