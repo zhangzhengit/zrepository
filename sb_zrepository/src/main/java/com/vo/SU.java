@@ -1502,7 +1502,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static void close(final AutoCloseable... autoCloseables) {
+	public static void close(final AutoCloseable... autoCloseables) {
 		for (final AutoCloseable autoCloseable : autoCloseables) {
 			if (autoCloseable == null) {
 				continue;

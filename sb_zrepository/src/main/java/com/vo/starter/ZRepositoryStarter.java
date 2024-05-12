@@ -99,6 +99,8 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 
 		// 1.1 验证ZRepository子接口指定的泛型类的@ZEntity指定的tableName是否存在
 		ZRepositoryMain.checkTableExist(zrSubinterfaceSet);
+		// 1.2  create table 语句
+		ZRepositoryMain.showCreateTable(zrSubinterfaceSet);
 
 		// 2 给ZRepository的子接口的每个方法生成 SQL
 		final List<SqlResult> sqlForZRSubclassList = ZRepositoryMain.generateSqlForZRSubclass(zrSubinterfaceSet);

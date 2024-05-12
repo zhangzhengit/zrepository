@@ -229,6 +229,83 @@ public class ZRepositoryMain {
 		return r;
 	}
 
+	/**
+	 * 展示出 create table 语句
+	 *
+	 * @param zrClassSet
+	 */
+	public synchronized static void showCreateTable(final Set<Class<?>> zrClassSet) {
+		final List<Object> zel = extractedZEntity(zrClassSet);
+		if (CollUtil.isEmpty(zel)) {
+			return;
+		}
+
+		for (final Object object : zel) {
+			final ZEntity annotation = (ZEntity) ((Class)object).getAnnotation(ZEntity.class);
+			final String tableName = annotation.tableName();
+			final ZConnection write = ZCPool.getInstance().getZConnection(Mode.WRITE);
+			showCreateTable0(tableName, write);
+			final ZConnection read = ZCPool.getInstance().getZConnection(Mode.READ);
+			showCreateTable0(tableName, read);
+		}
+
+	}
+
+	/**
+	 * @param tableName
+	 * @param zc
+	 */
+	// FIXME 2024年5月13日 上午12:03:38 zhangzhen: 考虑要做什么功能，在此得到了create table语句了，要不要做比如：
+	// 1 校验读写数据源的引擎什么的必须保持一致（引擎似乎没必要一致，比如：写用innodb 读用myisam ）？
+	// 2 之后是否做比如：根据 @ZEntity 注解来生成表结果DDL语句的功能，参考create table的返回结果
+	private static void showCreateTable0(final String tableName, final ZConnection zc) {
+
+		final Connection connection = zc.getConnection();
+		try {
+			connection.setAutoCommit(false);
+
+			final String show = "show create table " + tableName;
+			LOG.info("开始从[{}]数据源[{}]语句", zc.getMode(), show);
+
+			final PreparedStatement ps = connection.prepareStatement(show);
+			final ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				final String v = rs.getString(2);
+				LOG.info("在[{}]数据源[{}]语句的结果=[{}]", zc.getMode(), show, v);
+			}
+
+			SU.close(rs, ps);
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		} finally {
+			ZCPool.getInstance().returnZConnectionAndCommit(zc);
+		}
+	}
+
+	/**
+	 * 过滤出带有 @ZEntity 注解的类
+	 *
+	 * @param zrClassSet
+	 * @return
+	 */
+	private static List<Object> extractedZEntity(final Set<Class<?>> zrClassSet) {
+		final List<Object> x = Lists.newArrayList();
+		for (final Class<?> class1 : zrClassSet) {
+			final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(class1);
+			final String type = typeArray[0];
+			try {
+				final Class<?> typeClass = Class.forName(type);
+				final ZEntity zEntity = typeClass.getAnnotation(ZEntity.class);
+				if (zEntity != null) {
+					x.add(typeClass);
+				}
+			} catch (final ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return x;
+	}
 
 	// FIXME 2023年9月5日 下午9:46:27 zhanghen: 改为private，并且在第一步scanZR子接口时就校验
 	public synchronized static void checkTableExist(final Set<Class<?>> zrClassSet) {
