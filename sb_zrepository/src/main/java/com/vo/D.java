@@ -27,8 +27,16 @@ public class D {
 
 	/**
 	 * Entity中的字段名称数组，如:{"isDelete"}：
+	 *
+	 * 注意：这个是按Class中的Field.getName().length()倒序排序的
+	 *
 	 */
 	private List<String> filedName = new ArrayList<>();
+
+	/**
+	 * 本字段与 filedName 不同是，本字段没排序过，顺序按 Class.getDeclaredFields() 来存放
+	 */
+	private List<String> filedNameOriginalOrder;
 
 	/**
 	 * methodName 去除 了filedName后的结果，如：findBy

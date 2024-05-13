@@ -367,7 +367,7 @@ public class ZRepositoryMain {
 					final String tableName = zEntity.tableName();
 					final String sqlTemplateTemp = sqlTemplate.replace(TABLE_NAME, tableName);
 
-					final String sqlFinal = checkMethodName(typeClass, methodName, sqlTemplateTemp, methodSQL);
+					final String sqlFinal = checkMethodName(typeClass, methodName, sqlTemplateTemp, methodSQL, zrSubClass);
 
 					final SqlResult result = new SqlResult(zrSubClassName, methodName, sqlFinal);
 
@@ -427,16 +427,16 @@ public class ZRepositoryMain {
 	 * @param methodName ZRepository 子类中的自定义的findByXX的方法名称,如findByUserId
 	 * @param sql        sql模板，如：select * from user where @ = ?
 	 * @param methodSQL TODO
+	 * @param zrClass ZRepository 的用户自定义的子接口
 	 * @return 返回可用于java.sql.PreparedStatement 的SQL语句， 如 : select * from user where
 	 *         id = ?
 	 *
 	 */
 	private static String checkMethodName(final Class<?> typeClass, final String methodName, final String sql,
-			final MethodSQL methodSQL) {
+			final MethodSQL methodSQL, final Class zrClass) {
 		if (methodSQL.isZQuery()) {
 			return methodSQL.getSqlTemplate();
 		}
-
 
 		// methodName 从每个大写字母分开分成一个数组，如findByUserId 分成[find, By, User, Id]
 		final List<String> fnLIst = getDeclaredFieldName(typeClass);
@@ -483,10 +483,29 @@ public class ZRepositoryMain {
 			}
 		}
 
+		final List<Method> ml = Arrays.stream(zrClass.getMethods()).filter(m -> m.getName().equals(methodName))
+				.collect(Collectors.toList());
+		if (ml.size() > 1) {
+			throw new IllegalArgumentException(
+					"@" + ZRepository.class.getCanonicalName() + " 类 " + typeClass.getSimpleName()
+							+ " 有重复的方法 [" + ml + "] ，不允许重名！"
+			);
+		}
+
+		final Method method = ml.get(0);
+		final Parameter[] ps = method.getParameters();
+
 		String sqlA = sql;
-		for (final String fieldName : fieldNameList) {
-			final String dbColumnName = ZFieldConverter.toDbField(fieldName);
-			sqlA = sqlA.replaceFirst("@", dbColumnName);
+		if (isZRClassMethod(method)) {
+			for (final String fieldName : d.getFiledName()) {
+				final String dbColumnName = ZFieldConverter.toDbField(fieldName);
+				sqlA = sqlA.replaceFirst("@", dbColumnName);
+			}
+		} else {
+			for (final Parameter p : ps) {
+				final String dbColumnName = ZFieldConverter.toDbField(p.getName());
+				sqlA = sqlA.replaceFirst("@", dbColumnName);
+			}
 		}
 
 		// 仍然包含 @，则说明参数和字段数目对不上
@@ -496,6 +515,17 @@ public class ZRepositoryMain {
 
 		return sqlA;
 
+	}
+
+	private static boolean isZRClassMethod(final Method method) {
+		final Method[] ms = ZRepository.class.getDeclaredMethods();
+		for (final Method method2 : ms) {
+			if(method.equals(method2)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static List<String> getDeclaredFieldName(final Class<?> typeClass) {
@@ -1370,6 +1400,21 @@ public class ZRepositoryMain {
 		}
 
 		d.setSqlKeyword(m);
+
+		final ArrayList<String> filedNameOriginalOrder = Lists.newArrayList();
+		final List<String> fn = d.getFiledName();
+		final Field[] fa = typeClass.getDeclaredFields();
+		for (final Field element : fa) {
+			final Optional<String> o = fn.stream().filter(f -> f.equals(element.getName())).findFirst();
+			if(!o.isPresent()) {
+				continue;
+			}
+			filedNameOriginalOrder.add(o.get());
+		}
+
+		d.setFiledNameOriginalOrder(filedNameOriginalOrder);
+
+		// FIXME 2024年5月13日 下午9:29:27 zhangzhen:加一个没排序的顺序，
 		return d;
 	}
 

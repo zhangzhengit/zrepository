@@ -973,7 +973,7 @@ public class SU {
 
 			int i = 1;
 			for (final Object object : fieldArray) {
-				ps.setObject(i, object);
+				setXX_fieldValue(object, ps, i);
 				i++;
 			}
 

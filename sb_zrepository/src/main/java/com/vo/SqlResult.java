@@ -1,6 +1,7 @@
 package com.vo;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 
 /**
@@ -12,6 +13,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
+@Data
 public class SqlResult {
 
 	/**
