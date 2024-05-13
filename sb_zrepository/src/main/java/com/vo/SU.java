@@ -1026,16 +1026,9 @@ public class SU {
 			}
 			ps = connection.prepareStatement(s);
 
-			if (fieldValue.getClass().equals(Character.class)) {
-				// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
-				ps.setString(1, String.valueOf(String.valueOf(fieldValue).charAt(0)));
-			} else if (fieldValue.getClass().equals(Float.class)) {
-				// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。 TODO 继续测试有何问题
-				ps.setDouble(1, Float.parseFloat(String.valueOf(fieldValue)));
-			} else {
-				ps.setObject(1, fieldValue);
-			}
+			final int index = 1;
 
+			setXX_fieldValue(fieldValue, ps, index);
 
 			rs = ps.executeQuery();
 
@@ -1063,6 +1056,18 @@ public class SU {
 		}
 
 		return Collections.emptyList();
+	}
+
+	private static void setXX_fieldValue(final Object fieldValue, final PreparedStatement ps, final int index) throws SQLException {
+		if (fieldValue.getClass().equals(Character.class)) {
+			// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
+			ps.setString(index, String.valueOf(String.valueOf(fieldValue).charAt(0)));
+		} else if (fieldValue.getClass().equals(Float.class)) {
+			// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。 TODO 继续测试有何问题
+			ps.setDouble(index, Float.parseFloat(String.valueOf(fieldValue)));
+		} else {
+			ps.setObject(index, fieldValue);
+		}
 	}
 
 	public static <T> List<T> findByXXIn(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
@@ -1414,7 +1419,7 @@ public class SU {
 		return count(mode, cls, sql,zc);
 	}
 
-	public static <T> Long countingByXX(final Mode mode, final Class<T> cls, final String sql, final Object field) {
+	public static <T> Long countingByXX(final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1424,10 +1429,22 @@ public class SU {
 		try {
 			final String s = sql;
 			ps = connection.prepareStatement(s);
-			ps.setObject(1, field);
+
+			// FIXME 2024年5月13日 下午8:59:22 zhangzhen: 这里继续考虑好，是 生成代理类时，把T和Field也传进来吗？方便在此setXXX赋值
+			// 否则只能 判断参数值类型来赋值，可能声明或传来的参数值类型不符，要到sql执行了才报错就太晚了，报错越早越好。
+
+			final int index = 1;
+			setXX_fieldValue(fieldValue, ps, index);
+//			if (fieldValue == null) {
+//				ps.setObject(1, null);
+//			} else if (fieldValue instanceof Character) {
+//				ps.setString(1, String.valueOf(fieldValue));
+//			} else {
+//				ps.setObject(1, fieldValue);
+//			}
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, field);
+				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
 			rs = ps.executeQuery();
