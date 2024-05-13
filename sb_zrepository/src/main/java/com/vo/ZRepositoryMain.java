@@ -229,6 +229,18 @@ public class ZRepositoryMain {
 		return r;
 	}
 
+	public synchronized static void showSupportedMethod() {
+		System.out.println();
+
+		final HashMap<String, HashMap<String, String>> map = MethodRegex.R_M;
+		final Set<String> keySet = map.keySet();
+		System.out.println("@" + ZRepository.class.getCanonicalName() + " 子接口中支持的声明式方法(共有" + keySet.size() + "个)形式如下：");
+		for (final String m : keySet) {
+			System.out.println("\t" + m);
+		}
+
+		System.out.println();
+	}
 	/**
 	 * 展示出 create table 语句
 	 *
