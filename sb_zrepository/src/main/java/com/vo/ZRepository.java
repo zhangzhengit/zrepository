@@ -10,6 +10,18 @@ import com.vo.core.Page;
  * 顶级接口，自定义interface来 extends 此interface，注意自定义interface里面只可以有数据操作相关的方法.
  * 并且自定义interface仅 extends 此interface，不要实现任何其他接口
  *
+ * 子接口中支持两种方法：
+
+	FIXME 2024年5月13日 下午10:55:47 zhangzhen: 考虑怎么在启动时校验，有点复杂，因为支持很多种声明式方法，需要仔细分辨，并且以后还可能
+ 		支持更多形式，更要慎重。当前是否考虑先校验简单的比如 findByXX、findByXXAndXX、findByXXNot 之类的？
+
+ * 1、声明式方法，参数类型、名称、顺序都必须和方法名称中保持一致，如：
+ * 	List<BlobEntity> findByDateAndInteger1(Date date,Integer integer1);
+
+ * 2、自定义查询，使用 @ZQuery 注解自定义SQL，如：
+ * 	@ZQuery(sql = "select * from blobt where id >= ?")
+	List<BlobEntity> selectGTEId(Integer id);
+
  *
  * @param <T>  @ZEntity 标记的类
  * @param <ID> @ZEntity 标记的类里的 @ZID 字段的类型
