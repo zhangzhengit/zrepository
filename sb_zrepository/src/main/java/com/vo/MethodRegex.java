@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -120,6 +121,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_Count = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_PAGE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_CountingByXXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXOrYY = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_EXISTBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_DELETEBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_SAVEALL = new LinkedHashMap<>();
@@ -155,6 +157,8 @@ public class MethodRegex {
 
 		// countingByXXX
 		REGEX_MAP_CountingByXXX.put(countingByXXX, "select count(*) from TABLE_NAME  where @ = ?;");
+		// findByXXOrXX
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYY, "select * from TABLE_NAME  where @ = ? or @ = ?;");
 
 		// existById
 		REGEX_MAP_EXISTBYID.put(existById, "select count(*) from TABLE_NAME  where @ = ?;");
@@ -237,6 +241,7 @@ public class MethodRegex {
 		R_M.put(GROUP_DeleteById, REGEX_MAP_DELETEBYID);
 		R_M.put(GROUP_EXISTBYId, REGEX_MAP_EXISTBYID);
 		R_M.put(GROUP_CountingByXXX, REGEX_MAP_CountingByXXX);
+		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
 		R_M.put(GROUP_count, REGEX_MAP_Count);
 		R_M.put(GROUP_page, REGEX_MAP_PAGE);
 	}
@@ -286,6 +291,65 @@ public class MethodRegex {
 	public static ArrayList<String> getFieldFromMethodname(final String methdoName) {
 		final ArrayList<String> sp = SqlPattern.sp(methdoName);
 		return sp;
+
+	}
+
+	public static boolean isMethod_ANALYSIS_BY_METHOD_PARAMETERS(final Method method) {
+		for (final HashMap<String, String> hashMap : R_M.values()) {
+			final Set<Entry<String, String>> es = hashMap.entrySet();
+			for (final Entry<String, String> entry : es) {
+				if (method.getName().matches(entry.getKey())) {
+					final boolean contains = ANALYSIS_BY_METHOD_PARAMETERS.contains(entry.getKey());
+					return contains;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean isMethod_ANALYSIS_BY_ZENTITY_FIELD(final Method method) {
+		for (final HashMap<String, String> hashMap : R_M.values()) {
+			final Set<Entry<String, String>> es = hashMap.entrySet();
+			for (final Entry<String, String> entry : es) {
+				if (method.getName().matches(entry.getKey())) {
+					final boolean contains = ANALYSIS_BY_ZENTITY_FIELD.contains(entry.getKey());
+					return contains;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private final static Set<String> ANALYSIS_BY_METHOD_PARAMETERS = Sets.newConcurrentHashSet();
+	private final static Set<String> ANALYSIS_BY_ZENTITY_FIELD =  Sets.newConcurrentHashSet();
+	static {
+		// FIXME 2024年5月14日 下午9:04:36 zhangzhen: 规则分两个组；一个是根据method.getps 的个数、类型、名称来解析的比如简单的findByXX
+		// 一个是 根据 ZEntity.field来解析的比如findByXXOrderByXXLimit
+
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXGreaterThan);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXNot);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXIsNull);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThan);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThanEquals);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXStartingWith);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXEndingWith);
+
+
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXDescLimit);
+
+
 
 	}
 

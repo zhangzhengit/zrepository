@@ -483,7 +483,7 @@ public class ZRepositoryMain {
 				.map(x -> x.length() == 1 ? x.toLowerCase() : Character.toLowerCase(x.charAt(0)) + x.substring(1))
 				.collect(Collectors.toList());
 
-
+		
 		for (final String fn : fieldNameList) {
 			final Optional<String> findAny = fnLIst.stream().filter(f1 -> f1.equalsIgnoreCase(fn)).findAny();
 			if (!findAny.isPresent()) {
@@ -508,12 +508,13 @@ public class ZRepositoryMain {
 		final Parameter[] ps = method.getParameters();
 
 		String sqlA = sql;
-		if (isZRClassMethod(method)) {
+
+		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
 			for (final String fieldName : d.getFiledName()) {
 				final String dbColumnName = ZFieldConverter.toDbField(fieldName);
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
 			}
-		} else {
+		} else if( MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
 			for (final Parameter p : ps) {
 				final String dbColumnName = ZFieldConverter.toDbField(p.getName());
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
@@ -526,7 +527,6 @@ public class ZRepositoryMain {
 		}
 
 		return sqlA;
-
 	}
 
 	private static boolean isZRClassMethod(final Method method) {
@@ -788,6 +788,10 @@ public class ZRepositoryMain {
 			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
 				return gROUP_findByXXLike(method, methodname);
 			}
+			if (methodname.matches(MethodRegex.findByXXOrYY)) {
+				// FIXME 2024年5月14日 下午9:28:38 zhangzhen: 在写or了
+				return gROUP_findByXXOrYY(method, methodname);
+			}
 
 			if (methodname.matches(MethodRegex.GROUP_count)) {
 				return "return " + SU.class.getCanonicalName() + ".count(" + modeString + ",classType,sql);";
@@ -917,7 +921,8 @@ public class ZRepositoryMain {
 					joiner.add(parameter.getName());
 				}
 				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit("+modeString+",classType,sql," + joiner.toString()	+ ");";
+				final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit("+modeString+",classType,sql," + joiner.toString()	+ ");";
+				return r;
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
@@ -965,6 +970,25 @@ public class ZRepositoryMain {
 		return EMTPY;
 	}
 
+	private static String gROUP_findByXXOrYY(final Method method, final String key) {
+		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.findByXXOrYY);
+		final Set<Entry<String, String>> entrySet = hh.entrySet();
+		for (final Entry<String, String> entry : entrySet) {
+			if (key.matches(entry.getKey())) {
+				final Parameter[] parameters2 = method.getParameters();
+				final StringJoiner joiner = new StringJoiner(",");
+				for (final Parameter parameter : parameters2) {
+					joiner.add(parameter.getName());
+				}
+				final String modeString = modeString(method);
+				final String r = "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,sql,"
+						+ joiner.toString() + ");";
+				return r;
+			}
+		}
+		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
+		return EMTPY;
+	}
 	private static String gROUP_findByXXLike(final Method method, final String key) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXLike);
 		final Set<Entry<String, String>> entrySet = hh.entrySet();
