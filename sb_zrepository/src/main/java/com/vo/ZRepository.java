@@ -138,6 +138,8 @@ public interface ZRepository<T, ID> {
 	 * @return
 	 *
 	 */
+	// FIXME 2024年5月14日 下午8:09:51 zhangzhen: mysql deleteByIdIn 一千万个id 报错：怎么办，是提示修改server参数，还是限制此方法不能传太多参数？
+	// Packet for query is too large (78,888,929 > 52,428,800). You can change this value on the server by setting the 'max_allowed_packet' variable.
 	boolean deleteByIdIn(List<ID> idList);
 
 	/**
