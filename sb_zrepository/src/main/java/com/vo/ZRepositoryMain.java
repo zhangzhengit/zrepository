@@ -483,7 +483,7 @@ public class ZRepositoryMain {
 				.map(x -> x.length() == 1 ? x.toLowerCase() : Character.toLowerCase(x.charAt(0)) + x.substring(1))
 				.collect(Collectors.toList());
 
-		
+
 		for (final String fn : fieldNameList) {
 			final Optional<String> findAny = fnLIst.stream().filter(f1 -> f1.equalsIgnoreCase(fn)).findAny();
 			if (!findAny.isPresent()) {
@@ -761,6 +761,10 @@ public class ZRepositoryMain {
 				return gROUP_findByXXXStartingWith(method, methodname);
 			}
 
+			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)) {
+				return gROUP_findByXXGreaterThanEquals(method, methodname);
+			}
+
 			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)) {
 				return gROUP_findByXXGreaterThan(method, methodname);
 			}
@@ -872,6 +876,24 @@ public class ZRepositoryMain {
 	}
 
 
+	private static String gROUP_findByXXGreaterThanEquals(final Method method, final String key) {
+		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXGreaterThanEquals);
+		final Set<Entry<String, String>> entrySet = hh.entrySet();
+		for (final Entry<String, String> entry : entrySet) {
+			if (key.matches(entry.getKey())) {
+				final Parameter[] parameters2 = method.getParameters();
+				final StringJoiner joiner = new StringJoiner(",");
+				for (final Parameter parameter : parameters2) {
+					joiner.add(parameter.getName());
+				}
+				final String modeString = modeString(method);
+				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+			}
+		}
+		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
+		return EMTPY;
+	}
 	private static String gROUP_findByXXGreaterThan(final Method method, final String key) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXGreaterThan);
 		final Set<Entry<String, String>> entrySet = hh.entrySet();

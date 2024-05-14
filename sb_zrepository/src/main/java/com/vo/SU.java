@@ -65,6 +65,7 @@ public class SU {
 
 	private static final ZCPool INSTANCE = ZCPool.getInstance();
 
+	// FIXME 2024年5月14日 下午10:22:14 zhangzhen: SU.page还要改
 	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final String sql, final Integer size, final Integer page) {
 		System.out
 				.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "SU.page()");
@@ -1070,6 +1071,7 @@ public class SU {
 		}
 	}
 
+	// FIXME 2024年5月14日 下午9:49:14 zhangzhen: in 还需要特殊处理 blob类型的，还没测试，不知道要不要改？
 	public static <T> List<T> findByXXIn(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);

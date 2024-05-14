@@ -150,6 +150,7 @@ public class MethodRegex {
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? order by @ asc limit ?,?");
 
 		// page
+		// FIXME 2024年5月14日 下午10:18:45 zhangzhen: page 暂时还只支持 ZR.page 方法，继续支持
 		REGEX_MAP_PAGE.put(page, "select * from TABLE_NAME where COLUMN limit ?,?");
 
 		// count
@@ -336,18 +337,22 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXX);
-		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXNot);
-		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXIsNull);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThan);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThanEquals);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXStartingWith);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXNot);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXEndingWith);
 
 
-		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXDescLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThanEquals);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_pageByXX_orderByXX);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXGreaterThanEquals);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByxx_in);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXIsNull);
 
 
 
