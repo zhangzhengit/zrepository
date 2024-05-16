@@ -1305,6 +1305,55 @@ public class SU {
 		return Collections.emptyList();
 	}
 
+	public static <T> List<T> findByXXOrYY(final Mode mode, final Class<T> cls, final String sql, final Object... field) {
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final Connection connection = zc.getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			connection.setAutoCommit(false);
+			final String s = sql;
+			ps = connection.prepareStatement(s);
+
+			int index = 1;
+			for (final Object object : field) {
+				setXX_fieldValue(object, ps, index);
+				index++;
+			}
+
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}],[{}]", s, Arrays.toString(field));
+			}
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final ArrayList<T> r = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = newT(cls, rs, metaData, count);
+				r.add(t);
+			}
+
+			return r;
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+				| SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZC(zc);
+			close(rs, ps);
+		}
+
+		return Collections.emptyList();
+	}
+
 	public static <T> List<T> findByXXLike(final Mode mode, final Class<T> cls, final String sql, final Object field) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);

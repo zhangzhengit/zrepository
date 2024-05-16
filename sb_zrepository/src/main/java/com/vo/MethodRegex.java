@@ -159,6 +159,7 @@ public class MethodRegex {
 		// countingByXXX
 		REGEX_MAP_CountingByXXX.put(countingByXXX, "select count(*) from TABLE_NAME  where @ = ?;");
 		// findByXXOrXX
+		// FIXME 2024年5月17日 上午2:25:01 zhangzhen: 继续支持多个or条件的
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYY, "select * from TABLE_NAME  where @ = ? or @ = ?;");
 
 		// existById
@@ -233,6 +234,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
 		R_M.put(GROUP_findByxx_in, REGEX_MAP_FINDBYXXIN);
 		R_M.put(GROUP_findByxxNot, REGEX_MAP_findByXXNot);
+		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
 		R_M.put(GROUP_findByXXAndXX, REGEX_MAP_FINDBYXX);
 		R_M.put(GROUP_findByXX, REGEX_MAP_FINDBYXX);
 		R_M.put(GROUP_FINDALL, REGEX_MAP_FINDALL);
@@ -242,7 +244,6 @@ public class MethodRegex {
 		R_M.put(GROUP_DeleteById, REGEX_MAP_DELETEBYID);
 		R_M.put(GROUP_EXISTBYId, REGEX_MAP_EXISTBYID);
 		R_M.put(GROUP_CountingByXXX, REGEX_MAP_CountingByXXX);
-		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
 		R_M.put(GROUP_count, REGEX_MAP_Count);
 		R_M.put(GROUP_page, REGEX_MAP_PAGE);
 	}
@@ -329,6 +330,10 @@ public class MethodRegex {
 		// FIXME 2024年5月14日 下午9:04:36 zhangzhen: 规则分两个组；一个是根据method.getps 的个数、类型、名称来解析的比如简单的findByXX
 		// 一个是 根据 ZEntity.field来解析的比如findByXXOrderByXXLimit
 
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYY);

@@ -738,9 +738,15 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + modeString + ", classType,sql);";
 
 		default:
+			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
+			if("findByNameOrId".equals(method.getName())) {
+				final int x =1;
+			}
 
 			// default  ZR的子类声明的方法
 			final MethodSQL methodSQL = MethodRegex.check(methodName, method);
+
+
 //			final Entry<String, String> check = MethodRegex.check(methodName, method);
 //			System.out.println("getSuMethod-check = " + check);
 			final String methodname = methodSQL.getMethodName();
@@ -1003,7 +1009,7 @@ public class ZRepositoryMain {
 					joiner.add(parameter.getName());
 				}
 				final String modeString = modeString(method);
-				final String r = "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,sql,"
+				final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,sql,"
 						+ joiner.toString() + ");";
 				return r;
 			}
