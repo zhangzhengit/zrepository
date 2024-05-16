@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -66,7 +65,8 @@ public class SU {
 	private static final ZCPool INSTANCE = ZCPool.getInstance();
 
 	// FIXME 2024年5月14日 下午10:22:14 zhangzhen: SU.page还要改
-	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final String sql, final Integer size, final Integer page) {
+	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final String sql, final Integer size,
+			final Integer page) {
 		System.out
 				.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "SU.page()");
 
@@ -77,39 +77,98 @@ public class SU {
 			throw new IllegalArgumentException("page 必须大于0！page = " + page);
 		}
 
+		PreparedStatement ps=null;
+		ResultSet rs=null;
+		PreparedStatement psc = null;
+		ResultSet pscRS = null;
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
-//		PreparedStatement ps = null;
-//		ResultSet rs  = null;
 		try {
 			connection.setAutoCommit(false);
 
 			final Map<String, Object> fMap = getNotNullFieldMap(t);
-			final String sqlFinal = sql.replace(COLUMN, "").replace("where", "");
-			if (CollUtil.isEmpty(fMap)) {
-				return page0(mode, cls, size, page, zc, sqlFinal, true);
-			}
 
-			final Set<Entry<String, Object>> es = fMap.entrySet();
-			final StringBuilder builder = new StringBuilder();
-			for (final Entry<String, Object> entry : es) {
-				final String fieldName = entry.getKey();
-				final Object fieldValue = entry.getValue();
+			final Set<String> keySet = fMap.keySet();
+			final int size2 = keySet.size();
+			final ArrayList<String> kl = Lists.newArrayList(keySet);
 
-				// FIXME 2023年9月6日 下午9:05:35 zhanghen: 测试不同类型的字段，看直接append(toString)是否报错
-				builder.append(" ").append(fieldName).append(" = ");
-				if (fieldValue instanceof String) {
-					builder.append("'").append(fieldValue).append("'");
-				} else if (fieldValue instanceof Number) {
-					builder.append(fieldValue);
+			final StringBuilder columnBuilder = new StringBuilder();
+
+			final String pageCountSQLT = "select count(*) from " + cls.getAnnotation(ZEntity.class).tableName()
+					+ " where COLUMN;";
+
+			for (int i = 1; i <= size2; i++) {
+				columnBuilder.append(" ").append(kl.get(i - 1)).append(" = ? ");
+				if (i < size2) {
+					columnBuilder.append(" and ");
 				}
-
-				builder.append(" and ");
 			}
-			final String x = builder.replace(builder.length()-5, builder.length(), "").toString();
-			final String sqlFinalX = sql.replace(COLUMN, x);
 
-			return page0(mode, cls, size, page, zc, sqlFinalX, false);
+			final String pageSql = columnBuilder.length() > 0 ? sql.replace(COLUMN, columnBuilder.toString())
+					: sql.replace(" where " + COLUMN, columnBuilder.toString());
+			final String pageCountSql = columnBuilder.length() > 0
+					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
+					: pageCountSQLT.replace(" where " + COLUMN, columnBuilder.toString());
+			if (ZDP.getShowSql()) {
+				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSql, fMap.values(), page, size);
+				LOG.info("page总条数查询-[{}]-[{}]-[{},{}]", pageCountSql, fMap.values(), page, size);
+			}
+
+			 ps = connection.prepareStatement(pageSql);
+			int index = 1;
+			final Field[] fs = cls.getDeclaredFields();
+			for (final Field field : fs) {
+				if (field.isAnnotationPresent(ZTransient.class)) {
+					continue;
+				}
+				field.setAccessible(true);
+				final Object fv = field.get(t);
+				if (fv == null) {
+					continue;
+				}
+				addPS(t, ps, index, field, SUMode.SAVE);
+				index++;
+			}
+			final int offset = (page - 1) * size;
+			final int rows = size;
+			ps.setInt((index - 1) + 1, offset);
+			ps.setInt((index - 1) + 2, rows);
+
+			rs = ps.executeQuery();
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+
+			final int count = metaData.getColumnCount();
+			final List<T> rL = Lists.newArrayList();
+			while (rs.next()) {
+				final T tR = newT(cls, rs, metaData, count);
+				rL.add(tR);
+			}
+
+			psc = connection.prepareStatement(pageCountSql);
+			int indexPSC = 1;
+			for (final Field field : fs) {
+				if (field.isAnnotationPresent(ZTransient.class)) {
+					continue;
+				}
+				field.setAccessible(true);
+				final Object fv = field.get(t);
+				if (fv == null) {
+					continue;
+				}
+				addPS(t, psc, indexPSC, field, SUMode.SAVE);
+				indexPSC++;
+			}
+
+			pscRS = psc.executeQuery();
+			pscRS.next();
+
+			final Long countR = pscRS.getLong(1);
+			final long pages = (countR.longValue() % size) == 0 ? countR.longValue() / size
+					: (countR.longValue() / size) + 1;
+			final Page<T> pageR = new Page(size, Long.valueOf(String.valueOf(page)), pages, countR,
+					ImmutableList.copyOf(rL));
+			return pageR;
 
 		} catch (final SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException e1) {
 			e1.printStackTrace();
@@ -119,48 +178,12 @@ public class SU {
 				e.printStackTrace();
 			}
 		} finally {
+			close(ps, rs, psc, pscRS);
 			returnZC(zc);
 		}
 
-		return null;
-	}
-
-	private static <T> Page<T> page0(final Mode mode, final Class<T> cls, final Integer size, final Integer page,
-			final ZConnection zc, final String sqlFinal, final boolean tAllFieldNull)
-			throws SQLException, InstantiationException, IllegalAccessException, NoSuchFieldException {
-		final PreparedStatement	ps = zc.getConnection().prepareStatement(sqlFinal);
-		final int offset = (page -1) * size;
-		final int rows = size;
-		ps.setInt(1, offset);
-		ps.setInt(2, rows);
-
-		if (ZDP.getShowSql()) {
-			LOG.info("[{}],[{},{}]", sqlFinal, offset, rows);
-		}
-
-		final ResultSet	rs = ps.executeQuery();
-		final ResultSetMetaData metaData = rs.getMetaData();
-
-		final int count = metaData.getColumnCount();
-		final List<T> rL = Lists.newArrayList();
-		while (rs.next()) {
-			final T tR = newT(cls, rs, metaData, count);
-			rL.add(tR);
-		}
-
-		final String tableName = cls.getAnnotation(ZEntity.class).tableName();
-
-		final int limitI = sqlFinal.indexOf(LIMIT);
-		final String countSQLNotNUll = sqlFinal.replace("select * ", "select count(*) ");
-
-		final String countSQL = tAllFieldNull ? "select count(*) from " + tableName
-				: sqlFinal.substring(0, limitI).replace("select * ", "select count(*) ");
-		final Long countR = count(mode, cls, countSQL, zc);
-
-		final long pages = (countR.longValue() % size) == 0 ? countR.longValue() / size
-				: (countR.longValue() / size) + 1;
-		final Page<T> pageR = new Page(size, Long.valueOf(String.valueOf(page)), pages, countR, ImmutableList.copyOf(rL));
-		return pageR;
+		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L,
+				ImmutableList.copyOf(Collections.emptyList()));
 	}
 
 	/**
@@ -172,7 +195,7 @@ public class SU {
 	 *
 	 */
 	private static <T> Map<String, Object> getNotNullFieldMap(final T t) {
-		final Map<String, Object> fMap = Maps.newHashMap();
+		final Map<String, Object> fMap = Maps.newLinkedHashMap();
 		final Field[] fs = t.getClass().getDeclaredFields();
 		for (final Field f : fs) {
 			f.setAccessible(true);
@@ -669,6 +692,7 @@ public class SU {
 			} else if (fn.equals(Long.class.getCanonicalName())) {
 				ps.setLong(i, (Long) v2);
 			} else if (fn.equals(Float.class.getCanonicalName())) {
+				// FIXME 2024年5月17日 上午1:51:06 zhangzhen: 继续测这个mysql是否要改为setDouble
 				ps.setFloat(i, (Float) v2);
 			} else if (fn.equals(Double.class.getCanonicalName())) {
 				ps.setDouble(i, (Double) v2);
