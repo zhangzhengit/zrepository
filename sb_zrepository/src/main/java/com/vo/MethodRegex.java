@@ -90,6 +90,12 @@ public class MethodRegex {
 	public static final String findByXXOrYYOrYY = "findBy(.*)Or(.*)Or(.*)";
 	public static final String findByXXOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)";
 	public static final String findByXXOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
 
 	public 	static final String findByXXBetween = "findBy(.*)Between";
 
@@ -158,8 +164,16 @@ public class MethodRegex {
 
 		// countingByXXX
 		REGEX_MAP_CountingByXXX.put(countingByXXX, "select count(*) from TABLE_NAME  where @ = ?;");
-		// findByXXOrXX
-		// FIXME 2024年5月17日 上午2:25:01 zhangzhen: 继续支持多个or条件的
+		// findByXXOrXX 支持2个到11个条件的
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ?;");
+		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ?;");
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYY, "select * from TABLE_NAME  where @ = ? or @ = ?;");
 
 		// existById
@@ -330,10 +344,17 @@ public class MethodRegex {
 		// FIXME 2024年5月14日 下午9:04:36 zhangzhen: 规则分两个组；一个是根据method.getps 的个数、类型、名称来解析的比如简单的findByXX
 		// 一个是 根据 ZEntity.field来解析的比如findByXXOrderByXXLimit
 
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYYOrYYOrYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYYOrYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYYOrYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYYOrYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYY);
+
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYY);

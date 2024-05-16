@@ -739,7 +739,7 @@ public class ZRepositoryMain {
 
 		default:
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByNameOrId".equals(method.getName())) {
+			if("findByNameOrIdAndContent".equals(method.getName())) {
 				final int x =1;
 			}
 
@@ -798,8 +798,16 @@ public class ZRepositoryMain {
 			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
 				return gROUP_findByXXLike(method, methodname);
 			}
-			if (methodname.matches(MethodRegex.findByXXOrYY)) {
-				// FIXME 2024年5月14日 下午9:28:38 zhangzhen: 在写or了
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)
+				||	methodname.matches(MethodRegex.findByXXOrYYOrYY)
+				|| 	methodname.matches(MethodRegex.findByXXOrYY)) {
 				return gROUP_findByXXOrYY(method, methodname);
 			}
 
