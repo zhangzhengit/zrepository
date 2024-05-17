@@ -14,16 +14,30 @@ import com.google.common.collect.Sets;
  * @data 2024年5月3日 下午8:54:22
  *
  */
+// FIXME 2024年5月18日 上午12:28:42 zhangzhen: 注意，到此为止，写死的类型关系，
+// 只限于 mysql-8.0.34-0ubuntu0.22.04.1
+// 和pgsql-PostgreSQL 14.11 (Ubuntu 14.11-0ubuntu0.22.04.1) on aarch64-unknown-linux-gnu, compiled by gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0, 64-bit
+// 并且也只写了几个常见类型，其他类型和版本要继续支持
+
 public class DBType {
 
 	// FIXME 2024年5月13日 上午12:34:27 zhangzhen: TODO aliyun 已启动 pgsql，开始写pgsql相关的
 
+	/**
+	 * java > pgsql
+	 */
+	private static final Multimap<String, String> JAVA_PGSQL = ArrayListMultimap.create();
 	/**
 	 * java > mysql
 	 */
 	private static final Multimap<String, String> JAVA_MYSQL = ArrayListMultimap.create();
 	public static final Set<String> JAVA = Sets.newHashSet("byte", "short", "int", "long", "float", "double",
 			"boolean", "char");
+
+	public static Collection<String> getPGSqlType(final String javaTypeName) {
+		final Collection<String> v = JAVA_PGSQL.get(javaTypeName);
+		return v;
+	}
 
 	public static Collection<String> getMysqlType(final String javaTypeName) {
 		final Collection<String> v = JAVA_MYSQL.get(javaTypeName);
@@ -42,20 +56,61 @@ public class DBType {
 	}
 
 	/**
-	 * java类型和mysql类型是否匹配
+	 * java类型和DB类型是否匹配
 	 *
 	 * @param javaType
-	 * @param mysqlType
+	 * @param dbType
 	 * @return
 	 */
-	public static boolean match(final String javaType, final String mysqlType) {
-		final Collection<String> v = getMysqlType(javaType);
-		final boolean contains = v.contains(mysqlType);
-		return contains;
+	public static boolean match(final String javaType, final String dbType) {
+		final DBEnum db = ZRepositoryMain.getDB();
+		if (db == DBEnum.MYSQL) {
+			return getMysqlType(javaType).contains(dbType);
+		}
+		if (db == DBEnum.POSTGRESQL) {
+ 			return getPGSqlType(javaType).contains(dbType);
+		}
+
+		return false;
 	}
 
 	static {
 
+		// java -> pgsql
+		JAVA_PGSQL.put("java.lang.Byte", "smallint");
+		JAVA_PGSQL.put("java.lang.Byte", "integer");
+		JAVA_PGSQL.put("java.lang.Byte", "int4");
+
+		JAVA_PGSQL.put("java.lang.Short", "smallint");
+		JAVA_PGSQL.put("java.lang.Short", "integer");
+		JAVA_PGSQL.put("java.lang.Short", "int4");
+		JAVA_PGSQL.put("java.lang.Integer", "int4");
+		JAVA_PGSQL.put("java.lang.Integer", "integer");
+		JAVA_PGSQL.put("java.lang.Long", "int8");
+		JAVA_PGSQL.put("java.lang.Long", "bigint");
+		JAVA_PGSQL.put("java.lang.Character", "bpchar");
+		JAVA_PGSQL.put("java.lang.Character", "char");
+		JAVA_PGSQL.put("java.lang.Character", "character");
+		JAVA_PGSQL.put("java.lang.Float", "float8");
+		JAVA_PGSQL.put("java.lang.Float", "real");
+		JAVA_PGSQL.put("java.lang.Double", "numeric");
+		JAVA_PGSQL.put("java.lang.Double", "double precision");
+		JAVA_PGSQL.put("java.math.BigDecimal", "numeric");
+		JAVA_PGSQL.put("java.lang.String", "varchar");
+		JAVA_PGSQL.put("java.lang.String", "text");
+		JAVA_PGSQL.put("java.lang.Boolean", "bool");
+		JAVA_PGSQL.put("java.lang.Boolean", "boolean");
+		JAVA_PGSQL.put("java.sql.Date", "timestamp");
+		JAVA_PGSQL.put("java.sql.Date", "date");
+		JAVA_PGSQL.put("java.util.Date", "timestamp");
+		JAVA_PGSQL.put("java.util.Date", "date");
+		JAVA_PGSQL.put("java.sql.Time", "time");
+		JAVA_PGSQL.put("java.sql.Timestamp", "timestamp");
+		JAVA_PGSQL.put("byte[]", "bytea");
+		JAVA_PGSQL.put("java.lang.Object", "jsonb");
+
+
+		// java -> mysql
 		JAVA_MYSQL.put("byte", "TINYINT");
 		JAVA_MYSQL.put("java.lang.Byte", "TINYINT");
 

@@ -739,7 +739,7 @@ public class ZRepositoryMain {
 
 		default:
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByIdBetween".equals(method.getName())) {
+			if("findByIdLessThan".equals(method.getName())) {
 				final int x =1;
 			}
 
@@ -1536,6 +1536,12 @@ public class ZRepositoryMain {
 		return d;
 	}
 
+	private static DBEnum DB_ENUM = null;
+
+	/**
+	 * @param url
+	 * @return
+	 */
 	private static String findCatalog(final String url) {
 		// FIXME 2024年5月4日 下午6:19:00 zhangzhen: 在程序启动时就严格校验url
 		// jdbc:mysql://192.168.1.10:3306/learn?useSSL=false&characterEncoding=utf8
@@ -1551,6 +1557,7 @@ public class ZRepositoryMain {
 			final int e = url.indexOf(end, s + 1);
 			final String x = url.substring(s + start.length(), e);
 
+			DB_ENUM = DBEnum.MYSQL;
 			return x;
 		}
 		if (url.toLowerCase().contains("postgresql")) {
@@ -1559,9 +1566,14 @@ public class ZRepositoryMain {
 
 			final String substring = url.substring(lastIndexOf + keyword.length());
 
+			DB_ENUM = DBEnum.POSTGRESQL;
 			return substring;
 		}
 		throw new IllegalArgumentException("JDBC 配置不支持：" + url);
+	}
+
+	public static DBEnum getDB() {
+		return DB_ENUM;
 	}
 
 }

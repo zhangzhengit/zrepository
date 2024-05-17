@@ -255,13 +255,18 @@ public class SU {
 					zTransientCount++;
 					continue;
 				}
+				// 兼顾pgsql，@ZID字段不可以update
+				if (f.isAnnotationPresent(ZID.class)) {
+					continue;
+				}
+
 				f.setAccessible(true);
 				index++;
 				addPS(t, ps, index, f, SUMode.UPDATE);
 			}
 
 			// 最后面的where id = ？ 赋值
-			ps.setObject((fs.length + 1) -zTransientCount , idValue);
+			ps.setObject((fs.length) - zTransientCount, idValue);
 
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}],[{}]", sqlF, t,idValue);
@@ -684,9 +689,14 @@ public class SU {
 
 			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
 			if (fn.equals(Boolean.class.getCanonicalName())) {
-				final boolean equals = Boolean.TRUE.equals(v2);
-				final byte vb = (byte) (equals ? 1 : 0);
-				ps.setByte(i, vb);
+				final DBEnum db = ZRepositoryMain.getDB();
+				if (db == DBEnum.MYSQL) {
+					final boolean equals = Boolean.TRUE.equals(v2);
+					final byte vb = (byte) (equals ? 1 : 0);
+					ps.setByte(i, vb);
+				} else if (db == DBEnum.POSTGRESQL) {
+					ps.setBoolean(i, Boolean.parseBoolean(String.valueOf(v2)));
+				}
 			} else if (fn.equals(Character.class.getCanonicalName())) {
 				// char 类型直接用String
 				ps.setString(i, String.valueOf(v2));
@@ -1724,10 +1734,10 @@ public class SU {
 			if (f.isAnnotationPresent(ZTransient.class)) {
 				continue;
 			}
-			// update语句，即使是id也生成：id = ？
-//			if (f.isAnnotationPresent(ZID.class)) {
-//				continue;
-//			}
+			// 兼顾pgsql，@ZID字段不可以update
+			if (f.isAnnotationPresent(ZID.class)) {
+				continue;
+			}
 
 			f.setAccessible(true);
 			try {
