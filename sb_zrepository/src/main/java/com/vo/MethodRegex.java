@@ -50,7 +50,6 @@ public class MethodRegex {
 	public static final String GROUP_UPDATE = "update";
 	public static final String GROUP_FINDALL = "findAll";
 
-	public static final String GROUP_findByXXAndXX = "findBy(.*)And(.*)";
 	public static final String GROUP_findByXX = "findBy(.*)";
 	public static final String GROUP_findByxxNot = "findBy(.*)Not";
 	public static final String GROUP_findByxx_in = "findBy(.*)In";
@@ -72,10 +71,18 @@ public class MethodRegex {
 	public static final String save = GROUP_SAVE;
 	public static final String findAll = GROUP_FINDALL;
 	public static final String findByXX = GROUP_findByXX;
-	public static final String findByXXAndYY = GROUP_findByXXAndXX;
+
+	public static final String GROUP_findByXXAndXX = "findBy(.*)And(.*)";
+	public static final String findByXXAndYY = "findBy(.*)And(.*)";
 	public static final String findByXXAndYYAndYY = "findBy(.*)And(.*)And(.*)";
 	public static final String findByXXAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)";
 	public static final String findByXXAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
 
 
 	public 	static final String findByXXXEndingWith = GROUP_findByXXXEndingWith;
@@ -204,6 +211,12 @@ public class MethodRegex {
 		REGEX_MAP_findByXXXLike.put(findByXXLike, "select * from TABLE_NAME where @ like ?");
 
 		// finByXX
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?  and @ = ? ");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?  and @ = ?");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYY, "select * from TABLE_NAME where @ = ? and @ = ?  and @ = ?");
@@ -355,10 +368,17 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYYOrYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXOrYY);
 
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYYAndYYAndYY);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYYAndYY);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXAndYY);
+
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXGreaterThan);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);

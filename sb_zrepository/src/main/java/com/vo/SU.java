@@ -51,6 +51,8 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月16日
  *
  */
+// FIXME 2024年5月17日 上午8:12:47 zhangzhen: 当前支持的mysql，如果查询条件的值传来了，那么把sql中的=都替换为is，即 xx is null
+
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 public class SU {
 // FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
@@ -1084,6 +1086,11 @@ public class SU {
 	}
 
 	private static void setXX_fieldValue(final Object fieldValue, final PreparedStatement ps, final int index) throws SQLException {
+		if (fieldValue == null) {
+			ps.setObject(index, null);
+			return;
+		}
+
 		if (fieldValue.getClass().equals(Character.class)) {
 			// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
 			ps.setString(index, String.valueOf(String.valueOf(fieldValue).charAt(0)));
@@ -1510,13 +1517,6 @@ public class SU {
 
 			final int index = 1;
 			setXX_fieldValue(fieldValue, ps, index);
-//			if (fieldValue == null) {
-//				ps.setObject(1, null);
-//			} else if (fieldValue instanceof Character) {
-//				ps.setString(1, String.valueOf(fieldValue));
-//			} else {
-//				ps.setObject(1, fieldValue);
-//			}
 
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}]", s, fieldValue);
