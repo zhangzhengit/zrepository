@@ -385,7 +385,7 @@ public class SU {
 		return false;
 	}
 
-	public  static <T> boolean deleteById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
+	public static <T> boolean deleteById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 		try {
@@ -474,7 +474,6 @@ public class SU {
 		return false;
 	}
 
-	// FIXME 2024年5月4日 下午9:10:32 zhangzhen:TODO  支持了blob类型后，saveAll会NPE？继续测试
 	public static <T> List<Object> saveAll(final Mode mode, final Class<T> cls, final String sqlParam,
 			final List<T> tList) {
 
