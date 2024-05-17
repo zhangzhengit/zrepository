@@ -1540,16 +1540,28 @@ public class ZRepositoryMain {
 		// FIXME 2024年5月4日 下午6:19:00 zhangzhen: 在程序启动时就严格校验url
 		// jdbc:mysql://192.168.1.10:3306/learn?useSSL=false&characterEncoding=utf8
 
-		final String jdbc = "jdbc:mysql://";
-		final String start = "/";
-		final String end = "?";
+		if (url.toLowerCase().contains("mysql")) {
 
-		final int i = url.indexOf(jdbc);
-		final int s = url.indexOf(start,i + jdbc.length());
-		final int e = url.indexOf(end,s + 1);
-		final String x = url.substring(s +start.length() , e);
+			final String jdbc = "jdbc:mysql://";
+			final String start = "/";
+			final String end = "?";
 
-		return x;
+			final int i = url.indexOf(jdbc);
+			final int s = url.indexOf(start, i + jdbc.length());
+			final int e = url.indexOf(end, s + 1);
+			final String x = url.substring(s + start.length(), e);
+
+			return x;
+		}
+		if (url.toLowerCase().contains("postgresql")) {
+			final String keyword = "/";
+			final int lastIndexOf = url.lastIndexOf(keyword, url.length());
+
+			final String substring = url.substring(lastIndexOf + keyword.length());
+
+			return substring;
+		}
+		throw new IllegalArgumentException("JDBC 配置不支持：" + url);
 	}
 
 }
