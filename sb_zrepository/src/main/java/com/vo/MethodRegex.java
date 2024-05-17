@@ -135,6 +135,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_Count = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_PAGE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_CountingByXXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXBetween = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrYY = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_EXISTBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_DELETEBYID = new LinkedHashMap<>();
@@ -170,6 +171,9 @@ public class MethodRegex {
 
 		// count
 		REGEX_MAP_Count.put(count, "select count(*) from TABLE_NAME");
+
+		// findByXXBetween
+		REGEX_MAP_findByXXBetween.put(findByXXBetween, "select * from TABLE_NAME where @ BETWEEN ? AND ?;");
 
 		// countingByXXX
 		REGEX_MAP_CountingByXXX.put(countingByXXX, "select count(*) from TABLE_NAME  where @ = ?;");
@@ -265,6 +269,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
 		R_M.put(GROUP_findByxx_in, REGEX_MAP_FINDBYXXIN);
+		R_M.put(findByXXBetween, REGEX_MAP_findByXXBetween);
 		R_M.put(GROUP_findByxxNotNull, REGEX_MAP_findByXXNotNull);
 		R_M.put(GROUP_findByxxNot, REGEX_MAP_findByXXNot);
 		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
@@ -398,6 +403,7 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXEndingWith);
 
 
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXBetween);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXDescLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByxxNotNull);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThanEquals);

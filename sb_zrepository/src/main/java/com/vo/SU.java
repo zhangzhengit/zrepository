@@ -1367,6 +1367,58 @@ public class SU {
 		return Collections.emptyList();
 	}
 
+	public static <T> List<T> findByXXBetween(final Mode mode, final Class<T> cls, final String sql,final Object...fiedlArray) {
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final Connection connection = zc.getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			connection.setAutoCommit(false);
+			// "select * from user where id between ? and ?;"
+			final String s = sql;
+			ps = connection.prepareStatement(s);
+
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}],[{}]", s,Arrays.toString(fiedlArray));
+			}
+
+			int index = 1;
+			for (final Object f : fiedlArray) {
+
+				setXX_fieldValue(f, ps, index);
+
+				index++;
+			}
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final ArrayList<T> r = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = newT(cls, rs, metaData, count);
+				r.add(t);
+			}
+
+			return r;
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+				| SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZC(zc);
+			close(rs, ps);
+		}
+
+		return Collections.emptyList();
+	}
+
 	public static <T> List<T> findByXXNotNull(final Mode mode, final Class<T> cls, final String sql) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();

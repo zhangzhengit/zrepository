@@ -739,7 +739,7 @@ public class ZRepositoryMain {
 
 		default:
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByIdNotNull".equals(method.getName())) {
+			if("findByIdBetween".equals(method.getName())) {
 				final int x =1;
 			}
 
@@ -777,6 +777,10 @@ public class ZRepositoryMain {
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)) {
 				return GROUP_findByXXLessThanEquals(method, methodname);
+			}
+
+			if (methodname.matches(MethodRegex.findByXXBetween)) {
+				return gROUP_findByXXBetween(method, methodname);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
@@ -1087,8 +1091,8 @@ public class ZRepositoryMain {
 	}
 
 
-	private static String gROUP_findByxx_in(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByxx_in);
+	private static String gROUP_findByXXBetween(final Method method, final String key) {
+		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.findByXXBetween);
 		final Set<Entry<String, String>> entrySet = hh.entrySet();
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
@@ -1098,10 +1102,29 @@ public class ZRepositoryMain {
 					joiner.add(parameter.getName());
 				}
 				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXIn("+modeString+",classType,sql," + joiner.toString()	+ ");";
+				final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween("+modeString+",classType,sql," + joiner.toString()	+ ");";
+				return r;
 			}
 		}
 		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
+		return EMTPY;
+	}
+
+	private static String gROUP_findByxx_in(final Method method, final String key) {
+		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.findByXXIn);
+		final Set<Entry<String, String>> entrySet = hh.entrySet();
+		for (final Entry<String, String> entry : entrySet) {
+			if (key.matches(entry.getKey())) {
+				final Parameter[] parameters2 = method.getParameters();
+				final StringJoiner joiner = new StringJoiner(",");
+				for (final Parameter parameter : parameters2) {
+					joiner.add(parameter.getName());
+				}
+				final String modeString = modeString(method);
+				final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn("+modeString+",classType,sql," + joiner.toString()	+ ");";
+				return r;
+			}
+		}
 		return EMTPY;
 	}
 
