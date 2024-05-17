@@ -600,7 +600,10 @@ public class SU {
 		final Field[] fs = cls.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
-			if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
+			if (field.isAnnotationPresent(ZTransient.class)) {
+				continue;
+			}
+			if(field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY)) {
 				continue;
 			}
 			fieldCount++;
@@ -622,7 +625,10 @@ public class SU {
 			ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
 			int i = 0;
 			for (final Field field : fs) {
-				if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
+				if (field.isAnnotationPresent(ZTransient.class)) {
+					continue;
+				}
+				if(field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY)) {
 					continue;
 				}
 
