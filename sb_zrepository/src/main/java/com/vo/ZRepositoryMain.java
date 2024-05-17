@@ -514,7 +514,7 @@ public class ZRepositoryMain {
 				final String dbColumnName = ZFieldConverter.toDbField(fieldName);
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
 			}
-		} else if( MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
+		} else if (MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
 			for (final Parameter p : ps) {
 				final String dbColumnName = ZFieldConverter.toDbField(p.getName());
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
@@ -739,7 +739,7 @@ public class ZRepositoryMain {
 
 		default:
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByNameOrIdAndContent".equals(method.getName())) {
+			if("findByIdNotNull".equals(method.getName())) {
 				final int x =1;
 			}
 
@@ -791,6 +791,10 @@ public class ZRepositoryMain {
 				return gROUP_CountingByXXX(method, methodname);
 			}
 //
+			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
+				final int x = 20;
+				return GROUP_findByXXNotNull(method, methodname);
+			}
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,sql);";
 			}
@@ -1019,6 +1023,25 @@ public class ZRepositoryMain {
 				final String modeString = modeString(method);
 				final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,sql,"
 						+ joiner.toString() + ");";
+				return r;
+			}
+		}
+		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
+		return EMTPY;
+	}
+	private static String GROUP_findByXXNotNull(final Method method, final String key) {
+		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByxxNotNull);
+		final Set<Entry<String, String>> entrySet = hh.entrySet();
+		for (final Entry<String, String> entry : entrySet) {
+			if (key.matches(entry.getKey())) {
+				final Parameter[] parameters2 = method.getParameters();
+				final StringJoiner joiner = new StringJoiner(",");
+				for (final Parameter parameter : parameters2) {
+					joiner.add(parameter.getName());
+				}
+				final String modeString = modeString(method);
+				final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull("+modeString+",classType,sql," + joiner.toString()
+				+ ");";
 				return r;
 			}
 		}
