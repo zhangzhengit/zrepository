@@ -55,6 +55,7 @@ import cn.hutool.core.util.StrUtil;
 // FIXME 2024年5月17日 上午8:12:47 zhangzhen: 当前支持的mysql，如果查询条件的值传来了，那么把sql中的=都替换为is，即 xx is null
 
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
+// FIXME 2024年5月18日 下午12:29:49 zhangzhen: LOG 要不要使用 PreparedStatement.toString 代替？
 public class SU {
 // FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
 	private static final int NO_DELETE_OR_DELETE = -1;
