@@ -37,6 +37,12 @@ public class D {
 	 * 本字段与 filedName 不同是，本字段没排序过，顺序按 Class.getDeclaredFields() 来存放
 	 */
 	private List<String> filedNameOriginalOrder;
+	
+	/**
+	 * 本字段顺序，按声明式方法名称中出现的字段名称来排序，如 findByDateOrderByNameDescLimit
+	 * 则本字段值为[date,name]
+	 */
+	private List<String> filedNameMethodNameOrder;
 
 	/**
 	 * methodName 去除 了filedName后的结果，如：findBy

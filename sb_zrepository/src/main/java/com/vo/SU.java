@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -125,10 +126,10 @@ public class SU {
 
 			if (ZDP.getShowSql()) {
 				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSql, fMap.values(), page, size);
-				LOG.info("page总条数查询-[{}]-[{}]-[{},{}]", pageCountSql, fMap.values(), page, size);
+				LOG.info("page总条数查询-[{}]-[{}]", pageCountSql, fMap.values());
 			}
 
-			 ps = connection.prepareStatement(pageSql);
+			ps = connection.prepareStatement(pageSql);
 			int index = 1;
 			final Field[] fs = cls.getDeclaredFields();
 			for (final Field field : fs) {
@@ -1129,6 +1130,8 @@ public class SU {
 		} else if (fieldValue.getClass().equals(Float.class)) {
 			// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。 TODO 继续测试有何问题
 			ps.setDouble(index, Float.parseFloat(String.valueOf(fieldValue)));
+		} else if(fieldValue.getClass().equals(Date.class)){
+			ps.setDate(index, new java.sql.Date(((Date) fieldValue).getTime()));
 		} else {
 			ps.setObject(index, fieldValue);
 		}
@@ -1682,16 +1685,28 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String sqlF = ZRepositoryMain.getDB() == DBEnum.POSTGRESQL ? sql.replace("limit ?,?", "limit ? offset ?")
+					: sql;
+
+			ps = connection.prepareStatement(sqlF);
 			int i = 1;
-			for (final Object object : field) {
-				ps.setObject(i, object);
+			if (ZRepositoryMain.getDB() == DBEnum.MYSQL) {
+				for (final Object object : field) {
+					ps.setObject(i, object);
+					i++;
+				}
+			} else if (ZRepositoryMain.getDB() == DBEnum.POSTGRESQL) {
+				ps.setObject(i, field[0]);
+				i++;
+				ps.setObject(i, field[2]);
+				i++;
+				ps.setObject(i, field[1]);
 				i++;
 			}
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, Arrays.toString(field));
+				LOG.info("[{}],[{}]", sqlF, Arrays.toString(field));
 			}
 
 			rs = ps.executeQuery();
@@ -1773,7 +1788,7 @@ public class SU {
 		return column.toString();
 	}
 
-	public static <T> List<T> zQuerySelect(final Mode mode, final Object object, final String sql, final Object... arg)
+	public static <T> List<T> zQuerySelect(final Mode mode, final Object object, final String sqlT, final Object... arg)
 			throws InstantiationException {
 		final Class cls = (Class) object;
 
@@ -1790,21 +1805,39 @@ public class SU {
 		ResultSet rs = null;
 		try {
 
-			final int argcount = StrUtil.count(sql, '?');
+			final int argcount = StrUtil.count(sqlT, '?');
 			if (argcount != arg.length) {
 				final String message = "@" + ZQuery.class.getCanonicalName() + " 自定义SQL参数个数[" + argcount
 						+ "]和方法传入的参数个数[" + arg.length + "]不匹配";
 				throw new ZQuerySQLException(message);
 			}
 
+			final String regex = "\\?(\\d+)";
+			final String sql = sqlT.replaceAll(regex, "?");
+
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
 			}
+
 			ps = connection.prepareStatement(sql);
+
+			final Pattern pattern = Pattern.compile(regex);
+			final java.util.regex.Matcher matcher = pattern.matcher(sqlT);
+			final int[] argOrderArray = new int[arg.length];
+			int i = 0;
+			boolean find = false;
+			while (matcher.find()) {
+				find = true;
+				final String a = matcher.group(1);
+				argOrderArray[i] = Integer.parseInt(a);
+				i++;
+			}
+
+
 			if (arg != null) {
 				int n = 1;
-				for (final Object a1 : arg) {
- 					ps.setObject(n, a1);
+				for (final int element : argOrderArray) {
+					ps.setObject(n, arg[element-1]);
 					n++;
 				}
 			}
@@ -1832,7 +1865,7 @@ public class SU {
 			close(rs, ps);
 		}
 
-		return null;
+		return Collections.emptyList();
 	}
 
 	public static int zQueryUpdate(final Mode mode, final Object object, final String sql,

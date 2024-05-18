@@ -24,6 +24,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.WeakHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -509,8 +511,13 @@ public class ZRepositoryMain {
 
 		String sqlA = sql;
 
+		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
+		if("findByDateOrderByNameDescLimit".equals(method.getName())) {
+			final int x2 = 1;
+		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
-			for (final String fieldName : d.getFiledName()) {
+			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
+			for (final String fieldName : filedNameMethodNameOrder) {
 				final String dbColumnName = ZFieldConverter.toDbField(fieldName);
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
 			}
@@ -1161,6 +1168,7 @@ public class ZRepositoryMain {
 		String subClassMethodName = null ;
 		if (u.startsWith("SELECT")) {
 			subClassMethodName = "zQuerySelect";
+			checkZQuerySelect(method, sqlTemplate);
 		} else if (u.startsWith("UPDATE")) {
 			subClassMethodName = "zQueryUpdate";
 		} else if (u.startsWith("DELETE")) {
@@ -1176,6 +1184,79 @@ public class ZRepositoryMain {
 				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
+
+	/**
+	 * 校验 select 语句中的 ?占位符，必须组为一个数组排序后符合 ?1 ?2 ?3 的顺序
+	 *
+	 * @param method
+	 * @param sqlTemplate
+	 * @return
+	 */
+	public static int[] checkZQuerySelect(final Method method, final String sqlTemplate) {
+
+		if (method.getParameterAnnotations().length <= 0) {
+			return null;
+		}
+
+		final String k = method.getName() + "@" + sqlTemplate;
+		synchronized (k.intern()) {
+
+			final int[] v = C.get(k);
+			if(v !=null) {
+				return v;
+			}
+
+			return checkZQuerySelect0(method, sqlTemplate, k);
+		}
+
+
+	}
+
+	private static int[] checkZQuerySelect0(final Method method, final String sqlTemplate, final String k) {
+		final String regex = "\\?(\\d+)";
+		final Pattern pattern = Pattern.compile(regex);
+		final java.util.regex.Matcher matcher = pattern.matcher(sqlTemplate);
+		final int[] argOrderArray = new int[method.getParameters().length];
+
+		int i = 0;
+		boolean find = false;
+		while (matcher.find()) {
+			find = true;
+			final String a = matcher.group(1);
+			argOrderArray[i] = Integer.parseInt(a);
+			i++;
+		}
+
+		if (!find) {
+			throw new IllegalArgumentException(
+					"@" + ZQuery.class.getCanonicalName() + " 方法"
+							+ " ["
+							+ method.getName()
+							+ "] "
+							+ "的自定义sql - [" + sqlTemplate + "] 中的?占位符必须符合 [?从1开始递增的数字] 的模式，如 ?1 ?2 ?3 ");
+		}
+		System.out.println("a = " + Arrays.toString(argOrderArray));
+		System.out.println("method.name = " + method.getName());
+
+		Arrays.sort(argOrderArray);
+		for (int ix = 0; ix < argOrderArray.length; ix++) {
+			if (argOrderArray[ix] != (ix + 1)) {
+				throw new IllegalArgumentException("@" + ZQuery.class.getCanonicalName()
+						+ " 方法"
+						+ " ["
+						+ method.getName()
+						+ "] "
+						+ "自定义sql - [" + sqlTemplate
+						+ "] 中的 ?占位符 必须从1开始依次递增 "
+						) ;
+			}
+		}
+
+		C.put(k, argOrderArray);
+		return argOrderArray;
+	}
+
+	private static final WeakHashMap<String, int[]> C = new WeakHashMap<>();
 
 	private static Class getClassType(final Method method) {
 
@@ -1484,21 +1565,7 @@ public class ZRepositoryMain {
 		// 现在问题:ZEntity 有字段 time 和 timestamp ，在此会处理 findBystamp，因为time在前。
 		// 但显然不能要求用户自定义字段的顺序必须怎样，所以在此重排字段顺序
 		// fs name.length 排序看是否解决问题
-
 		Arrays.sort(fs, (o1, o2) -> {
-
-//			final String name1 = o1.getName();
-//			final String name2 = o2.getName();
-//
-//			final String upFieldName1 = String.valueOf(name1.charAt(0)).toUpperCase() + name1.substring(1);
-//			final String upFieldName2 = String.valueOf(name2.charAt(0)).toUpperCase() + name2.substring(1);
-//
-//			final int i1 = methodName.indexOf(upFieldName1);
-//			final int i2 = methodName.indexOf(upFieldName2);
-//
-//			final int v = Integer.compare(i1, i2);
-//
-//			return v;
 			final String name1 = o1.getName();
 			final String name2 = o2.getName();
 			final int v = Integer.compare(name2.length(), name1.length());
@@ -1531,6 +1598,23 @@ public class ZRepositoryMain {
 		}
 
 		d.setFiledNameOriginalOrder(filedNameOriginalOrder);
+
+		final ArrayList<String> filedNameMethodNameOrder = Lists.newArrayList();
+
+		final ArrayList<String> fnl = Lists.newArrayList(d.getFiledName());
+		if("findByDateOrderByNameDescLimit".equals(methodName)) {
+			final int x2 = 1;
+		}
+		fnl.sort((s1, s2) -> {
+//			s1.compareTo(s2)
+
+			final int i1 = methodName.indexOf(String.valueOf(s1.charAt(0)).toUpperCase() + s1.substring(1));
+			final int i2 = methodName.indexOf(String.valueOf(s2.charAt(0)).toUpperCase() + s2.substring(1));
+			final int compare = Integer.compare(i1, i2);
+			return compare;
+		});
+
+		d.setFiledNameMethodNameOrder(fnl);
 
 		// FIXME 2024年5月13日 下午9:29:27 zhangzhen:加一个没排序的顺序，
 		return d;
