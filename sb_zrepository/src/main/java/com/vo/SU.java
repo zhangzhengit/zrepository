@@ -106,19 +106,8 @@ public class SU {
 				}
 			}
 
-			// ----------mysql
-			// select * from blobt where  id = ?  limit ?,?
-			// select count(*) from blobt where  id = ? ;
-
-			// ----------pgsql
-			// select * from blobt limit ? offset ?;
-			// select count(*) from blobt where  id = ? ;
-
-			final String pageSqlTemp = columnBuilder.length() > 0 ? sql.replace(COLUMN, columnBuilder.toString())
+			final String pageSql = columnBuilder.length() > 0 ? sql.replace(COLUMN, columnBuilder.toString())
 					: sql.replace(" where " + COLUMN, columnBuilder.toString());
-			final String pageSql = ZRepositoryMain.getDB() == DBEnum.POSTGRESQL
-					? pageSqlTemp.replace("limit ?,?", "limit ? offset ?")
-					: pageSqlTemp;
 
 			final String pageCountSql = columnBuilder.length() > 0
 					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
@@ -146,17 +135,11 @@ public class SU {
 			}
 			final int offset = (page - 1) * size;
 			final int rows = size;
-			if (ZRepositoryMain.getDB() == DBEnum.MYSQL) {
-				ps.setInt((index - 1) + 1, offset);
-				ps.setInt((index - 1) + 2, rows);
-			} else if (ZRepositoryMain.getDB() == DBEnum.POSTGRESQL) {
-				ps.setInt((index - 1) + 2, offset);
-				ps.setInt((index - 1) + 1, rows);
-			}
+			ps.setInt((index - 1) + 1, rows);
+			ps.setInt((index - 1) + 2, offset);
 
 			rs = ps.executeQuery();
 			final ResultSetMetaData metaData = rs.getMetaData();
-
 
 			final int count = metaData.getColumnCount();
 			final List<T> rL = Lists.newArrayList();

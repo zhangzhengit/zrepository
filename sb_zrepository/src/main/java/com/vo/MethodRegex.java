@@ -178,7 +178,7 @@ public class MethodRegex {
 
 		// page
 		// FIXME 2024年5月14日 下午10:18:45 zhangzhen: page 暂时还只支持 ZR.page 方法，继续支持
-		REGEX_MAP_PAGE.put(page, "select * from TABLE_NAME where COLUMN limit ?,?");
+		REGEX_MAP_PAGE.put(page, "select * from TABLE_NAME where COLUMN limit ? offset ?");
 
 		// count
 		REGEX_MAP_Count.put(count, "select count(*) from TABLE_NAME");
