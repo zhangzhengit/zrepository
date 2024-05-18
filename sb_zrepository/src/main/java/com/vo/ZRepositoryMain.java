@@ -712,27 +712,12 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".update(" + modeString + ", classType,t,sql);";
 
 		case "save":
-
 			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,t,sql);";
 
-//			final String string =
-//				   "Object id = " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,t,sql);" + "\n\t"
-//				+ "final Object v1 = com.vo.ZC.get(\"myZRSubclass_save_getInterfaces_0.getCanonicalName\");" + "\n\t"
-//				+ "final Object v = v1 == null ? this.getClass().getInterfaces()[0].getCanonicalName() : v1;" + "\n\t"
-//				+ "final String zrCN = String.valueOf(v);" + "\n\t"
-//				+ "com.vo.ZC.put(\"myZRSubclass_save_getInterfaces_0.getCanonicalName\", v);" + "\n\t"
-//				+ "final String findByIDSql = "+ZRSqlMap.class.getCanonicalName()+".get(zrCN, \"findById\");"  + "\n\t"
-//				+ "return "+SU.class.getCanonicalName()+".findById(" + modeString + ", id, this.classType, findByIDSql);";
-//
-//			return string;
-
 		case "page":
-
-//			page(final Mode mode, final Class<T> cls, final T t, final String sql, final Integer size, final Integer page) {
 			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType,t,sql,size,page);";
 
 		case "existById":
-
 			return "return " + SU.class.getCanonicalName() + ".existById(" + modeString + ", id,classType,sql);";
 
 		case "deleteById":
@@ -741,9 +726,7 @@ public class ZRepositoryMain {
 		case "deleteByIdIn":
 			return "return " + SU.class.getCanonicalName() + ".deleteByIdIn(" + modeString + ", idList,classType,sql);";
 
-
 		case "deleteAll":
-
 			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + modeString + ", classType,sql);";
 
 		default:
@@ -762,7 +745,7 @@ public class ZRepositoryMain {
 			final String methodname = methodSQL.getMethodName();
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
-				return gROUP_findByXXOrderByXXDescLimit(method, methodname);
+				return gROUP_findByXXOrderByXXDescLimit(method);
 			}
 
 			if (
@@ -777,35 +760,35 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
-				return gROUP_findByXXXEndingWith(method, methodname);
+				return gROUP_findByXXXEndingWith(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
-				return gROUP_findByXXXStartingWith(method, methodname);
+				return gROUP_findByXXXStartingWith(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)) {
-				return gROUP_findByXXGreaterThanEquals(method, methodname);
+				return gROUP_findByXXGreaterThanEquals(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)) {
-				return gROUP_findByXXGreaterThan(method, methodname);
+				return gROUP_findByXXGreaterThan(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)) {
-				return GROUP_findByXXLessThanEquals(method, methodname);
+				return GROUP_findByXXLessThanEquals(method);
 			}
 
 			if (methodname.matches(MethodRegex.findByXXBetween)) {
-				return gROUP_findByXXBetween(method, methodname);
+				return gROUP_findByXXBetween(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
-				return gROUP_findByxx_in(method, methodname);
+				return gROUP_findByxx_in(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLessThan)) {
-				return gROUP_findByXXLessThan(method, methodname);
+				return gROUP_findByXXLessThan(method);
 			}
 
 			if (
@@ -818,7 +801,7 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
-				return GROUP_findByXXNotNull(method, methodname);
+				return GROUP_findByXXNotNull(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
@@ -826,7 +809,7 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
-				return gROUP_findByXXLike(method, methodname);
+				return gROUP_findByXXLike(method);
 			}
 			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
 				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
@@ -838,7 +821,7 @@ public class ZRepositoryMain {
 				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)
 				||	methodname.matches(MethodRegex.findByXXOrYYOrYY)
 				|| 	methodname.matches(MethodRegex.findByXXOrYY)) {
-				return gROUP_findByXXOrYY(method, methodname);
+				return gROUP_findByXXOrYY(method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_count)) {
@@ -882,97 +865,43 @@ public class ZRepositoryMain {
 		return Mode.class.getCanonicalName() + "." + Mode.WRITE.name();
 	}
 
-	private static String gROUP_findByXXXEndingWith(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXXEndingWith);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith("+modeString+",classType,sql," + joiner.toString()	+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
-	}
-
-
-	private static String gROUP_findByXXXStartingWith(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXXStartingWith);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith("+modeString+",classType,sql," + joiner.toString()	+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
-	}
-
-
-	private static String gROUP_findByXXGreaterThanEquals(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXGreaterThanEquals);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+	private static String gROUP_findByXXXEndingWith(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + modeString + ",classType,sql,"
 				+ joiner.toString() + ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
-	}
-	private static String gROUP_findByXXGreaterThan(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXGreaterThan);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
-						+ joiner.toString() + ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
 	}
 
-	private static String GROUP_findByXXLessThanEquals(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXLessThanEquals);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan("+modeString+",classType,sql," + joiner.toString()	+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+	private static String gROUP_findByXXXStartingWith(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+	}
+
+	private static String gROUP_findByXXGreaterThanEquals(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+	}
+
+	private static String gROUP_findByXXGreaterThan(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+	}
+
+	private static String GROUP_findByXXLessThanEquals(final Method method) {
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
 	}
 
 
@@ -984,24 +913,11 @@ public class ZRepositoryMain {
 		return r;
 	}
 
-	private static String gROUP_findByXXOrderByXXDescLimit(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXOrderByXXDescLimit);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString
-						+ ",classType,sql," + joiner.toString() + ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+	private static String gROUP_findByXXOrderByXXDescLimit(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
 	}
 
 	private static String gROUP_CountingByXXX(final Method method, final String key) {
@@ -1029,118 +945,50 @@ public class ZRepositoryMain {
 				+ joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXOrYY(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.findByXXOrYY);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,sql,"
-						+ joiner.toString() + ");";
-				return r;
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
-	}
-	private static String GROUP_findByXXNotNull(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByxxNotNull);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull("+modeString+",classType,sql," + joiner.toString()
-				+ ");";
-				return r;
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
-	}
-	private static String gROUP_findByXXLike(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXLike);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXLike("+modeString+",classType,sql," + joiner.toString()
-						+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+	private static String gROUP_findByXXOrYY(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+		return r;
 	}
 
-	private static String gROUP_findByXXLessThan(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXLessThan);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByIdLessThan("+modeString+",classType,sql," + joiner.toString()
-						+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+	private static String GROUP_findByXXNotNull(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+		return r;
 	}
 
-
-	private static String gROUP_findByXXBetween(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.findByXXBetween);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween("+modeString+",classType,sql," + joiner.toString()	+ ");";
-				return r;
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+	private static String gROUP_findByXXLike(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByxx_in(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.findByXXIn);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(DELIMITER);
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn("+modeString+",classType,sql," + joiner.toString()	+ ");";
-				return r;
-			}
-		}
-		return EMTPY;
+	private static String gROUP_findByXXLessThan(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+	}
+
+	private static String gROUP_findByXXBetween(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+		return r;
+	}
+
+	private static String gROUP_findByxx_in(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
+		return r;
 	}
 
 	private static String zQuery(final Method method, final String sqlTemplate) {
