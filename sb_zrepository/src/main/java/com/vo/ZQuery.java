@@ -35,13 +35,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD })
-// FIXME 2024年5月18日 上午1:00:31 zhangzhen: 这个有些需要特殊处理，比如参数顺序，
-// @ZQuery(sql = "select * from blobt limit ? offset ?")	 此为pgsql写法
-//@ZQuery(sql = "select * from blobt limit ?,?")			此为mysql写法，
-// 按method.getps 从前到后来给sql赋值显然是不行的，pgsql会取反了顺序，
-// TODO 写一个 ?1 ?2 ?3 的方式来匹配sql中的参数顺序
-// 如 上pgsql 的可以写成 limit ?2 offset ?1
-
 // FIXME 2024年5月18日 上午1:06:03 zhangzhen: pgsql遇到的问题2：
 // @ZQuery(sql = "select length(name) as nameLength from blobt limit ?;")
 // nameLength 会在jdbc中取到namelength,导致java class.getDField时获取不到，而mysqljdbc获取到的就是 nameLength
