@@ -116,6 +116,9 @@ public class MethodRegex {
 	public 	static final String findByXXOrderByXXLimit = GROUP_findByXXOrderByXXLimit;
 	public static final String findByXXAndXXOrderByXXLimit = "findBy(.*)And(.*)OrderBy(.*)Limit";
 	public static final String findByXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)OrderBy(.*)Limit";
+	public static final String findByXXAndXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)And(.*)OrderBy(.*)Limit";
+	public static final String findByXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)And(.*)And(.*)OrderBy(.*)Limit";
+	public static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)OrderBy(.*)Limit";
 	public 	static final String count = GROUP_count;
 	public 	static final String page = GROUP_page;
 	public 	static final String countingByXXX = GROUP_CountingByXXX;
@@ -163,6 +166,9 @@ public class MethodRegex {
 	static {
 
 		// findByXXOrderByXXLimit
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? and @ = ? and @ = ? and @ = ? and @ = ? order by @ asc limit ? offset ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? and @ = ? and @ = ? and @ = ? order by @ asc limit ? offset ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? and @ = ? and @ = ? order by @ asc limit ? offset ?");
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? and @ = ? order by @ asc limit ? offset ?");
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? order by @ asc limit ? offset ?");
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? order by @ asc limit ? offset ?");
@@ -415,6 +421,9 @@ public class MethodRegex {
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThanEquals);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_pageByXX_orderByXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXGreaterThanEquals);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXAndXXOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);

@@ -767,7 +767,11 @@ public class ZRepositoryMain {
 				return gROUP_findByXXOrderByXXDescLimit(method, methodname);
 			}
 
-			if (methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
+			if (
+				   methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+				|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+			    || methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
+				|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
 				|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
 				|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)
 					) {
