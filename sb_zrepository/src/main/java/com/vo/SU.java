@@ -1002,7 +1002,7 @@ public class SU {
 		return object;
 	}
 
-	public static <T> List<T> findByXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
+	public static <T> List<T> findByXXAndXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1625,7 +1625,7 @@ public class SU {
 	}
 
 	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
-	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[]. 
+	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[].
 	public static <T> Long countingByXXAndXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
@@ -1959,6 +1959,20 @@ public class SU {
 		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
 		// FIXME 2024年5月9日 下午11:44:27 zhangzhen: insert貌似没必须要写，直接用save方法就行了吧？
 		return Collections.emptyList();
+	}
+
+	/**
+	 * 把一个sql中的 指定顺序的 = ? 替换为 is null
+	 *
+	 * @param sql 如：select * from blobt where id = ? and name = ?
+	 * @param i   第几个，如上例子，要替换 id = ? ，则传值1
+	 */
+	// FIXME 2024年5月18日 下午8:30:34 zhangzhen: SU里面的方法要不要加一个参数：method.getPS.name[] ，直接替换就行了，就不需要自己查找然后替换了
+	public static void sqlR(final String sql, final int i) {
+		if (i <= 0) {
+			throw new IllegalArgumentException("i 必须大于0！i = " + i);
+		}
+
 	}
 
 }

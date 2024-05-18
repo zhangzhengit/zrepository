@@ -60,6 +60,8 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
+	private static final String DELIMITER = ",";
+
 	private static final String TYPE_NAME = "TYPE_NAME";
 
 	private static final String COLUMN_NAME = "COLUMN_NAME";
@@ -814,11 +816,11 @@ public class ZRepositoryMain {
 					) {
 				return gROUP_CountingByXXX(method, methodname);
 			}
-//
+
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
-				final int x = 20;
 				return GROUP_findByXXNotNull(method, methodname);
 			}
+
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,sql);";
 			}
@@ -843,12 +845,12 @@ public class ZRepositoryMain {
 				return "return " + SU.class.getCanonicalName() + ".count(" + modeString + ",classType,sql);";
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_findByXXAndXX)) {
-				return gROUP_findByXXAndXX(method, methodname);
-			}
+
 			// 最短的排最后
-			if (methodname.matches(MethodRegex.GROUP_findByXX)) {
-				return gROUP_findByXX(method, methodname);
+			if (
+					methodname.matches(MethodRegex.GROUP_findByXXAndXX)
+				||	methodname.matches(MethodRegex.GROUP_findByXX)) {
+				return gROUP_findByXX(method);
 			}
 
 			// 最后面是@ZQuery自定义方法
@@ -886,7 +888,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -905,7 +907,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -924,7 +926,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -942,7 +944,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -961,7 +963,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -975,11 +977,7 @@ public class ZRepositoryMain {
 
 
 	private static String gROUP_findByXXOrderByXXLimit(final Method method, final String key) {
-		final Parameter[] parameters2 = method.getParameters();
-		final StringJoiner joiner = new StringJoiner(",");
-		for (final Parameter parameter : parameters2) {
-			joiner.add(parameter.getName());
-		}
+		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString
 				+ ",classType,sql," + joiner.toString() + ");";
@@ -992,7 +990,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1013,13 +1011,13 @@ public class ZRepositoryMain {
 			final int x =1;
 		}
 
-		final StringJoiner joiner = new StringJoiner(",");
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
 		}
 		final String modeString = modeString(method);
 
-		final int ac = StrUtil.count(joiner.toString(), ",");
+		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
 
 		// FIXME 2024年5月18日 下午3:32:25 zhangzhen: byte[] 类型引起的问题 : 很多方法都有此问题，都要好好再测试byte[] 类型
 		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
@@ -1037,7 +1035,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1056,7 +1054,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1075,7 +1073,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1094,7 +1092,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1114,7 +1112,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1133,7 +1131,7 @@ public class ZRepositoryMain {
 		for (final Entry<String, String> entry : entrySet) {
 			if (key.matches(entry.getKey())) {
 				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
+				final StringJoiner joiner = new StringJoiner(DELIMITER);
 				for (final Parameter parameter : parameters2) {
 					joiner.add(parameter.getName());
 				}
@@ -1145,27 +1143,8 @@ public class ZRepositoryMain {
 		return EMTPY;
 	}
 
-
-	private static String gROUP_findByXXAndXX(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXX);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXX("+modeString+",classType,sql," + joiner.toString()	+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
-	}
-
 	private static String zQuery(final Method method, final String sqlTemplate) {
-		final StringJoiner joiner = new StringJoiner(",");
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
 		}
@@ -1190,7 +1169,7 @@ public class ZRepositoryMain {
 					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
 		}
 
-		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + ","
+		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + DELIMITER
 				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
@@ -1288,22 +1267,14 @@ public class ZRepositoryMain {
 		return returnType2;
 	}
 
-	private static String gROUP_findByXX(final Method method, final String methodname) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXX);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (methodname.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXX("+modeString+",classType,sql," + joiner.toString()	+ ");";
-			}
-		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+	private static String gROUP_findByXX(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
+
+		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
 	}
 
 	/**
@@ -1370,7 +1341,7 @@ public class ZRepositoryMain {
 		}
 
 		if (zidList.size() != 1) {
-			final String fsA = zidList.stream().map(Field::getName).collect(Collectors.joining(","));
+			final String fsA = zidList.stream().map(Field::getName).collect(Collectors.joining(DELIMITER));
 			throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
 					+ " 只能有一个 " + ZID.class.getSimpleName() + " 字段，现有有两个：" + fsA);
 		}
@@ -1670,5 +1641,12 @@ public class ZRepositoryMain {
 		return DB_ENUM;
 	}
 
+	private static StringJoiner getParameterNameFromMethod(final Method method) {
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+		return joiner;
+	}
 }
 
