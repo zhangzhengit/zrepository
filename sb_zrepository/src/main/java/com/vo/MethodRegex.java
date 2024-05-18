@@ -160,10 +160,12 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_BETWEEN = new LinkedHashMap<>();
 
 	static {
-		// findByXXOrderByXXDescLimit
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXOrderByXXDescLimit, "select * from TABLE_NAME where @ = ? order by @ desc limit ?,?");
+
 		// findByXXOrderByXXLimit
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? order by @ asc limit ?,?");
+
+		// findByXXOrderByXXDescLimit
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXOrderByXXDescLimit, "select * from TABLE_NAME where @ = ? order by @ desc limit ?,?");
 
 		// page
 		// FIXME 2024年5月14日 下午10:18:45 zhangzhen: page 暂时还只支持 ZR.page 方法，继续支持

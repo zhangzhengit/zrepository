@@ -66,7 +66,6 @@ public class SU {
 
 	private static final ZCPool INSTANCE = ZCPool.getInstance();
 
-	// FIXME 2024年5月14日 下午10:22:14 zhangzhen: SU.page还要改
 	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final String sql, final Integer size,
 			final Integer page) {
 		System.out
@@ -106,11 +105,24 @@ public class SU {
 				}
 			}
 
-			final String pageSql = columnBuilder.length() > 0 ? sql.replace(COLUMN, columnBuilder.toString())
+			// ----------mysql
+			// select * from blobt where  id = ?  limit ?,?
+			// select count(*) from blobt where  id = ? ;
+
+			// ----------pgsql
+			// select * from blobt limit ? offset ?;
+			// select count(*) from blobt where  id = ? ;
+
+			final String pageSqlTemp = columnBuilder.length() > 0 ? sql.replace(COLUMN, columnBuilder.toString())
 					: sql.replace(" where " + COLUMN, columnBuilder.toString());
+			final String pageSql = ZRepositoryMain.getDB() == DBEnum.POSTGRESQL
+					? pageSqlTemp.replace("limit ?,?", "limit ? offset ?")
+					: pageSqlTemp;
+
 			final String pageCountSql = columnBuilder.length() > 0
 					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
 					: pageCountSQLT.replace(" where " + COLUMN, columnBuilder.toString());
+
 			if (ZDP.getShowSql()) {
 				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSql, fMap.values(), page, size);
 				LOG.info("page总条数查询-[{}]-[{}]-[{},{}]", pageCountSql, fMap.values(), page, size);
@@ -133,8 +145,13 @@ public class SU {
 			}
 			final int offset = (page - 1) * size;
 			final int rows = size;
-			ps.setInt((index - 1) + 1, offset);
-			ps.setInt((index - 1) + 2, rows);
+			if (ZRepositoryMain.getDB() == DBEnum.MYSQL) {
+				ps.setInt((index - 1) + 1, offset);
+				ps.setInt((index - 1) + 2, rows);
+			} else if (ZRepositoryMain.getDB() == DBEnum.POSTGRESQL) {
+				ps.setInt((index - 1) + 2, offset);
+				ps.setInt((index - 1) + 1, rows);
+			}
 
 			rs = ps.executeQuery();
 			final ResultSetMetaData metaData = rs.getMetaData();
