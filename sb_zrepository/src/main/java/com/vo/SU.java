@@ -1616,6 +1616,56 @@ public class SU {
 		return count(mode, cls, sql,zc);
 	}
 
+	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
+	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[]. 
+	public static <T> Long countingByXXAndXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final Connection connection = zc.getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			final String s = sql;
+			ps = connection.prepareStatement(s);
+
+			// FIXME 2024年5月13日 下午8:59:22 zhangzhen: 这里继续考虑好，是 生成代理类时，把T和Field也传进来吗？方便在此setXXX赋值
+			// 否则只能 判断参数值类型来赋值，可能声明或传来的参数值类型不符，要到sql执行了才报错就太晚了，报错越早越好。
+
+			int index = 1;
+			for (final Object v : fieldValue) {
+				setXX_fieldValue(v, ps, index);
+				index++;
+			}
+
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}],[{}]", s, Arrays.toString(fieldValue));
+			}
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			if (rs.next()) {
+				final Long count = rs.getLong(1);
+				return count;
+			}
+
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZC(zc);
+			close(rs, ps);
+		}
+
+		return 0L;
+	}
+
 	public static <T> Long countingByXX(final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);

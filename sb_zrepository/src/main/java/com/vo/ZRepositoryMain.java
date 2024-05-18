@@ -758,10 +758,6 @@ public class ZRepositoryMain {
 //			final Entry<String, String> check = MethodRegex.check(methodName, method);
 //			System.out.println("getSuMethod-check = " + check);
 			final String methodname = methodSQL.getMethodName();
-			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByByte1AndNameOrderByTimeLimit".equals(method.getName())) {
-				final int x =1;
-			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
 				return gROUP_findByXXOrderByXXDescLimit(method, methodname);
@@ -810,7 +806,12 @@ public class ZRepositoryMain {
 				return gROUP_findByXXLessThan(method, methodname);
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
+			if (
+					methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
+				 || methodname.matches(MethodRegex.countingByXXXAndXXAndXX)
+				 || methodname.matches(MethodRegex.countingByXXXAndXX)
+				 ||	methodname.matches(MethodRegex.GROUP_CountingByXXX)
+					) {
 				return gROUP_CountingByXXX(method, methodname);
 			}
 //
@@ -1005,24 +1006,29 @@ public class ZRepositoryMain {
 		return EMTPY;
 	}
 
-
 	private static String gROUP_CountingByXXX(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_CountingByXXX);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				return "return " + SU.class.getCanonicalName() + ".countingByXX("+modeString+",classType,sql," + joiner.toString()
-						+ ");";
-			}
+
+		// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
+		if("countingByContent".equals(method.getName())) {
+			final int x =1;
 		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+
+		final StringJoiner joiner = new StringJoiner(",");
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+		final String modeString = modeString(method);
+
+		final int ac = StrUtil.count(joiner.toString(), ",");
+
+		// FIXME 2024年5月18日 下午3:32:25 zhangzhen: byte[] 类型引起的问题 : 很多方法都有此问题，都要好好再测试byte[] 类型
+		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
+		// 而不是a.length=1并且这唯一的值是一个byte[]
+
+		final String suMethodName =
+				ac == 0 ? "countingByXX" : "countingByXXAndXX";
+		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + modeString + ",classType,sql,"
+				+ joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXOrYY(final Method method, final String key) {

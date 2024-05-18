@@ -122,6 +122,9 @@ public class MethodRegex {
 	public 	static final String count = GROUP_count;
 	public 	static final String page = GROUP_page;
 	public 	static final String countingByXXX = GROUP_CountingByXXX;
+	public 	static final String countingByXXXAndXX = "countingBy(.*)And(.*)";
+	public 	static final String countingByXXXAndXXAndXX = "countingBy(.*)And(.*)And(.*)";
+	public 	static final String countingByXXXAndXXAndXXAndXX = "countingBy(.*)And(.*)And(.*)And(.*)";
 	public 	static final String existById = GROUP_EXISTBYId;
 	public 	static final String deleteById = GROUP_DeleteById;
 	public 	static final String deleteByIdIn = GROUP_DeleteByIdIn;
@@ -187,6 +190,9 @@ public class MethodRegex {
 		REGEX_MAP_findByXXBetween.put(findByXXBetween, "select * from TABLE_NAME where @ BETWEEN ? AND ?;");
 
 		// countingByXXX
+		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXXAndXX, "select count(*) from TABLE_NAME  where @ = ? and @ = ? and @ = ? and @ = ?;");
+		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXX, "select count(*) from TABLE_NAME  where @ = ? and @ = ? and @ = ?;");
+		REGEX_MAP_CountingByXXX.put(countingByXXXAndXX, "select count(*) from TABLE_NAME  where @ = ? and @ = ?;");
 		REGEX_MAP_CountingByXXX.put(countingByXXX, "select count(*) from TABLE_NAME  where @ = ?;");
 		// findByXXOrXX 支持2个到11个条件的
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, "select * from TABLE_NAME  where @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ? or @ = ?;");
@@ -406,6 +412,9 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXXAndXXAndXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXXAndXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThanEquals);
