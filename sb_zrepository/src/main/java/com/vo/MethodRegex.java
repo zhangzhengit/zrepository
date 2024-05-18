@@ -114,6 +114,8 @@ public class MethodRegex {
 
 	public 	static final String findByXXOrderByXXDescLimit = GROUP_findByXXOrderByXXDescLimit;
 	public 	static final String findByXXOrderByXXLimit = GROUP_findByXXOrderByXXLimit;
+	public static final String findByXXAndXXOrderByXXLimit = "findBy(.*)And(.*)OrderBy(.*)Limit";
+	public static final String findByXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)OrderBy(.*)Limit";
 	public 	static final String count = GROUP_count;
 	public 	static final String page = GROUP_page;
 	public 	static final String countingByXXX = GROUP_CountingByXXX;
@@ -129,7 +131,6 @@ public class MethodRegex {
 	public static ArrayList<String> regexList = Lists.newArrayList();
 
 	public final static HashMap<String, HashMap<String, String>> R_M = new LinkedHashMap<>();
-//	findByXXOrderByXXLimit
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXDescLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_Count = new LinkedHashMap<>();
@@ -162,10 +163,12 @@ public class MethodRegex {
 	static {
 
 		// findByXXOrderByXXLimit
-		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? order by @ asc limit ?,?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? and @ = ? order by @ asc limit ? offset ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? and @ = ? order by @ asc limit ? offset ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, "select * from TABLE_NAME where @ = ? order by @ asc limit ? offset ?");
 
 		// findByXXOrderByXXDescLimit
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXOrderByXXDescLimit, "select * from TABLE_NAME where @ = ? order by @ desc limit ?,?");
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXOrderByXXDescLimit, "select * from TABLE_NAME where @ = ? order by @ desc limit ? offset ?");
 
 		// page
 		// FIXME 2024年5月14日 下午10:18:45 zhangzhen: page 暂时还只支持 ZR.page 方法，继续支持
@@ -264,6 +267,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXGreaterThan, REGEX_MAP_GreaterThan);
 		R_M.put(GROUP_findByXXLessThanEquals, REGEX_MAP_LessThanEquals);
 		R_M.put(GROUP_findByXXOrderByXXDescLimit, REGEX_MAP_findByXXOrderByXXDescLimit);
+		R_M.put(findByXXAndXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
 		R_M.put(GROUP_findByXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
 		R_M.put(GROUP_findByXXXEndingWith, REGEX_MAP_findByXXXEndingWith);
 		R_M.put(GROUP_findByXXXStartingWith, REGEX_MAP_StartingWith);
@@ -411,6 +415,8 @@ public class MethodRegex {
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThanEquals);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_pageByXX_orderByXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXGreaterThanEquals);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByxx_in);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXIsNull);

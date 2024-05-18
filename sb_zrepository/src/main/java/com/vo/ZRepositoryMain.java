@@ -745,8 +745,9 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + modeString + ", classType,sql);";
 
 		default:
+
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByIdLessThan".equals(method.getName())) {
+			if("findByByte1AndNameOrderByTimeLimit".equals(method.getName())) {
 				final int x =1;
 			}
 
@@ -757,12 +758,19 @@ public class ZRepositoryMain {
 //			final Entry<String, String> check = MethodRegex.check(methodName, method);
 //			System.out.println("getSuMethod-check = " + check);
 			final String methodname = methodSQL.getMethodName();
+			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
+			if("findByByte1AndNameOrderByTimeLimit".equals(method.getName())) {
+				final int x =1;
+			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
 				return gROUP_findByXXOrderByXXDescLimit(method, methodname);
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
+			if (methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
+				|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
+				|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)
+					) {
 				return gROUP_findByXXOrderByXXLimit(method, methodname);
 			}
 
@@ -962,24 +970,16 @@ public class ZRepositoryMain {
 
 
 	private static String gROUP_findByXXOrderByXXLimit(final Method method, final String key) {
-		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXOrderByXXLimit);
-		final Set<Entry<String, String>> entrySet = hh.entrySet();
-		for (final Entry<String, String> entry : entrySet) {
-			if (key.matches(entry.getKey())) {
-				final Parameter[] parameters2 = method.getParameters();
-				final StringJoiner joiner = new StringJoiner(",");
-				for (final Parameter parameter : parameters2) {
-					joiner.add(parameter.getName());
-				}
-				final String modeString = modeString(method);
-				final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit("+modeString+",classType,sql," + joiner.toString()	+ ");";
-				return r;
-			}
+		final Parameter[] parameters2 = method.getParameters();
+		final StringJoiner joiner = new StringJoiner(",");
+		for (final Parameter parameter : parameters2) {
+			joiner.add(parameter.getName());
 		}
-		// FIXME 2023年6月16日 下午4:49:57 zhanghen: 抛异常，不支持的方法
-		return EMTPY;
+		final String modeString = modeString(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString
+				+ ",classType,sql," + joiner.toString() + ");";
+		return r;
 	}
-
 
 	private static String gROUP_findByXXOrderByXXDescLimit(final Method method, final String key) {
 		final HashMap<String, String> hh = MethodRegex.R_M.get(MethodRegex.GROUP_findByXXOrderByXXDescLimit);

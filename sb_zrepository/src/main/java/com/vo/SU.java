@@ -1685,28 +1685,15 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-
-			final String sqlF = ZRepositoryMain.getDB() == DBEnum.POSTGRESQL ? sql.replace("limit ?,?", "limit ? offset ?")
-					: sql;
-
-			ps = connection.prepareStatement(sqlF);
+			ps = connection.prepareStatement(sql);
 			int i = 1;
-			if (ZRepositoryMain.getDB() == DBEnum.MYSQL) {
-				for (final Object object : field) {
-					ps.setObject(i, object);
-					i++;
-				}
-			} else if (ZRepositoryMain.getDB() == DBEnum.POSTGRESQL) {
-				ps.setObject(i, field[0]);
-				i++;
-				ps.setObject(i, field[2]);
-				i++;
-				ps.setObject(i, field[1]);
+			for (final Object object : field) {
+				ps.setObject(i, object);
 				i++;
 			}
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sqlF, Arrays.toString(field));
+				LOG.info("[{}],[{}]", sql, Arrays.toString(field));
 			}
 
 			rs = ps.executeQuery();
