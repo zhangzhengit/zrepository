@@ -897,9 +897,6 @@ public class SU {
 
 	private static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql,
 			final ZConnection zc) {
-		if (Objects.isNull(id)) {
-			return null;
-		}
 
 		final Connection connection = zc.getConnection();
 
@@ -913,12 +910,18 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
-			ps.setObject(1, id);
+			String sT = null;
+			if (id == null) {
+				sT = sql.replaceFirst("= \\?", "is null");
+				ps = connection.prepareStatement(sT);
+			} else {
+				sT = sql;
+				ps = connection.prepareStatement(sT);
+				ps.setObject(1, id);
+			}
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, id);
+				LOG.info("[{}],[{}]", sT, id);
 			}
 
 			rs = ps.executeQuery();
@@ -1062,17 +1065,22 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id = ?"
-			final String s = sql;
+			// "select * from user where xx = ?"
+			String s = null;
+
+			if (fieldValue == null) {
+				s = sql.replaceFirst(" = \\?", " is null");
+				ps = connection.prepareStatement(s);
+			} else {
+				s = sql;
+				ps = connection.prepareStatement(s);
+				final int index = 1;
+				setXX_fieldValue(fieldValue, ps, index);
+			}
 
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
-			ps = connection.prepareStatement(s);
-
-			final int index = 1;
-
-			setXX_fieldValue(fieldValue, ps, index);
 
 			rs = ps.executeQuery();
 
