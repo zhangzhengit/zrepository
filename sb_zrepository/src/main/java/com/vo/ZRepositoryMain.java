@@ -778,16 +778,12 @@ public class ZRepositoryMain {
 				return gROUP_findByXXXStartingWith(method);
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)) {
+			if (	methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
+				 || methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)
+				 || methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)
+				 || methodname.matches(MethodRegex.GROUP_findByXXLessThan)
+					) {
 				return gROUP_findByXXGreaterThanEquals(method);
-			}
-
-			if (methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)) {
-				return gROUP_findByXXGreaterThan(method);
-			}
-
-			if (methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)) {
-				return GROUP_findByXXLessThanEquals(method);
 			}
 
 			if (methodname.matches(MethodRegex.findByXXBetween)) {
@@ -796,10 +792,6 @@ public class ZRepositoryMain {
 
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
 				return gROUP_findByxx_in(method);
-			}
-
-			if (methodname.matches(MethodRegex.GROUP_findByXXLessThan)) {
-				return gROUP_findByXXLessThan(method);
 			}
 
 			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
@@ -814,7 +806,9 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
-				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,sql);";
+				final Class returnType = getClassType(method);
+				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,"
+						+ returnType.getCanonicalName() + ",sql);";
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
@@ -880,56 +874,44 @@ public class ZRepositoryMain {
 	private static String gROUP_findByXXXEndingWith(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final Class returnType = getClassType(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXXStartingWith(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
+		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXGreaterThanEquals(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
+		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
-
-	private static String gROUP_findByXXGreaterThan(final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-
-		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
-	}
-
-	private static String GROUP_findByXXLessThanEquals(final Method method) {
-
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
-	}
-
 
 	private static String gROUP_findByXXOrderByXXLimit(final Method method, final String key) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
+		final Class returnType = getClassType(method);
 		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString
-				+ ",classType,sql," + joiner.toString() + ");";
+				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
 	private static String gROUP_findByXXOrderByXXDescLimit(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final Class returnType = getClassType(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_CountingByXXX(final Method method, final String key) {
@@ -960,31 +942,31 @@ public class ZRepositoryMain {
 	private static String gROUP_findByXXOrYY(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final Class returnType = getClassType(method);
+
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
 	private static String GROUP_findByXXNotNull(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final Class returnType = getClassType(method);
+
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
 	private static String gROUP_findByXXLike(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
-	}
 
-	private static String gROUP_findByXXLessThan(final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final Class returnType = getClassType(method);
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,"
+				+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXBetween(final Method method) {
@@ -1000,8 +982,9 @@ public class ZRepositoryMain {
 	private static String gROUP_findByxx_in(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final Class returnType = getClassType(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 

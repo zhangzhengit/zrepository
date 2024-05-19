@@ -1201,7 +1201,8 @@ public class SU {
 	}
 
 	// FIXME 2024年5月14日 下午9:49:14 zhangzhen: in 还需要特殊处理 blob类型的，还没测试，不知道要不要改？
-	public static <T> List<T> findByXXIn(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
+	public static <T> List<T> findByXXIn(final Mode mode, final Class<T> cls, final Class<T> returnType,
+			final String sql, final Object... fieldArray) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1240,18 +1241,20 @@ public class SU {
 				}
 			}
 
-			if (ZDP.getShowSql()) {
-				LOG.info("[{}]", s);
-			}
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = s.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			rs = statement.executeQuery(s);
+			if (ZDP.getShowSql()) {
+				LOG.info("[{}]", sqlColumn);
+			}
+			rs = statement.executeQuery(sqlColumn);
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1272,7 +1275,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByIdLessThan(final Mode mode, final Class<T> cls, final String sql, final Object field) {
+	public static <T> List<T> findByIdLessThan(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object field) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1281,14 +1284,15 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id = ?"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, field);
 
-
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, field);
+				LOG.info("[{}],[{}]", sqlColumn, field);
 			}
 
 			rs = ps.executeQuery();
@@ -1298,7 +1302,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1317,7 +1321,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXXEndingWith(final Mode mode, final Class<T> cls, final String sql, final Object field) {
+	public static <T> List<T> findByXXXEndingWith(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1326,13 +1330,15 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id = ?"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, "%" + field);
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, "%" + field);
+				LOG.info("[{}],[{}]", sqlColumn, "%" + field);
 			}
 
 			rs = ps.executeQuery();
@@ -1342,7 +1348,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1364,7 +1370,8 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXXStartingWith(final Mode mode, final Class<T> cls, final String sql, final Object field) {
+	public static <T> List<T> findByXXXStartingWith(final Mode mode, final Class<T> cls, final Class<T> returnType,
+			final String sql, final Object field) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1373,13 +1380,14 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id = ?"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, field + "%");
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, field + "%");
+				LOG.info("[{}],[{}]", sqlColumn, field + "%");
 			}
 
 			rs = ps.executeQuery();
@@ -1389,7 +1397,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1409,7 +1417,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXOrYY(final Mode mode, final Class<T> cls, final String sql, final Object... field) {
+	public static <T> List<T> findByXXOrYY(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object... field) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 
@@ -1417,8 +1425,11 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 
 			int index = 1;
 			for (final Object object : field) {
@@ -1427,7 +1438,7 @@ public class SU {
 			}
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, Arrays.toString(field));
+				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
 			}
 
 			rs = ps.executeQuery();
@@ -1437,7 +1448,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1466,12 +1477,15 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id between ? and ?;"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+
+			ps = connection.prepareStatement(sqlColumn);
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s,Arrays.toString(fiedlArray));
+				LOG.info("[{}],[{}]", sqlColumn,Arrays.toString(fiedlArray));
 			}
 
 			int index = 1;
@@ -1510,7 +1524,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXNotNull(final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> List<T> findByXXNotNull(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 
@@ -1518,12 +1532,14 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id is not null;"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}]", s);
+				LOG.info("[{}]", sqlColumn);
 			}
 
 			rs = ps.executeQuery();
@@ -1533,7 +1549,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1554,7 +1570,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXLike(final Mode mode, final Class<T> cls, final String sql, final Object field) {
+	public static <T> List<T> findByXXLike(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1563,13 +1579,15 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			connection.setAutoCommit(false);
-			// "select * from user where id = ?"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, "%" + field + "%");
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", s, "%" + field + "%");
+				LOG.info("[{}],[{}]", sqlColumn, "%" + field + "%");
 			}
 
 			rs = ps.executeQuery();
@@ -1579,7 +1597,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1604,7 +1622,7 @@ public class SU {
 		INSTANCE.returnZConnectionAndCommit(zc);
 	}
 
-	public static <T> List<T> findByXXIsNull(final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> List<T> findByXXIsNull(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1612,12 +1630,14 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			// "select * from user where id = ?"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}]", s);
+				LOG.info("[{}]", sqlColumn);
 			}
 
 			rs = ps.executeQuery();
@@ -1627,7 +1647,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1789,7 +1809,7 @@ public class SU {
 		return 0L;
 	}
 
-	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls, final String sql, final Object... field) {
+	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object... field) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1797,15 +1817,20 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			ps = connection.prepareStatement(sql);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			ps = connection.prepareStatement(sqlColumn);
 			int i = 1;
 			for (final Object object : field) {
 				ps.setObject(i, object);
 				i++;
 			}
 
+
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sql, Arrays.toString(field));
+				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
 			}
 
 			rs = ps.executeQuery();
@@ -1815,7 +1840,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
