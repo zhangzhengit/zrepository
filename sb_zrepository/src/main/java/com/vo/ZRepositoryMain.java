@@ -635,6 +635,13 @@ public class ZRepositoryMain {
 		final Set<ZMethod> zmSet = new HashSet<>();
 		for (final Method method : ms) {
 
+			final Class classType = getClassType(method);
+
+			// FIXME 2024年5月19日 下午6:13:44 zhangzhen: debug 代码记得删除
+			if("findByNameAndId".equals(method.getName())) {
+				final int x2=1;
+			}
+
 			final ZWrite write = method.getAnnotation(ZWrite.class);
 			final ZRead read = method.getAnnotation(ZRead.class);
 			if ((write != null) && (read != null)) {
@@ -696,6 +703,7 @@ public class ZRepositoryMain {
 
 		switch (method.getName()) {
 		case "findById":
+//			final Class returnType = getClassType(method);
 			return "return " + SU.class.getCanonicalName() + ".findById(" + modeString + ", id,classType,sql);";
 
 		case "findByIdIn":
@@ -714,7 +722,9 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,t,sql);";
 
 		case "page":
-			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType,t,sort,sql,size,page);";
+			final Class returnTypePage = getClassType(method);
+			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType,"
+					+ returnTypePage.getCanonicalName() + ",t,sort,sql,size,page);";
 
 		case "existById":
 			return "return " + SU.class.getCanonicalName() + ".existById(" + modeString + ", id,classType,sql);";
@@ -979,9 +989,11 @@ public class ZRepositoryMain {
 
 	private static String gROUP_findByXXBetween(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final Class returnType = getClassType(method);
+
 		final String modeString = modeString(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + modeString + ",classType,"
+				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
@@ -1113,6 +1125,13 @@ public class ZRepositoryMain {
             }
         }
 
+		// FIXME 2024年5月19日 下午7:14:40 zhangzhen: ZR.page 这个方法，在此会走到这里，
+		// public abstract com.vo.core.Page com.vo.ZRepository.page(java.lang.Object,com.vo.core.Sort,java.lang.Integer,java.lang.Integer)
+		// 考虑：
+		// 1 ZR 加一个默认实现类试下，page等方法放在实现类里再试
+		// 2 ZR 不改，page等方法就不支持自定义返回T了，select 也直接select * 算了
+
+
 		final Class<?> returnType2 = method.getReturnType();
 		return returnType2;
 	}
@@ -1121,9 +1140,11 @@ public class ZRepositoryMain {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 
+		final Class returnType = getClassType(method);
+
 		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 
-		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + modeString + ",classType,sql,"
+		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + modeString + ",classType,"+returnType.getCanonicalName()+",sql,"
 				+ joiner.toString() + ");";
 	}
 

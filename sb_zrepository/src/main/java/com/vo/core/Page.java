@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import java.util.Collections;
+
 import com.google.common.collect.ImmutableList;
 
 import lombok.AllArgsConstructor;
@@ -19,27 +21,35 @@ public final class Page<T> {
 	/**
 	 * 每页的条数
 	 */
-	private final Integer size;
+	private Integer size;
 
 	/**
 	 * 当前第几页
 	 */
-	private final Long page;
+	private Long page;
 
 	/**
 	 * 总页数
 	 */
-	private final Long totalPage;
+	private Long totalPage;
 
 	/**
 	 * 总条数
 	 */
-	private final Long totalCount;
+	private Long totalCount;
 
 	/**
 	 * 本页内容
 	 */
 	private final ImmutableList<T> list;
+
+	public Page() {
+		this.size = 0;
+		this.page = 0L;
+		this.totalPage = 0L;
+		this.totalPage = 0L;
+		this.list = ImmutableList.copyOf(Collections.emptyList());
+	}
 
 	/**
 	 * 是否有下一页
@@ -50,11 +60,13 @@ public final class Page<T> {
 	public boolean hasNextPage() {
 		return this.page < this.totalPage;
 	}
+
 	public boolean hasPreviousPage() {
-		return (this.page - 1) * this.size <= this.totalCount;
+		return ((this.page - 1) * this.size) <= this.totalCount;
 	}
 
 	public boolean hasContent() {
 		return this.getList().size() > 0;
 	}
+
 }

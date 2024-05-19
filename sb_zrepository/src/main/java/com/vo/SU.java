@@ -69,7 +69,7 @@ public class SU {
 
 	private static final ZCPool INSTANCE = ZCPool.getInstance();
 
-	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final Sort sort, final String sql,
+	public static <T> Page<T> page(final Mode mode, final Class<T> cls,final Class<T> returnType, final T t, final Sort sort, final String sql,
 			final Integer size, final Integer page) {
 
 		if (size <= 0) {
@@ -106,11 +106,18 @@ public class SU {
 				}
 			}
 
-			final String s2 = sort == null ? sql
-					: sql.replace(Sort.SPACE + "limit", sort.done() + Sort.SPACE + "limit");
+//			final String select = gSelectFromReturnType(returnType);
+//			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			// FIXME 2024年5月19日 下午7:16:32 zhangzhen: 问题看 ZRMain.getClassType 里面
+			final String sqlColumn = sql;
+
+
+			final String s2 = sort == null ? sqlColumn
+					: sqlColumn.replace(Sort.SPACE + "limit", sort.done() + Sort.SPACE + "limit");
 
 			final String pageSql = columnBuilder.length() > 0 ? s2.replace(COLUMN, columnBuilder.toString())
-					: sql.replace(" where " + COLUMN, columnBuilder.toString());
+					: sqlColumn.replace(" where " + COLUMN, columnBuilder.toString());
 
 			final String pageCountSql = columnBuilder.length() > 0
 					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
@@ -176,7 +183,7 @@ public class SU {
 					ImmutableList.copyOf(rL));
 			return pageR;
 
-		} catch (final SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException e1) {
+		} catch (final SQLException | IllegalArgumentException | IllegalAccessException  e1) {
 			e1.printStackTrace();
 			try {
 				connection.rollback();
@@ -651,7 +658,7 @@ public class SU {
 					final Object id = rs.getObject(1);
 					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
 					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-					final T findByIdNew = findById(mode, id, cls, selectById, zc);
+					final T findByIdNew = findById0(mode, id, cls,selectById, zc);
 					return findByIdNew;
 				}
 			} finally {
@@ -806,7 +813,7 @@ public class SU {
 			returnZC(zc);
 			return r;
 
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -881,7 +888,7 @@ public class SU {
 				rList.add(t);
 			}
 			return rList;
-		} catch (SQLException | SecurityException | InstantiationException | IllegalAccessException | NoSuchFieldException e) {
+		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 
 			try {
@@ -897,8 +904,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql,
-			final ZConnection zc) {
+	private static <T> T findById0(final Mode mode, final Object id, final Class<T> cls,final String sql, final ZConnection zc) {
 
 		final Connection connection = zc.getConnection();
 
@@ -913,11 +919,19 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			String sT = null;
+
+			// FIXME 2024年5月19日 下午7:28:28 zhangzhen: select 字段和page方法一样，ZR.findByID 返回的泛型是Object，而不是具体的@ZEntity 类，思路同page
+
+//			final String select = gSelectFromReturnType(returnType);
+//			final String s1 = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+			final String s1 = sql;
+
+
 			if (id == null) {
-				sT = sql.replaceFirst("= \\?", "is null");
+				sT = s1.replaceFirst("= \\?", "is null");
 				ps = connection.prepareStatement(sT);
 			} else {
-				sT = sql;
+				sT = s1;
 				ps = connection.prepareStatement(sT);
 				ps.setObject(1, id);
 			}
@@ -936,7 +950,7 @@ public class SU {
 				return t;
 			}
 
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -952,59 +966,88 @@ public class SU {
 		return null;
 	}
 
-	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
+	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls,final String sql) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
-		return findById(mode, id, cls, sql, zc);
+		return findById0(mode, id, cls, sql,zc);
 	}
 
-	private static <T> T newT(final Class<T> cls, final ResultSet rs, final ResultSetMetaData metaData, final int count)
-			throws InstantiationException, IllegalAccessException, SQLException, NoSuchFieldException {
-		final T object = cls.newInstance();
-		for (int i = 0; i < count; i++) {
-			final Object columValue = rs.getObject(i + 1);
-			final String columnName = metaData.getColumnLabel(i + 1);
-			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
-			final Field ffffff = cls.getDeclaredField(javaFieldName);
-			ffffff.setAccessible(true);
+	private static <T> T newT(final Class<T> cls, final ResultSet rs, final ResultSetMetaData metaData,
+			final int count) {
+		T object = null;
+		try {
+			object = cls.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 
-			final Object value = handValue(object, columValue, ffffff);
+		for (int i = 0; i < count; i++) {
+			Object columValue = null;
+			try {
+				columValue = rs.getObject(i + 1);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+			String columnName = null;
+			try {
+				columnName = metaData.getColumnLabel(i + 1);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+
+			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
+			Field field = null;
+			try {
+				field = cls.getDeclaredField(javaFieldName);
+				field.setAccessible(true);
+			} catch (NoSuchFieldException | SecurityException e) {
+				// 到此就继续，因为cls可能不是@ZEntity 类，而是自定义的类，所以可能column不存在此类中
+				// FIXME 2024年5月19日 下午6:33:27 zhangzhen: 继续支持了根据返回类型T来生成select的字段后，上面这行的问题就不存在了。
+				continue;
+			}
+
+			final Object value = handValue(object, columValue, field);
 			if (value == null) {
 				continue;
 			}
 
-			final String cn = ffffff.getType().getCanonicalName();
-			if (cn.equals(Byte.class.getCanonicalName())) {
-				ffffff.set(object, Byte.valueOf(String.valueOf(value)));
-			} else if (cn.equals(Short.class.getCanonicalName())) {
-				ffffff.set(object, Short.valueOf(String.valueOf(value)));
-			} else if (cn.equals(Integer.class.getCanonicalName())) {
-				ffffff.set(object, Integer.valueOf(String.valueOf(value)));
-			} else if (cn.equals(Long.class.getCanonicalName())) {
-				ffffff.set(object, Long.valueOf(String.valueOf(value)));
-			} else if (cn.equals(Float.class.getCanonicalName())) {
-				ffffff.set(object, Float.valueOf(String.valueOf(value)));
-			} else if (cn.equals(Double.class.getCanonicalName())) {
-				ffffff.set(object, Double.valueOf(String.valueOf(value)));
-			} else if (cn.equals(BigDecimal.class.getCanonicalName())) {
-				ffffff.set(object, new BigDecimal(String.valueOf(value)));
-			} else if (cn.equals(Boolean.class.getCanonicalName())) {
-				ffffff.set(object,
-						value == null ? null : (Integer.valueOf(1).equals(value) ? Boolean.TRUE : Boolean.FALSE));
-			} else if (cn.equals(Character.class.getCanonicalName())){
-				ffffff.set(object, Character.valueOf(String.valueOf(value).charAt(0)));
-			} else if (cn.equals(String.class.getCanonicalName())){
-				ffffff.set(object, String.valueOf(value));
-			} else {
-				if (ffffff.getClass().isArray()){
+			final String cn = field.getType().getCanonicalName();
+			try {
+
+				if (cn.equals(Byte.class.getCanonicalName())) {
+					field.set(object, Byte.valueOf(String.valueOf(value)));
+				} else if (cn.equals(Short.class.getCanonicalName())) {
+					field.set(object, Short.valueOf(String.valueOf(value)));
+				} else if (cn.equals(Integer.class.getCanonicalName())) {
+					field.set(object, Integer.valueOf(String.valueOf(value)));
+				} else if (cn.equals(Long.class.getCanonicalName())) {
+					field.set(object, Long.valueOf(String.valueOf(value)));
+				} else if (cn.equals(Float.class.getCanonicalName())) {
+					field.set(object, Float.valueOf(String.valueOf(value)));
+				} else if (cn.equals(Double.class.getCanonicalName())) {
+					field.set(object, Double.valueOf(String.valueOf(value)));
+				} else if (cn.equals(BigDecimal.class.getCanonicalName())) {
+					field.set(object, new BigDecimal(String.valueOf(value)));
+				} else if (cn.equals(Boolean.class.getCanonicalName())) {
+					field.set(object,
+							value == null ? null : (Integer.valueOf(1).equals(value) ? Boolean.TRUE : Boolean.FALSE));
+				} else if (cn.equals(Character.class.getCanonicalName())) {
+					field.set(object, Character.valueOf(String.valueOf(value).charAt(0)));
+				} else if (cn.equals(String.class.getCanonicalName())) {
+					field.set(object, String.valueOf(value));
+				} else {
+					if (field.getClass().isArray()) {
+					}
+					field.set(object, value);
 				}
-				ffffff.set(object, value);
+			} catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
 			}
 
 		}
 		return object;
 	}
 
-	public static <T> List<T> findByXXAndXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldArray) {
+	public static <T> List<T> findByXXAndXX(final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1017,7 +1060,9 @@ public class SU {
 		ResultSet rs = null;
 		try {
 			// "select * from user where id = ?"
-			final String s = sql;
+			final String select = gSelectFromReturnType(returnType);
+			final String s = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
 			ps = connection.prepareStatement(s);
 
 			int i = 1;
@@ -1037,12 +1082,12 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1058,7 +1103,28 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXX(final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
+
+	private static String gSelectFromReturnType(final Class returnType) {
+		final Field[] declaredFields = returnType.getDeclaredFields();
+
+		final StringJoiner joiner = new StringJoiner(",");
+		for (final Field f : declaredFields) {
+
+			if (f.isAnnotationPresent(ZTransient.class)) {
+				continue;
+			}
+
+			final String javaFieldName = f.getName();
+			final String dbColumnName = ZFieldConverter.toDbField(javaFieldName);
+			joiner.add(dbColumnName);
+		}
+
+//		final int x = 20;
+
+		return joiner.toString();
+	}
+
+	public static <T> List<T> findByXX(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object fieldValue) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
@@ -1070,11 +1136,14 @@ public class SU {
 			// "select * from user where xx = ?"
 			String s = null;
 
+			final String select = gSelectFromReturnType(returnType);
+			final String x = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
 			if (fieldValue == null) {
-				s = sql.replaceFirst(" = \\?", " is null");
+				s = x.replaceFirst(" = \\?", " is null");
 				ps = connection.prepareStatement(s);
 			} else {
-				s = sql;
+				s = x;
 				ps = connection.prepareStatement(s);
 				final int index = 1;
 				setXX_fieldValue(fieldValue, ps, index);
@@ -1091,12 +1160,12 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			try {
 				connection.rollback();
@@ -1187,7 +1256,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1234,8 +1303,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
-				| SecurityException e) {
+		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 			try {
 				connection.rollback();
@@ -1279,7 +1347,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1326,7 +1394,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1374,7 +1442,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1390,7 +1458,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXBetween(final Mode mode, final Class<T> cls, final String sql,final Object...fiedlArray) {
+	public static <T> List<T> findByXXBetween(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql,final Object...fiedlArray) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 
@@ -1421,12 +1489,12 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(returnType, rs, metaData, count);
 				r.add(t);
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1470,7 +1538,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1516,7 +1584,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1564,7 +1632,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchFieldException
+		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
@@ -1753,7 +1821,7 @@ public class SU {
 
 			return r;
 
-		} catch (SQLException | SecurityException | InstantiationException | IllegalAccessException | NoSuchFieldException e) {
+		} catch (SQLException | SecurityException  e) {
 			e.printStackTrace();
 			try {
 				connection.rollback();
@@ -1884,7 +1952,7 @@ public class SU {
 			}
 
 			return ra;
-		} catch (SQLException | SecurityException | IllegalAccessException | NoSuchFieldException e) {
+		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 			try {
 				connection.rollback();
