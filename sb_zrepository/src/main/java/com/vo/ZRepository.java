@@ -40,8 +40,6 @@ public interface ZRepository<T, ID> {
 	//  2、select * 也改为 select 具体字段，自定义类型T使用getDeclaredFields来获取字段来生成具体的字段
 
 
-	// FIXME 2023年9月6日 下午7:40:07 zhanghen: TODO 分页
-
 	/**
 	 * 分页查询，按T中非空字段等值查询，有多个非空字段则用and连接
 	 *

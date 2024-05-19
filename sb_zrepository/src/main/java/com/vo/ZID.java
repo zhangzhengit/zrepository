@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 表示 @ZEntity 标记的类里面的某个属性为ID，暂只支持在一个字段上使用此注解，暂不支持联合主键.
- *
+ * 表示 @ZEntity 标记的类里面的某个属性为主键，暂只支持在一个字段上使用此注解，暂不支持联合主键.
  *
  * @author zhangzhen
  * @date 2023年6月15日
