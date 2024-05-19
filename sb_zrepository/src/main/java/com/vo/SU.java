@@ -37,6 +37,7 @@ import com.vo.conn.ZConnection;
 import com.vo.conn.ZDatasourceProperties;
 import com.vo.conn.ZDatasourcePropertiesLoader;
 import com.vo.core.Page;
+import com.vo.core.Sort;
 import com.vo.core.ZLog2;
 import com.vo.transaction.ZTransactionAspect;
 
@@ -68,10 +69,8 @@ public class SU {
 
 	private static final ZCPool INSTANCE = ZCPool.getInstance();
 
-	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final String sql, final Integer size,
-			final Integer page) {
-		System.out
-				.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "SU.page()");
+	public static <T> Page<T> page(final Mode mode, final Class<T> cls, final T t, final Sort sort, final String sql,
+			final Integer size, final Integer page) {
 
 		if (size <= 0) {
 			throw new IllegalArgumentException("size 必须大于0！size = " + size);
@@ -107,7 +106,10 @@ public class SU {
 				}
 			}
 
-			final String pageSql = columnBuilder.length() > 0 ? sql.replace(COLUMN, columnBuilder.toString())
+			final String s2 = sort == null ? sql
+					: sql.replace(Sort.SPACE + "limit", sort.done() + Sort.SPACE + "limit");
+
+			final String pageSql = columnBuilder.length() > 0 ? s2.replace(COLUMN, columnBuilder.toString())
 					: sql.replace(" where " + COLUMN, columnBuilder.toString());
 
 			final String pageCountSql = columnBuilder.length() > 0

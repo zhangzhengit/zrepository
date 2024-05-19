@@ -29,6 +29,12 @@ public class MethodRegex {
 
 	public static final String GROUP_page = "page";
 
+	// FIXME 2024年5月19日 下午4:16:10 zhangzhen: pageByXXOrderByXX 这一组语句不打算支持了，给ZR.page 加入一个排序的条件就包含了这一组语句的功能了
+	
+	// FIXME 2024年5月19日 下午5:34:03 zhangzhen: 支持了ZR.page 加入Sort了，但是排序条件必须用String写出来，不太好
+	// 要不要还是支持一下pageByXXOrderByXX这种形式？但是要提前支持好，组合可能非常多，比如order by A asc B desc C asc
+	// order by A desc B asc C asc 等等形式非常多的组合数。如：支持到5个条件，则有32种语句，到10个则要提前支持到1024种情况，似乎太复杂了，光写单元测试都很麻烦
+	
 	public static final String GROUP_pageByXX_orderByXX = "pageBy(.*)OrderBy(.*)";
 	public static final String GROUP_pageByXXAndXX_orderByXX = "pageBy(.*)And(.*)OrderBy(.*)";
 	public static final String GROUP_pageByXXAndXXAndXX_orderByXX = "pageBy(.*)And(.*)And(.*)OrderBy(.*)";
@@ -145,6 +151,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXDescLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_Count = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_GROUP_pageByXX_orderByXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_PAGE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_CountingByXXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXBetween = new LinkedHashMap<>();
@@ -192,6 +199,9 @@ public class MethodRegex {
 		// page
 		// FIXME 2024年5月14日 下午10:18:45 zhangzhen: page 暂时还只支持 ZR.page 方法，继续支持
 		REGEX_MAP_PAGE.put(page, "select * from TABLE_NAME where COLUMN limit ? offset ?");
+
+		// pageByXXOrderByXX
+		REGEX_MAP_GROUP_pageByXX_orderByXX.put(GROUP_pageByXX_orderByXX, "select * from TABLE_NAME where @ = ? order by @ limit ? offset ?");
 
 		// count
 		REGEX_MAP_Count.put(count, "select count(*) from TABLE_NAME");
@@ -311,6 +321,8 @@ public class MethodRegex {
 		R_M.put(GROUP_EXISTBYId, REGEX_MAP_EXISTBYID);
 		R_M.put(GROUP_CountingByXXX, REGEX_MAP_CountingByXXX);
 		R_M.put(GROUP_count, REGEX_MAP_Count);
+
+		R_M.put(GROUP_pageByXX_orderByXX, REGEX_MAP_GROUP_pageByXX_orderByXX);
 		R_M.put(GROUP_page, REGEX_MAP_PAGE);
 	}
 

@@ -714,7 +714,7 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,t,sql);";
 
 		case "page":
-			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType,t,sql,size,page);";
+			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType,t,sort,sql,size,page);";
 
 		case "existById":
 			return "return " + SU.class.getCanonicalName() + ".existById(" + modeString + ", id,classType,sql);";
@@ -730,11 +730,6 @@ public class ZRepositoryMain {
 
 		default:
 
-			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByByte1AndNameOrderByTimeLimit".equals(method.getName())) {
-				final int x =1;
-			}
-
 			// default  ZR的子类声明的方法
 			final MethodSQL methodSQL = MethodRegex.check(methodName, method);
 
@@ -742,26 +737,26 @@ public class ZRepositoryMain {
 //			final Entry<String, String> check = MethodRegex.check(methodName, method);
 //			System.out.println("getSuMethod-check = " + check);
 			final String methodname = methodSQL.getMethodName();
+			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
+			if("pageByNameOrderById".equals(method.getName())) {
+				final int x =1;
+			}
 
-			if (
-			        methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
-				||  methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
-				||  methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXDescLimit)
-				||	methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
-				||	methodname.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
-				||	methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)
-				) {
+			if (methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXDescLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
+					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
 				return gROUP_findByXXOrderByXXDescLimit(method);
 			}
 
-			if (
-				   methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
-				|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXLimit)
-			    || methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
-				|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
-				|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
-				|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)
-					) {
+			if (methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
+					|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
+					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
 				return gROUP_findByXXOrderByXXLimit(method, methodname);
 			}
 
@@ -797,12 +792,10 @@ public class ZRepositoryMain {
 				return gROUP_findByXXLessThan(method);
 			}
 
-			if (
-					methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
-				 || methodname.matches(MethodRegex.countingByXXXAndXXAndXX)
-				 || methodname.matches(MethodRegex.countingByXXXAndXX)
-				 ||	methodname.matches(MethodRegex.GROUP_CountingByXXX)
-					) {
+			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
+					|| methodname.matches(MethodRegex.countingByXXXAndXXAndXX)
+					|| methodname.matches(MethodRegex.countingByXXXAndXX)
+					|| methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
 				return gROUP_CountingByXXX(method, methodname);
 			}
 
@@ -818,15 +811,15 @@ public class ZRepositoryMain {
 				return gROUP_findByXXLike(method);
 			}
 			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)
-				||	methodname.matches(MethodRegex.findByXXOrYYOrYY)
-				|| 	methodname.matches(MethodRegex.findByXXOrYY)) {
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYYOrYY)
+					|| methodname.matches(MethodRegex.findByXXOrYY)) {
 				return gROUP_findByXXOrYY(method);
 			}
 
@@ -834,28 +827,23 @@ public class ZRepositoryMain {
 				return "return " + SU.class.getCanonicalName() + ".count(" + modeString + ",classType,sql);";
 			}
 
-
 			// 最短的排最后
-			if (
-					methodname.matches(MethodRegex.GROUP_findByXXAndXX)
-				||	methodname.matches(MethodRegex.GROUP_findByXX)) {
+			if (methodname.matches(MethodRegex.GROUP_findByXXAndXX) || methodname.matches(MethodRegex.GROUP_findByXX)) {
 				return gROUP_findByXX(method);
 			}
 
 			// 最后面是@ZQuery自定义方法
-			if(methodSQL.isZQuery()) {
+			if (methodSQL.isZQuery()) {
 				final String sqlTemplate = methodSQL.getSqlTemplate();
 				final String x = zQuery(method, methodSQL.getSqlTemplate());
 				return x;
 			}
-
 
 			break;
 		}
 
 		return EMTPY;
 	}
-
 
 	/**
 	 * 返回声明方法是 @ZRead 还是 @ZWrite ，无默认为 @ZWrite
@@ -869,6 +857,14 @@ public class ZRepositoryMain {
 			return Mode.class.getCanonicalName() + "." + Mode.READ.name();
 		}
 		return Mode.class.getCanonicalName() + "." + Mode.WRITE.name();
+	}
+
+	private static String gROUP_pageByXX_orderByXX(final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final String r = "return " + SU.class.getCanonicalName() + ".pageByXXOrderByXX(" + modeString + ",classType,sql,"
+		+ joiner.toString() + ");";
+		return r;
 	}
 
 	private static String gROUP_findByXXXEndingWith(final Method method) {

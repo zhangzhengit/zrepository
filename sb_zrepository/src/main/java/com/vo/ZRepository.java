@@ -3,6 +3,7 @@ package com.vo;
 import java.util.List;
 
 import com.vo.core.Page;
+import com.vo.core.Sort;
 
 
 /**
@@ -45,13 +46,14 @@ public interface ZRepository<T, ID> {
 	 * 分页查询，按T中非空字段等值查询，有多个非空字段则用and连接
 	 *
 	 * @param t    查询条件，根据对象里非null的字段来查询，等值查询
+	 * @param sort 排序条件
 	 * @param page 第几页，从1开始
 	 * @param size 一页显示几条
 	 * @return
 	 *
 	 */
 	// FIXME 2024年5月4日 下午10:46:33 zhangzhen: TODO :支持了blob类型后，page还要改，包括其他方法都要重新仔细测试
-	Page<T> page(T t, Integer page, Integer size);
+	Page<T> page(T t, Sort sort, Integer page, Integer size);
 
 	/**
 	 * select count(*) from 表
