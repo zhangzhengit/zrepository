@@ -36,6 +36,8 @@ import java.lang.annotation.Target;
 // FIXME 2024年5月12日 下午9:18:33 zhangzhen: float 类型查询暂用 setDouble(index,float)解决了，但是否提示出不建议mysql用float类型？
 // 建议用double或者直接用decimal？
 
+// FIXME 2024年5月19日 下午9:28:07 zhangzhen: Entity 中使用java.sql.Date 还是有问题，在save和findById时的类型转换还是有问题，尤其是pgsql
+
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })

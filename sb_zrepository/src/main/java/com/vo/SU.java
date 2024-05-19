@@ -735,10 +735,14 @@ public class SU {
 //				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
 //				ps.setBlob(i, inputStream);
 //				ps.setBinaryStream(i, inputStream);
-			} else if (fn.equals(Date.class.getCanonicalName())) {
+			} else if (fn.equals(java.util.Date.class.getCanonicalName()) ) {
 				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
 				// 日期时间的字段，新增注解：表示插入的格式
-				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+//				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+				// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
+				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
+			} else if (fn.equals(fn.equals(java.sql.Date.class.getCanonicalName()))) {
+				ps.setDate(i, (java.sql.Date)v2);
 			} else if (fn.equals(Time.class.getCanonicalName())) {
 				ps.setTime(i, (Time) v2);
 			} else if (fn.equals(Timestamp.class.getCanonicalName())) {
@@ -832,19 +836,27 @@ public class SU {
 	// FIXME 2023年9月24日 下午3:41:35 zhanghen: 继续写，测试各种db和java的日期类型转换
 	private static <T> Object handValue(final T t, final Object columValue, final Field field) {
 		if (columValue instanceof LocalDateTime) {
-			final Date date = Date.from(((LocalDateTime) columValue).atZone(ZoneId.systemDefault()).toInstant());
+			final Date utilDate = Date.from(((LocalDateTime) columValue).atZone(ZoneId.systemDefault()).toInstant());
+
+			if(field.getType().equals(java.util.Date.class)) {
+				return utilDate;
+			}
+			if( field.getType().equals(java.sql.Date.class)) {
+				final java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+				return sqlDate;
+			}
 			final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);
 			if (zdf != null) {
 				final String format = zdf.format().getFormat();
 				final SimpleDateFormat sss = new SimpleDateFormat(format);
 
-				final String format2 = sss.format(date);
+				final String format2 = sss.format(utilDate);
 
 				final DateTime parse = DateUtil.parse(format2, format);
 				return parse;
 			}
 
-			return date;
+			return utilDate;
 		}
 
 		return columValue;
@@ -1035,7 +1047,7 @@ public class SU {
 				} else if (cn.equals(String.class.getCanonicalName())) {
 					field.set(object, String.valueOf(value));
 				} else {
-					if (field.getClass().isArray()) {
+					if ((cn.equals(java.sql.Date.class.getCanonicalName()) || cn.equals(java.util.Date.class.getCanonicalName())) || (field.getClass().isArray())) {
 					}
 					field.set(object, value);
 				}

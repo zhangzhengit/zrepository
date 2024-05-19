@@ -1295,13 +1295,12 @@ public class ZRepositoryMain {
 						final List<Field> c = fieldList.stream().filter(f -> fieldNameList.contains(f.getName()))
 								.collect(Collectors.toList());
 
-						final long noZTransientFieldCount = c.stream().filter(f -> !f.isAnnotationPresent(ZTransient.class))
-								.count();
+						final List<Field> noZTransientFieldList = c.stream().filter(f -> !f.isAnnotationPresent(ZTransient.class)).collect(Collectors.toList());
 
-						if (noZTransientFieldCount > 0) {
+						if (noZTransientFieldList.size() > 0) {
 							final String m = "@" + ZEntity.class
 									.getSimpleName() + "类[" + typeClass.getSimpleName()
-									+ "]中存在数据表[" + tableName + "]中不存在的字段" + fieldNameList + EMTPY
+									+ "]中存在数据表[" + tableName + "]中不存在的字段" + noZTransientFieldList + EMTPY
 									+ "，如需与数据表字段对应，请在数据表中加入此字段；如不需与数据表对应，请在字段上加入@" + ZTransient.class.getCanonicalName() + " 注解"
 									;
 							throw new IllegalArgumentException(m);

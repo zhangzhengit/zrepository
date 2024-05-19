@@ -170,6 +170,7 @@ public class DBType {
 		JAVA_MYSQL.put("byte[]", "LONGBLOB");
 
 		JAVA_MYSQL.put("java.sql.Date", "DATE");
+		JAVA_MYSQL.put("java.sql.Date", "DATETIME");
 		JAVA_MYSQL.put("java.util.Date", "DATE");
 		JAVA_MYSQL.put("java.util.Date", "DATETIME");
 
