@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -514,7 +513,7 @@ public class ZRepositoryMain {
 		String sqlA = sql;
 
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByDateOrderByNameDescLimit".equals(method.getName())) {
+		if("findByDateAndNameOrderByNameDescLimit".equals(method.getName())) {
 			final int x2 = 1;
 		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
@@ -531,7 +530,7 @@ public class ZRepositoryMain {
 		}
 
 		// 仍然包含 @，则说明参数和字段数目对不上
-		if (sqlA.contains("@")) {
+ 		if (sqlA.contains("@")) {
 			throw new IllegalArgumentException("请检查自定义方法名称，methodName = " + methodName);
 		}
 
@@ -744,7 +743,14 @@ public class ZRepositoryMain {
 //			System.out.println("getSuMethod-check = " + check);
 			final String methodname = methodSQL.getMethodName();
 
-			if (methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
+			if (
+			        methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
+				||  methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
+				||  methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXDescLimit)
+				||	methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
+				||	methodname.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
+				||	methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)
+				) {
 				return gROUP_findByXXOrderByXXDescLimit(method);
 			}
 
@@ -1428,25 +1434,56 @@ public class ZRepositoryMain {
 
 		d.setFiledNameOriginalOrder(filedNameOriginalOrder);
 
-		final ArrayList<String> filedNameMethodNameOrder = Lists.newArrayList();
-
-		final ArrayList<String> fnl = Lists.newArrayList(d.getFiledName());
-		if("findByDateOrderByNameDescLimit".equals(methodName)) {
+		// FIXME 2024年5月19日 上午7:48:57 zhangzhen: debug 代码
+		if("findByDateAndNameOrderByNameDescLimit".equals(methodName)) {
 			final int x2 = 1;
 		}
-		fnl.sort((s1, s2) -> {
-//			s1.compareTo(s2)
+		final List<String> fieldNameArray = getFieldNameArray(methodName, fs);
+		d.setFiledNameMethodNameOrder(fieldNameArray);
 
-			final int i1 = methodName.indexOf(String.valueOf(s1.charAt(0)).toUpperCase() + s1.substring(1));
-			final int i2 = methodName.indexOf(String.valueOf(s2.charAt(0)).toUpperCase() + s2.substring(1));
-			final int compare = Integer.compare(i1, i2);
-			return compare;
+		return d;
+	}
+
+	private static List<String> getFieldNameArray(final String methodName,final Field[] fs) {
+
+		final ArrayList<Field> fl = Lists.newArrayList(fs);
+		final List<String> fnl = fl.stream().map(Field::getName).map(n -> String.valueOf(n.charAt(0)).toUpperCase() + n.substring(1))
+		.collect(Collectors.toList());
+
+		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
+		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
+		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
+		skList.sort(Comparator.comparing(String::length).reversed());
+
+		final String ffN= methodName;
+
+		if("findByDateAndNameOrderByNameDescLimit".equals(methodName)) {
+			final int x2 = 1;
+		}
+
+		final ArrayList<String> x = Lists.newArrayList();
+		for (final String fn : fnl) {
+			int from = 0;
+			while (from< ffN.length()) {
+				final int i = ffN.indexOf(fn,from);
+				if (i < 0) {
+					break;
+				}
+
+				final String one = ffN.substring(i, i + fn.length());
+				x.add(one);
+
+				from = i + fn.length();
+			}
+		}
+
+		x.sort((s1, s2) -> {
+			final int i1 = methodName.indexOf(s1);
+			final int i2 = methodName.indexOf(s2);
+			return Integer.compare(i1, i2);
 		});
 
-		d.setFiledNameMethodNameOrder(fnl);
-
-		// FIXME 2024年5月13日 下午9:29:27 zhangzhen:加一个没排序的顺序，
-		return d;
+		return x;
 	}
 
 	private static DBEnum DB_ENUM = null;
