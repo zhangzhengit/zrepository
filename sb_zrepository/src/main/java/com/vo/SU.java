@@ -1123,8 +1123,6 @@ public class SU {
 			joiner.add(dbColumnName);
 		}
 
-//		final int x = 20;
-
 		return joiner.toString();
 	}
 
