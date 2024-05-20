@@ -1014,7 +1014,7 @@ public class ZRepositoryMain {
 					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
 		}
 
-		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + DELIMITER
+		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + ","
 				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}

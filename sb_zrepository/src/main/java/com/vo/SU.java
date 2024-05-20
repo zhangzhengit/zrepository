@@ -654,8 +654,10 @@ public class SU {
 				if (rs.next()) {
 					final Object id = rs.getObject(1);
 					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
+
+					// XXX 这个sql就这样写了，因为在 findById0 里面已经把*替换为具体column了
 					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-					final T findByIdNew = findById0(mode, id, entityTName,selectById, zc);
+					final T findByIdNew = findById0(mode, id, entityTName, selectById, zc);
 					return findByIdNew;
 				}
 			} finally {
@@ -915,15 +917,6 @@ public class SU {
 
 	private static <T> T findById0(final Mode mode, final Object id, final Class cls,final String sql, final ZConnection zc) {
 
-		final Connection connection = zc.getConnection();
-
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
-
-
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -934,10 +927,10 @@ public class SU {
 
 			if (id == null) {
 				sT = s1.replaceFirst("= \\?", "is null");
-				ps = connection.prepareStatement(sT);
+				ps = zc.getConnection().prepareStatement(sT);
 			} else {
 				sT = s1;
-				ps = connection.prepareStatement(sT);
+				ps = zc.getConnection().prepareStatement(sT);
 				ps.setObject(1, id);
 			}
 
@@ -959,21 +952,28 @@ public class SU {
 				| SecurityException e) {
 			e.printStackTrace();
 			try {
-				connection.rollback();
+				zc.getConnection().rollback();
 			} catch (final SQLException e1) {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
 			close(rs, ps);
 		}
 
 		return null;
 	}
 
-	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls,final String sql) {
+	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
+
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
-		return findById0(mode, id, cls, sql,zc);
+
+		try {
+			final T findById0 = findById0(mode, id, cls, sql, zc);
+			return findById0;
+		} finally {
+			returnZC(zc);
+		}
+
 	}
 
 	private static <T> T newT(final Class<T> cls, final ResultSet rs, final ResultSetMetaData metaData,
@@ -1934,6 +1934,7 @@ public class SU {
 
 	public static <T> List<T> zQuerySelect(final Mode mode, final Object object, final String sqlT, final Object... arg)
 			throws InstantiationException {
+
 		final Class cls = (Class) object;
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
@@ -1959,11 +1960,20 @@ public class SU {
 			final String regex = "\\?(\\d+)";
 			final String sql = sqlT.replaceAll(regex, "?");
 
+			// FIXME 2024年5月20日 上午10:51:25 zhangzhen: @ZQuery 自定义select 也处理为了select 字段，
+			// 即使 sql= select * 。但这样有点不太好，不受用户控制了
+			// 应该时用户写什么，就select什么。或者提供一个特殊占位符，比如 select @T from ，这个 @T就作为占位符
+			// 如果select语句中出现了这个@T，才处理为 select 字段，否则就是用户写了select什么就select什么。
+
+			final String select = gSelectFromReturnType(cls);
+			final String s2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+
 			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
+				LOG.info("[{}],[{}]", s2, Arrays.toString(arg));
 			}
 
-			ps = connection.prepareStatement(sql);
+			ps = connection.prepareStatement(s2);
 
 			final Pattern pattern = Pattern.compile(regex);
 			final java.util.regex.Matcher matcher = pattern.matcher(sqlT);
@@ -1976,7 +1986,6 @@ public class SU {
 				argOrderArray[i] = Integer.parseInt(a);
 				i++;
 			}
-
 
 			if (arg != null) {
 				int n = 1;
