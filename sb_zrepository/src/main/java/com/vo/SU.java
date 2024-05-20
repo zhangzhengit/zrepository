@@ -1051,6 +1051,8 @@ public class SU {
 		return object;
 	}
 
+	// FIXME 2024年5月20日 上午10:22:38 zhangzhen: TODO 继续支持：声明式方法，如果值传了null，则 = null 改为 is null
+
 	public static <T> List<T> findByXXAndXX(final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
