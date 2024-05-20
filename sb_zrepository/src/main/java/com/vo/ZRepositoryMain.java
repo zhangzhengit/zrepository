@@ -719,14 +719,12 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".update(" + modeString + ", classType,t,sql);";
 
 		case "save":
-			final Class returnTypeSave = getClassType(method);
-			System.out.println("save-returnTypeSave = " + returnTypeSave);
-			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,"+entityTName+",t,sql);";
+			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType," + entityTName
+					+ ",t,sql);";
 
 		case "page":
-			final Class returnTypePage = getClassType(method);
-			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType,"
-					+ returnTypePage.getCanonicalName() + ",t,sort,sql,size,page);";
+			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType," + entityTName
+					+ ",t,sort,sql,size,page);";
 
 		case "existById":
 			return "return " + SU.class.getCanonicalName() + ".existById(" + modeString + ", id,classType,sql);";
@@ -1110,15 +1108,7 @@ public class ZRepositoryMain {
             }
         }
 
-		// FIXME 2024年5月19日 下午7:14:40 zhangzhen: ZR.page 这个方法，在此会走到这里，
-		// public abstract com.vo.core.Page com.vo.ZRepository.page(java.lang.Object,com.vo.core.Sort,java.lang.Integer,java.lang.Integer)
-		// 考虑：
-		// 1 ZR 加一个默认实现类试下，page等方法放在实现类里再试
-		// 2 ZR 不改，page等方法就不支持自定义返回T了，select 也直接select * 算了
-
-
-		final Class<?> returnType2 = method.getReturnType();
-		return returnType2;
+		return method.getReturnType();
 	}
 
 	private static String gROUP_findByXX(final Method method) {

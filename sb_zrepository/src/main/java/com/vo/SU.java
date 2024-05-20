@@ -106,12 +106,8 @@ public class SU {
 				}
 			}
 
-//			final String select = gSelectFromReturnType(returnType);
-//			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
-
-			// FIXME 2024年5月19日 下午7:16:32 zhangzhen: 问题看 ZRMain.getClassType 里面
-			final String sqlColumn = sql;
-
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			final String s2 = sort == null ? sqlColumn
 					: sqlColumn.replace(Sort.SPACE + "limit", sort.done() + Sort.SPACE + "limit");
@@ -154,7 +150,7 @@ public class SU {
 			final int count = metaData.getColumnCount();
 			final List<T> rL = Lists.newArrayList();
 			while (rs.next()) {
-				final T tR = newT(cls, rs, metaData, count);
+				final T tR = newT(returnType, rs, metaData, count);
 				rL.add(tR);
 			}
 
