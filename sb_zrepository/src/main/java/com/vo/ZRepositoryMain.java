@@ -690,20 +690,20 @@ public class ZRepositoryMain {
 			final String body = "String sql = \""+sql+"\";";
 
 			final String body2 = EMTPY;
-			final String methodS = getSuMethod(method.getName(), method);
+			final String entityT = typeArray[0];
+			final String methodS = getSuMethod(method.getName(), method, entityT);
 
 			zm.setBody("\t" +body + "\n\t" + body2  + "\n\t" + methodS);
 		}
 		return zmSet;
 	}
 
-	static String getSuMethod(final String methodName, final Method method) {
+	static String getSuMethod(final String methodName, final Method method, final String entityTName) {
 
 		final String modeString = modeString(method);
 
 		switch (method.getName()) {
 		case "findById":
-//			final Class returnType = getClassType(method);
 			return "return " + SU.class.getCanonicalName() + ".findById(" + modeString + ", id,classType,sql);";
 
 		case "findByIdIn":
@@ -719,7 +719,9 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".update(" + modeString + ", classType,t,sql);";
 
 		case "save":
-			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,t,sql);";
+			final Class returnTypeSave = getClassType(method);
+			System.out.println("save-returnTypeSave = " + returnTypeSave);
+			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType,"+entityTName+",t,sql);";
 
 		case "page":
 			final Class returnTypePage = getClassType(method);

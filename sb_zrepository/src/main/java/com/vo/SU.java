@@ -601,7 +601,7 @@ public class SU {
 		return sql2;
 	}
 
-	public static <T> T save(final Mode mode, final Class<T> cls, final T t, final String sql) {
+	public static <T> T save(final Mode mode, final Class<T> cls, final Class entityTName, final T t, final String sql) {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
 		final Connection connection = zc.getConnection();
 
@@ -658,7 +658,7 @@ public class SU {
 					final Object id = rs.getObject(1);
 					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
 					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-					final T findByIdNew = findById0(mode, id, cls,selectById, zc);
+					final T findByIdNew = findById0(mode, id, entityTName,selectById, zc);
 					return findByIdNew;
 				}
 			} finally {
@@ -916,7 +916,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static <T> T findById0(final Mode mode, final Object id, final Class<T> cls,final String sql, final ZConnection zc) {
+	private static <T> T findById0(final Mode mode, final Object id, final Class cls,final String sql, final ZConnection zc) {
 
 		final Connection connection = zc.getConnection();
 
@@ -932,12 +932,8 @@ public class SU {
 		try {
 			String sT = null;
 
-			// FIXME 2024年5月19日 下午7:28:28 zhangzhen: select 字段和page方法一样，ZR.findByID 返回的泛型是Object，而不是具体的@ZEntity 类，思路同page
-
-//			final String select = gSelectFromReturnType(returnType);
-//			final String s1 = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
-			final String s1 = sql;
-
+			final String select = gSelectFromReturnType(cls);
+			final String s1 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (id == null) {
 				sT = s1.replaceFirst("= \\?", "is null");
@@ -958,7 +954,7 @@ public class SU {
 
 			if (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = (T) newT(cls, rs, metaData, count);
 				return t;
 			}
 
@@ -1836,10 +1832,9 @@ public class SU {
 			ps = connection.prepareStatement(sqlColumn);
 			int i = 1;
 			for (final Object object : field) {
-				ps.setObject(i, object);
+				setXX_fieldValue(object, ps, i);
 				i++;
 			}
-
 
 			if (ZDP.getShowSql()) {
 				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
