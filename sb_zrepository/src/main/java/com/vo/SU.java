@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
@@ -1110,10 +1111,26 @@ public class SU {
 	}
 
 
+	private static final WeakHashMap<String, Object> C = new WeakHashMap<>();
+
 	private static String gSelectFromReturnType(final Class returnType) {
+		final String k = returnType.getCanonicalName();
+		final Object v = C.get(k);
+		if (v != null) {
+			return (String) v;
+		}
+
+		synchronized (k.intern()) {
+			final String v2 = gSelectFromReturnType0(returnType);
+			C.put(k, v2);
+			return v2;
+		}
+	}
+
+	private static String gSelectFromReturnType0(final Class returnType) {
 		final Field[] declaredFields = returnType.getDeclaredFields();
 
-		final StringJoiner joiner = new StringJoiner(",");
+		final StringJoiner joiner = new StringJoiner(ZRepositoryMain.DELIMITER);
 		for (final Field f : declaredFields) {
 
 			if (f.isAnnotationPresent(ZTransient.class)) {

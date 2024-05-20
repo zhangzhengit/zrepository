@@ -59,7 +59,7 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
-	private static final String DELIMITER = ",";
+	public static final String DELIMITER = ",";
 
 	private static final String TYPE_NAME = "TYPE_NAME";
 
