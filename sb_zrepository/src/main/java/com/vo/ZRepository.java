@@ -35,10 +35,6 @@ import com.vo.core.Sort;
 // FIXME 2024年5月10日 下午10:21:52 zhangzhen: blob 类型 = 可以了，in 还是有问题
 
 public interface ZRepository<T, ID> {
-	// FIXME 2023年9月11日 下午8:35:46 zhanghen: TODO
-	//	1、子接口中自定义方法的返回值，可以自定义返回类型中的T，做到隐藏敏感字段和去除非必要的select 字段
-	//  2、select * 也改为 select 具体字段，自定义类型T使用getDeclaredFields来获取字段来生成具体的字段
-
 
 	/**
 	 * 分页查询，按T中非空字段等值查询，有多个非空字段则用and连接
