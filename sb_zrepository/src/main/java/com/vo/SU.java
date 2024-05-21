@@ -106,26 +106,30 @@ public class SU {
 					columnBuilder.append(" and ");
 				}
 			}
+			if (columnBuilder.length() <= 0) {
+				columnBuilder.append(" 1 = 1 ");
+			}
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final String s2 = sort == null ? sqlColumn
-					: sqlColumn.replace(Sort.SPACE + "limit", sort.done() + Sort.SPACE + "limit");
-
-			final String pageSql = columnBuilder.length() > 0 ? s2.replace(COLUMN, columnBuilder.toString())
+			final String pageSql = columnBuilder.length() > 0 ? sqlColumn.replace(COLUMN, columnBuilder.toString())
 					: sqlColumn.replace(" where " + COLUMN, columnBuilder.toString());
 
 			final String pageCountSql = columnBuilder.length() > 0
 					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
 					: pageCountSQLT.replace(" where " + COLUMN, columnBuilder.toString());
 
+			final String pageSqlFinal = pageSql.replace(LIMIT, sort.done() + Sort.SPACE + LIMIT);
+			final int offset = (page - 1) * size;
+			final int rows = size;
+
 			if (ZDP.getShowSql()) {
-				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSql, fMap.values(), page, size);
+				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal, fMap.values(), rows, offset);
 				LOG.info("page总条数查询-[{}]-[{}]", pageCountSql, fMap.values());
 			}
 
-			ps = connection.prepareStatement(pageSql);
+			ps = connection.prepareStatement(pageSqlFinal);
 			int index = 1;
 			final Field[] fs = cls.getDeclaredFields();
 			for (final Field field : fs) {
@@ -140,8 +144,7 @@ public class SU {
 				addPS(t, ps, index, field, SUMode.SAVE);
 				index++;
 			}
-			final int offset = (page - 1) * size;
-			final int rows = size;
+
 			ps.setInt((index - 1) + 1, rows);
 			ps.setInt((index - 1) + 2, offset);
 
@@ -720,7 +723,16 @@ public class SU {
 				ps.setLong(i, (Long) v2);
 			} else if (fn.equals(Float.class.getCanonicalName())) {
 				// FIXME 2024年5月17日 上午1:51:06 zhangzhen: 继续测这个mysql是否要改为setDouble
-				ps.setFloat(i, (Float) v2);
+//				ps.setFloat(i, (Float) v2);
+
+				// FIXME 2024年5月21日 下午10:46:17 zhangzhen:
+				// guoguang docker run 1071324756/percona-mysql-5.7 遇到了问题： setFloat查不出数据，还要用setDouble才行。
+				// guoguang docker run 1071324756/postgresql-11-with-zhparser setFloat和setDouble都行
+				// orangepi3 apt install 的 mysql-8.0.33-0ubuntu0.20.04.4 setFloat 可以查出，改为setDouble也可以
+				// panther   apt install 的 mysql-8.0.34-0ubuntu0.22.04.1 setFloat 可以查出，改为setDouble也可以
+				// pgsql 上面两个没装成功，virtualbox 里的ubuntu install的pgsql和docker run 的上面那个版本pgsql setFloat double 都可以
+
+				ps.setDouble(i, Float.parseFloat(String.valueOf(v2)));
 			} else if (fn.equals(Double.class.getCanonicalName())) {
 				ps.setDouble(i, (Double) v2);
 			} else if (fn.equals(String.class.getCanonicalName())) {
