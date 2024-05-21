@@ -203,6 +203,7 @@ public class ZCPool {
 			for (final ZConnection zc : this.writeVector) {
 				if (zc.getConnection() == zConnection.getConnection()) {
 					try {
+						// FIXME 2024年5月21日 下午3:07:13 zhangzhen: 测试出的问题：当server(armbian的panther x2 mysql-8.0.34-0ubuntu0.22.04.1)硬盘满了，commit 会一直卡着没反应，也不报错，也没法设置超时时间，怎么办？
 						zConnection.getConnection().commit();
 					} catch (final SQLException e) {
 						e.printStackTrace();
