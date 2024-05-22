@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -441,6 +442,87 @@ public class SU {
 		}
 
 		return false;
+	}
+
+	public static <T> Map<Object, Boolean> existByIdIn(final Mode mode, final Object idList, final Class<T> cls,
+			final String sql) {
+
+		final Map<Object, Boolean> v = Maps.newHashMap();
+		if (idList == null) {
+			v.put(null, false);
+			return v;
+		}
+
+		final List idX = (List) ((List) idList).stream()
+				.distinct().collect(Collectors.toList());
+		if (CollUtil.isEmpty(idX)) {
+			return v;
+		}
+
+		final List idNullList = (List) idX.stream().filter(x -> x == null).collect(Collectors.toList());
+		if (CollUtil.isNotEmpty(idNullList)) {
+			v.put(null, false);
+		}
+		final List idNotNullList = (List) idX.stream().filter(x -> x != null).collect(Collectors.toList());
+
+		// select ZID,count(*) from TABLE_NAME where @ in (?) group by ZID;
+
+		final Field zidF = getZID(cls);
+		final String dbColumnName = ZFieldConverter.toDbField(zidF.getName());
+		final String sqlF = sql.replace("ZID", dbColumnName);
+
+		final StringJoiner idJoiner = new StringJoiner(",");
+		for (final Object id : idNotNullList) {
+			idJoiner.add(String.valueOf(id));
+		}
+		final String sqlF2 = sqlF.replaceFirst("\\?", idJoiner.toString());
+
+		// 开始查询
+
+		if (ZDP.getShowSql()) {
+			LOG.info("根据[{}]个ID批量查询是否存在-[{}]", idNotNullList.size(), sqlF);
+		}
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final Connection connection = zc.getConnection();
+
+		try {
+			connection.setAutoCommit(false);
+		} catch (final SQLException e2) {
+			e2.printStackTrace();
+		}
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			ps = connection.prepareStatement(sqlF2);
+
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				final Object id = rs.getObject(1);
+				final Object count = rs.getObject(2);
+				v.put(id, (count!=null) && (Long.parseLong(String.valueOf(count)) >= 1));
+			}
+
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			close(rs, ps);
+			returnZC(zc);
+		}
+
+		for (final Object id : idNotNullList) {
+			if (!v.containsKey(id)) {
+				v.put(id, false);
+			}
+		}
+
+		return v;
 	}
 
 	public static <T> boolean existById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
@@ -2111,4 +2193,13 @@ public class SU {
 
 	}
 
+	public static Field getZID(final Class cls) {
+		final Field[] fs = cls.getDeclaredFields();
+		for (final Field f : fs) {
+			if(f.isAnnotationPresent(ZID.class)) {
+				return f;
+			}
+		}
+		return null;
+	}
 }

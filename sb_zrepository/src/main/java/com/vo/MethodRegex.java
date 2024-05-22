@@ -140,6 +140,7 @@ public class MethodRegex {
 	public 	static final String countingByXXXAndXXAndXX = "countingBy(.*)And(.*)And(.*)";
 	public 	static final String countingByXXXAndXXAndXXAndXX = "countingBy(.*)And(.*)And(.*)And(.*)";
 	public 	static final String existById = GROUP_EXISTBYId;
+	public 	static final String existByIdIn = "existByIdIn";
 	public 	static final String deleteById = GROUP_DeleteById;
 	public 	static final String deleteByIdIn = GROUP_DeleteByIdIn;
 	public 	static final String deleteAll = "deleteAll";
@@ -159,6 +160,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_CountingByXXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXBetween = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrYY = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_EXISTBYIDIN = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_EXISTBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_DELETEBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_SAVEALL = new LinkedHashMap<>();
@@ -229,6 +231,8 @@ public class MethodRegex {
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYY, SELECT + " * from TABLE_NAME  where @ = ? or @ = ? or @ = ?;");
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYY, SELECT + " * from TABLE_NAME  where @ = ? or @ = ?;");
 
+		// existByIdIn
+		REGEX_MAP_EXISTBYIDIN.put(existByIdIn, SELECT + " ZID,count(*) from TABLE_NAME where @ in (?) group by ZID;");
 		// existById
 		REGEX_MAP_EXISTBYID.put(existById, SELECT + " count(*) from TABLE_NAME  where @ = ?;");
 
@@ -321,6 +325,7 @@ public class MethodRegex {
 		R_M.put(GROUP_SAVE, REGEX_MAP_SAVE);
 		R_M.put(GROUP_UPDATE, REGEX_MAP_UPDATE);
 		R_M.put(GROUP_DeleteById, REGEX_MAP_DELETEBYID);
+		R_M.put(existByIdIn, REGEX_MAP_EXISTBYIDIN);
 		R_M.put(GROUP_EXISTBYId, REGEX_MAP_EXISTBYID);
 		R_M.put(GROUP_CountingByXXX, REGEX_MAP_CountingByXXX);
 		R_M.put(GROUP_count, REGEX_MAP_Count);

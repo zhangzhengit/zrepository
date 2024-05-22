@@ -1,6 +1,7 @@
 package com.vo;
 
 import java.util.List;
+import java.util.Map;
 
 import com.vo.core.Page;
 import com.vo.core.Sort;
@@ -117,6 +118,14 @@ public interface ZRepository<T, ID> {
 	 *
 	 */
 	boolean existById(ID id);
+
+	/**
+	 * 根据一组 @ZID 字段判断对象是否存在
+	 *
+	 * @param idList
+	 * @return 返回Map<@ZID字段值,是否存在Boolean值>
+	 */
+	Map<ID, Boolean> existByIdIn(List<ID> idList);
 
 	/**
 	 * 根据 @ZID 字段删除一个对象

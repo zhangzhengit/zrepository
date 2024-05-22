@@ -726,6 +726,8 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType," + entityTName
 					+ ",t,sort,sql,size,page);";
 
+		case "existByIdIn":
+			return "return " + SU.class.getCanonicalName() + ".existByIdIn(" + modeString + ", idList,classType,sql);";
 		case "existById":
 			return "return " + SU.class.getCanonicalName() + ".existById(" + modeString + ", id,classType,sql);";
 
