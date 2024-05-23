@@ -1,6 +1,7 @@
 
 # 使用说明：
 # 一  springboot 项目引入maven依赖后可以直接使用，已封装为starter形式
+	 sb_zframework 项目引入maven依赖后可以直接使用，已封装为starter形式
 	
 	1 新springboot项目 A ，引入
 		
