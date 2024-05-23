@@ -18,6 +18,13 @@
 	</properties>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>com.vo</groupId>
+			<artifactId>zframework_core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>		
+		
 		<dependency>
 			<groupId>com.vo</groupId>
 			<artifactId>sb_zlog2</artifactId>
