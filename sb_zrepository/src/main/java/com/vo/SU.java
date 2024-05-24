@@ -2142,7 +2142,7 @@ public class SU {
 			if (arg != null) {
 				int n = 1;
 				for (final Object a1 : arg) {
-					prepareStatement.setObject(n, a1);
+					setXX_fieldValue(a1, prepareStatement, n);
 					n++;
 				}
 			}
