@@ -2118,12 +2118,10 @@ public class SU {
 	public static int zQueryUpdate(final Mode mode, final Object object, final String sql,
 			final Object... arg) throws IllegalAccessException {
 
-		final Integer updateOrDelete = updateOrDelete(mode, object, sql, arg);
-
-		return updateOrDelete;
+		return (int) updateOrDeleteOrInsert(mode, object, sql, SUEnum.UPDATE, arg);
 	}
 
-	private static Integer updateOrDelete(final Mode mode, final Object object, final String sql, final Object... arg) {
+	private static Object updateOrDeleteOrInsert(final Mode mode, final Object object, final String sql, final SUEnum suEnum, final Object... arg) {
 		final Class cls = (Class) object;
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
@@ -2149,6 +2147,13 @@ public class SU {
 				}
 			}
 			final int executeUpdate = prepareStatement.executeUpdate();
+			if (suEnum == SUEnum.INSERT) {
+				final ResultSet rs = prepareStatement.getGeneratedKeys();
+				if (rs.next()) {
+					final Object idINSERT = rs.getObject(1);
+					return idINSERT;
+				}
+			}
 			return executeUpdate;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
@@ -2168,15 +2173,11 @@ public class SU {
 	public static <T> Integer zQueryDelete(final Mode mode, final Object object, final String sql,
 			final Object... arg) {
 
-		final Integer updateOrDelete = updateOrDelete(mode, object, sql, arg);
-
-		return updateOrDelete;
+		return (Integer) updateOrDeleteOrInsert(mode, object, sql, SUEnum.DELETE, arg);
 	}
 
-	public static  <T> List<T> zQueryInsert(final Mode mode, final Class<T> cls, final String sql) {
-		// FIXME 2024年5月5日 下午10:51:53 zhangzhen: 写这个
-		// FIXME 2024年5月9日 下午11:44:27 zhangzhen: insert貌似没必须要写，直接用save方法就行了吧？
-		return Collections.emptyList();
+	public static  <T> Object zQueryInsert(final Mode mode, final Class<T> cls, final String sql,final Object... arg) {
+		return updateOrDeleteOrInsert(mode, cls, sql, SUEnum.INSERT, arg);
 	}
 
 	/**
