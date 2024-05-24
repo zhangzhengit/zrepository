@@ -39,6 +39,10 @@ import java.lang.annotation.Target;
 // @ZQuery(sql = "select length(name) as nameLength from blobt limit ?;")
 // nameLength 会在jdbc中取到namelength,导致java class.getDField时获取不到，而mysqljdbc获取到的就是 nameLength
 
+// FIXME 2024年5月24日 下午7:03:18 zhangzhen: 考虑好：对于非SQL标准的内容，比如pgslq的jsonb类型，是否在模板方法上支持？比如save方法，
+//  insert 要做成 ?::josnb ，一旦模板方法支持了，其他的所有声明式方法可能都要改动，工作量太大。还是使用@ZQuery 算了，本来不打算支持 @ZQuery insert 语句
+// 现在看来对于使用一些特有功能还是直接让手写sql算了.
+
 public @interface ZQuery {
 
 	// FIXME 2023年6月16日 下午8:03:51 zhanghen: 解析这个
