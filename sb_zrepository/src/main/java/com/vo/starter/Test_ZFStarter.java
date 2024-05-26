@@ -28,11 +28,9 @@ public class Test_ZFStarter implements ZStarter {
 	@Override
 	public void start() {
 
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "Test_ZFStarter.start()");
-
 		final String scanPackageName = String
 				.valueOf(ZProperties.getInstance().getProperty("zrepository.scanPackageName"));
-		System.out.println("ZR-ZF-starter-启动--ZProperties.getInstance().getProperty");
+
 		if (StrUtil.isEmpty(scanPackageName)) {
 			throw new IllegalArgumentException("zrepository.scanPackageName 未配置！");
 		}
