@@ -126,9 +126,13 @@ public class SU {
 			final int rows = size;
 
 			if (ZDP.getShowSql()) {
-				// FIXME 2024年5月27日 下午8:34:33 zhangzhen: 这个fMap.values可能是empty，记得处理
-				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal, fMap.values(), rows, offset);
-				LOG.info("page总条数查询-[{}]-[{}]", pageCountSql, fMap.values());
+				if (fMap.isEmpty()) {
+					LOG.info("page分页查询-[{}]-[{},{}]", pageSqlFinal, rows, offset);
+					LOG.info("page总条数查询-[{}]", pageCountSql);
+				} else {
+					LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal, fMap.values(), rows, offset);
+					LOG.info("page总条数查询-[{}]-[{}]", pageCountSql, fMap.values());
+				}
 			}
 
 			ps = connection.prepareStatement(pageSqlFinal);

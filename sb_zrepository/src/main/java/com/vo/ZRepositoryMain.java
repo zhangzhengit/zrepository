@@ -360,6 +360,8 @@ public class ZRepositoryMain {
 		for (final Class<?> zrSubClass : zrClassSet) {
 			LOG.info("ZRepositoryStarter开始生成[{}]的SQL模板", zrSubClass.getCanonicalName());
 			final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(zrSubClass);
+			final String tType = typeArray[0];
+			checkZRG(tType, typeArray[1], zrSubClass);
 
 			final Method[] ms = zrSubClass.getMethods();
 
@@ -369,9 +371,8 @@ public class ZRepositoryMain {
 				final MethodSQL methodSQL = MethodRegex.check(m.getName(), m);
 //				final Entry<String, String> check = MethodRegex.check(m.getName(), m);
 
-				final String type = typeArray[0];
 				try {
-					final Class<?> typeClass = Class.forName(type);
+					final Class<?> typeClass = Class.forName(tType);
 					final ZEntity zEntity = typeClass.getAnnotation(ZEntity.class);
 
 					checkZEntity(typeClass);
@@ -514,7 +515,7 @@ public class ZRepositoryMain {
 		String sqlA = sql;
 
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByDateAndNameOrderByNameDescLimit".equals(method.getName())) {
+		if("findByOrderCOUNTOrNAMEOrIdOrI1OrBYTE1".equals(method.getName())) {
 			final int x2 = 1;
 		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
@@ -532,10 +533,6 @@ public class ZRepositoryMain {
 
 		// 仍然包含 @，则说明参数和字段数目对不上
 		if (sqlA.contains("@")) {
-			// FIXME 2024年5月27日 下午8:44:41 zhangzhen: or的正则表达式有 改为
-			// findBy.+(?=Or.).+
-			// 之后，下面这个命名还是有问题，OrderCOUNT中的Or还是被认为是Or，要继续修改正则表达式，因为不让Field.name 出现sql关键字是行不通的
-			// 			findByIdOrNAMEOrOrderCOUNT
 			throw new IllegalArgumentException("请检查自定义方法名称，methodName = " + methodName);
 		}
 
@@ -1590,6 +1587,32 @@ public class ZRepositoryMain {
 
 
 		throw new IllegalArgumentException("JDBC 配置不支持：" + url);
+	}
+
+	private static void checkZRG(final String tType, final String idType, final Class zrSubClass) {
+
+		try {
+			final Class<?> tClass = Class.forName(tType);
+			final Field[] fs = tClass.getDeclaredFields();
+			final Optional<Field> idO = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
+			if (!idO.isPresent()) {
+				throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + tClass.getSimpleName()
+						+ " 必须有 " + ZID.class.getSimpleName() + " 字段");
+			}
+			final Field idField = idO.get();
+
+			if (!idField.getType().getCanonicalName().equals(idType)) {
+				final String m = ZRepository.class.getSimpleName() + " 的子接口 " + zrSubClass.getSimpleName()
+						+ " 泛型参数<T,ID> 设置错误. "
+						+ "泛型参数ID类型("+idType+")应和T("+tClass.getSimpleName()+")中的@" + ZID.class.getSimpleName()
+						+ "标记的Field的类型("+idField.getType().getCanonicalName()+")保持一致";
+				throw new IllegalArgumentException(m);
+			}
+
+		} catch (final ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static DBEnum getDB() {

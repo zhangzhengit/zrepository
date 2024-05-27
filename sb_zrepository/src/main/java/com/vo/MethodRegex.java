@@ -105,10 +105,9 @@ public class MethodRegex {
 
 	// FIXME 2024年5月27日 下午8:13:34 zhangzhen: 正则表达式都要改，.+ 是0个也可以的，显然不符合要求
 	public static final String findByXXOrYY = "findBy.+(?=Or.).+";
-//	public static final String findByXXOrYY = "findBy.+Or.+";
 	public static final String findByXXOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+";
 	public static final String findByXXOrYYOrYYOrYY = "findBy.+Or.+Or.+Or.+";
-	public static final String findByXXOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYY = "findBy.+Or.+Or.+Or.+Or.+";
 	public static final String findByXXOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
 	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
 	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
@@ -370,7 +369,7 @@ public class MethodRegex {
 			for (final Entry<String, String> entry : es) {
 				if (methodName.matches(entry.getKey())) {
 					// FIXME 2024年5月27日 下午8:10:15 zhangzhen: debug 代码，记得删除
-					if("findByOrderCOUNT".equals(methodName)) {
+					if("findByOrderCOUNTOrNAME".equals(methodName)) {
 						final int x = 1;
 					}
 					return new MethodSQL(false,entry.getKey(), entry.getValue());

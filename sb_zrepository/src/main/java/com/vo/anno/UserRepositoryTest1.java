@@ -35,7 +35,8 @@ public class UserRepositoryTest1 {
 							if (i2 > i) {
 								final String t = typeName.substring(i + 1, i2);
 								final String[] array = t.split(",");
-								return array;
+								final String[] array2 = {array[0].trim(),array[1].trim()};
+								return array2;
 							}
 						}
 					}
