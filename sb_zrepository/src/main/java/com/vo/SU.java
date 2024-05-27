@@ -654,6 +654,8 @@ public class SU {
 		} catch (final Exception e) {
 			e.printStackTrace();
 			try {
+				// XXX sqlite 在16GB的傲腾上面测试连续批量insert，硬盘满了会报错：[SQLITE_FULL] Insertion failed because database is full (database or disk is full)
+				// mysql和pgsql还没测
 				connection.rollback();
 			} catch (final SQLException e1) {
 				e1.printStackTrace();
