@@ -13,6 +13,8 @@ import com.google.common.collect.Sets;
  */
 public class ZFieldConverter {
 
+// FIXME 2024年5月27日 下午8:50:47 zhangzhen: 这个要好好测，万一出了问题，容易导致认为是后续代码的问题
+	
 	public static String toJavaField(final String dbFieldName) {
 		final char[] charArray = dbFieldName.toCharArray();
 

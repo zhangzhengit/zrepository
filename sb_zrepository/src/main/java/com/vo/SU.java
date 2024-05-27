@@ -126,6 +126,7 @@ public class SU {
 			final int rows = size;
 
 			if (ZDP.getShowSql()) {
+				// FIXME 2024年5月27日 下午8:34:33 zhangzhen: 这个fMap.values可能是empty，记得处理
 				LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal, fMap.values(), rows, offset);
 				LOG.info("page总条数查询-[{}]-[{}]", pageCountSql, fMap.values());
 			}
@@ -193,7 +194,7 @@ public class SU {
 			}
 		} finally {
 			close(ps, rs, psc, pscRS);
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 		}
 
 		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L,
@@ -295,7 +296,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 		}
 		// XXX 直接返回T可以吗？
 		return t;
@@ -346,7 +347,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(ps);
 		}
 
@@ -395,7 +396,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(ps);
 		}
 
@@ -438,7 +439,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 			close(ps);
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 		}
 
 		return false;
@@ -513,7 +514,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 		}
 
 		for (final Object id : idNotNullList) {
@@ -565,7 +566,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -602,7 +603,7 @@ public class SU {
 					e.printStackTrace();
 				}
 			}
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			return idl;
 
 		case MYSQL:
@@ -700,7 +701,7 @@ public class SU {
 			}
 
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -762,7 +763,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 		}
 
 		return null;
@@ -958,7 +959,7 @@ public class SU {
 				final T t = newT(cls, rs, metaData, count);
 				r.add(t);
 			}
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			return r;
 
 		} catch (SQLException
@@ -970,7 +971,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1053,7 +1054,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1116,7 +1117,7 @@ public class SU {
 			final T findById0 = findById0(mode, id, cls, sql, zc);
 			return findById0;
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 		}
 
 	}
@@ -1274,7 +1275,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1366,7 +1367,7 @@ public class SU {
 			}
 			e.printStackTrace();
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1460,7 +1461,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, statement);
 		}
 
@@ -1507,7 +1508,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 		return Collections.emptyList();
@@ -1554,7 +1555,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 
 			close(rs, ps);
 		}
@@ -1603,7 +1604,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 		return Collections.emptyList();
@@ -1654,7 +1655,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1709,7 +1710,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1755,7 +1756,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1803,14 +1804,14 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
 		return Collections.emptyList();
 	}
 
-	private static void returnZC(final ZConnection zc) {
+	private static void returnZConnectionAndCommit(final ZConnection zc) {
 		INSTANCE.returnZConnectionAndCommit(zc);
 	}
 
@@ -1853,7 +1854,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1894,7 +1895,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1949,7 +1950,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -1994,7 +1995,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -2045,7 +2046,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -2185,7 +2186,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(rs, ps);
 		}
 
@@ -2240,7 +2241,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZC(zc);
+			returnZConnectionAndCommit(zc);
 			close(prepareStatement);
 		}
 

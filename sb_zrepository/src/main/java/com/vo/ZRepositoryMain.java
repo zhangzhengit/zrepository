@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -530,7 +531,11 @@ public class ZRepositoryMain {
 		}
 
 		// 仍然包含 @，则说明参数和字段数目对不上
- 		if (sqlA.contains("@")) {
+		if (sqlA.contains("@")) {
+			// FIXME 2024年5月27日 下午8:44:41 zhangzhen: or的正则表达式有 改为
+			// findBy.+(?=Or.).+
+			// 之后，下面这个命名还是有问题，OrderCOUNT中的Or还是被认为是Or，要继续修改正则表达式，因为不让Field.name 出现sql关键字是行不通的
+			// 			findByIdOrNAMEOrOrderCOUNT
 			throw new IllegalArgumentException("请检查自定义方法名称，methodName = " + methodName);
 		}
 
@@ -1216,11 +1221,35 @@ public class ZRepositoryMain {
 		final String tableName = typeClass.getAnnotation(ZEntity.class).tableName();
 
 		final Field[] fs = typeClass.getDeclaredFields();
+		for (final Field f : fs) {
+			// FIXME 2024年5月27日 下午8:49:49 zhangzhen: 继续测试命名
+			final String name = f.getName();
+
+			if (ZFieldConverter.daxie.contains(name.charAt(0))) {
+				final String m = "@" + ZEntity.class.getSimpleName()
+						+ "类[" + typeClass.getSimpleName() + "] 中的Field ["
+						+ name
+						+ "] 不允许以大写字母开头,请严格遵循驼峰式命名法"
+						;
+				throw new IllegalArgumentException(m);
+			}
+
+			if (name.contains("_")) {
+				final String m = "@" + ZEntity.class.getSimpleName()
+						+ "类[" + typeClass.getSimpleName() + "] 中的Field ["
+						+ name
+						+ "] 不允许出现_下划线符号,请严格遵循驼峰式命名法"
+						;
+				throw new IllegalArgumentException(m);
+			}
+		}
+
 		final List<Field> fieldList = Lists.newArrayList(fs);
 
 		final Optional<Field> notSupport = fieldList.stream().filter(f -> !DBType.typeSupport(f.getType().getCanonicalName())).findAny();
 		if (notSupport.isPresent()) {
-			final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName() + "] 中的字段 ["
+			final String m = "@" + ZEntity.class.getSimpleName()
+					+ "类[" + typeClass.getSimpleName() + "] 中的字段 ["
 					+ notSupport.get().getName()
 					+ "] 的类型 ["
 					+ notSupport.get().getType().getCanonicalName()
@@ -1259,12 +1288,25 @@ public class ZRepositoryMain {
 					final String columnType = columns.getString(TYPE_NAME);
 
 					final String javaFieldName = ZFieldConverter.toJavaField(columnName);
-					final Optional<Field> o = fieldList.stream().filter(fn -> fn.getName().equals(javaFieldName)).findFirst();
+					final Optional<Field> o = fieldList.stream().filter(fn -> fn.getName().equals(javaFieldName)).findAny();
 
 					if (!o.isPresent()) {
+						final Optional<Field> oequalsIgnoreCase = fieldList.stream()
+								.filter(fn -> fn.getName().equalsIgnoreCase(javaFieldName)).findAny();
+						if (oequalsIgnoreCase.isPresent()) {
+							final String m = "数据表[" + tableName + "]中存在"
+									+ "[" + typeClass.getSimpleName() + "]中不存在的column [" + columnName + "]"
+									+ " ,是否手误写错了?想写的是java Field [" + oequalsIgnoreCase.get().getName() +"]"
+									+ " 转换为DB的下划线命名法后的 ["+ ZFieldConverter.toDbField(oequalsIgnoreCase.get().getName()) +"] ?)"
+									;
+							throw new IllegalArgumentException(m);
+						}
 						final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
-								+ typeClass.getSimpleName() + "]不存在的字段" + columnName;
+								+ typeClass.getSimpleName() + "]不存在的字段" + columnName
+								+ " 此字段从转为java驼峰式命名为[" + javaFieldName + "]"
+								;
 						throw new IllegalArgumentException(m);
+
 					}
 
 					final boolean match = DBType.match(o.get().getType().getCanonicalName(), columnType);
@@ -1282,6 +1324,23 @@ public class ZRepositoryMain {
 				if (fieldNameList.size() != columnsCount) {
 					final List<String> cnl = columnNameList.stream().map(ZFieldConverter::toJavaField)
 							.collect(Collectors.toList());
+					final HashSet<String> cns = Sets.newHashSet(cnl);
+					if (cnl.size() != cns.size()) {
+						final List<Entry<String, Long>> collect = cnl.stream().collect(Collectors.groupingBy(e -> e, Collectors.counting())).entrySet().stream().filter(e-> e.getValue().longValue() > 1).collect(Collectors.toList());
+						final String m = "数据表[" + tableName + "]" + "中的column"
+								+ "\r\n\t\t\t"
+								+ columnNameList
+								+ "转换为java驼峰式"
+								+ "\r\n\t\t\t"
+								+ cnl
+								+ "命名后有重复的,会导致处理数据时混乱."
+								+ "\r\n\t\t\t"
+								+ "转换后的java名称和出现次数如下："
+								+ "\r\n\t\t\t"
+								+ collect
+								+ "请检查";
+						throw new IllegalArgumentException(m);
+					}
 
 					if (fieldNameList.size() > columnNameList.size()) {
 						fieldNameList.removeAll(cnl);

@@ -26,8 +26,8 @@ public class MethodRegex {
 
 	public static final String SELECT = "select";
 
-	public static final String GROUP_findByXXOrderByXXLimit = "findBy(.*)OrderBy(.*)Limit";
-	public static final String GROUP_findByXXOrderByXXDescLimit = "findBy(.*)OrderBy(.*)DescLimit";
+	public static final String GROUP_findByXXOrderByXXLimit = "findBy.+OrderBy.+Limit";
+	public static final String GROUP_findByXXOrderByXXDescLimit = "findBy.+OrderBy.+DescLimit";
 	public static final String GROUP_count = "count";
 
 	public static final String GROUP_page = "page";
@@ -38,18 +38,18 @@ public class MethodRegex {
 	// 要不要还是支持一下pageByXXOrderByXX这种形式？但是要提前支持好，组合可能非常多，比如order by A asc B desc C asc
 	// order by A desc B asc C asc 等等形式非常多的组合数。如：支持到5个条件，则有32种语句，到10个则要提前支持到1024种情况，似乎太复杂了，光写单元测试都很麻烦
 
-	public static final String GROUP_pageByXX_orderByXX = "pageBy(.*)OrderBy(.*)";
-	public static final String GROUP_pageByXXAndXX_orderByXX = "pageBy(.*)And(.*)OrderBy(.*)";
-	public static final String GROUP_pageByXXAndXXAndXX_orderByXX = "pageBy(.*)And(.*)And(.*)OrderBy(.*)";
-	public static final String GROUP_pageByXXAndXXAndXXAndXX_orderByXX = "pageBy(.*)And(.*)And(.*)And(.*)OrderBy(.*)";
+	public static final String GROUP_pageByXX_orderByXX = "pageBy.+(?=OrderBy.).+";
+	public static final String GROUP_pageByXXAndXX_orderByXX = "pageBy.+(?=And.).+(?=OrderBy.).+";
+	public static final String GROUP_pageByXXAndXXAndXX_orderByXX = "pageBy.+(?=And.).+(?=And.).+(?=OrderBy.).+";
+	public static final String GROUP_pageByXXAndXXAndXXAndXX_orderByXX = "pageBy.+(?=And.).+(?=And.).+(?=And.).+(?=OrderBy.).+";
 
 	// desc
-	public static final String GROUP_pageByXX_orderByXXDesc = "pageBy(.*)OrderBy(.*)Desc";
-	public static final String GROUP_pageByXXAndXX_orderByXXDesc = "pageBy(.*)And(.*)OrderBy(.*)Desc";
-	public static final String GROUP_pageByXXAndXXAndXX_orderByXXDesc = "pageBy(.*)And(.*)And(.*)OrderBy(.*)Desc";
-	public static final String GROUP_pageByXXAndXXAndXXAndXX_orderByXXDesc = "pageBy(.*)And(.*)And(.*)And(.*)OrderBy(.*)Desc";
+	public static final String GROUP_pageByXX_orderByXXDesc = "pageBy.+(?=OrderBy.).+Desc";
+	public static final String GROUP_pageByXXAndXX_orderByXXDesc = "pageBy.+(?=And.).+(?=OrderBy.).+Desc";
+	public static final String GROUP_pageByXXAndXXAndXX_orderByXXDesc = "pageBy.+(?=And.).+(?=And.).+(?=OrderBy.).+Desc";
+	public static final String GROUP_pageByXXAndXXAndXXAndXX_orderByXXDesc = "pageBy.+(?=And.).+(?=And.).+(?=And.).+(?=OrderBy.).+Desc";
 
-	public static final String GROUP_CountingByXXX = "countingBy(.*)";
+	public static final String GROUP_CountingByXXX = "countingBy.+";
 	public static final String GROUP_EXISTBYId = "existById";
 	public static final String GROUP_DeleteById = "deleteById";
 	public static final String GROUP_DeleteByIdIn = "deleteByIdIn";
@@ -59,62 +59,64 @@ public class MethodRegex {
 	public static final String GROUP_UPDATE = "update";
 	public static final String GROUP_FINDALL = "findAll";
 
-	public static final String GROUP_findByXX = "findBy(.*)";
-	public static final String GROUP_findByxxNot = "findBy(.*)Not";
-	public static final String GROUP_findByxxNotNull = "findBy(.*)NotNull";
-	public static final String GROUP_findByxx_in = "findBy(.*)In";
+	public static final String GROUP_findByXX = "findBy.+";
+	public static final String GROUP_findByxxNot = "findBy.+Not";
+	public static final String GROUP_findByxxNotNull = "findBy.+NotNull";
+	public static final String GROUP_findByxx_in = "findBy.+In";
 
-	public static final String GROUP_findByXXXEndingWith= "findBy(.*)EndingWith";
-	public static final String GROUP_findByXXXStartingWith= "findBy(.*)StartingWith";
+	public static final String GROUP_findByXXXEndingWith= "findBy.+EndingWith";
+	public static final String GROUP_findByXXXStartingWith= "findBy.+StartingWith";
 
-	public static final String GROUP_findByXXGreaterThanEquals = "findBy(.*)GreaterThanEquals";
+	public static final String GROUP_findByXXGreaterThanEquals = "findBy.+GreaterThanEquals";
 
-	public static final String GROUP_findByXXGreaterThan = "findBy(.*)GreaterThan";
-	public static final String GROUP_findByXXLessThanEquals = "findBy(.*)LessThanEquals";
-	public static final String GROUP_findByXXLessThan = "findBy(.*)LessThan";
+	public static final String GROUP_findByXXGreaterThan = "findBy.+GreaterThan";
+	public static final String GROUP_findByXXLessThanEquals = "findBy.+LessThanEquals";
+	public static final String GROUP_findByXXLessThan = "findBy.+LessThan";
 
-	public 	static final String GROUP_findByXXLike = "findBy(.*)Like";
+	public 	static final String GROUP_findByXXLike = "findBy.+Like";
 
-	public 	static final String GROUP_findByXXIsNull = "findBy(.*)IsNull";
+	public 	static final String GROUP_findByXXIsNull = "findBy.+IsNull";
 
 	public static final String saveAll = GROUP_SAVEALL;
 	public static final String save = GROUP_SAVE;
 	public static final String findAll = GROUP_FINDALL;
 	public static final String findByXX = GROUP_findByXX;
 
-	public static final String GROUP_findByXXAndXX = "findBy(.*)And(.*)";
-	public static final String findByXXAndYY = "findBy(.*)And(.*)";
-	public static final String findByXXAndYYAndYY = "findBy(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
-	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)And(.*)";
+	public static final String GROUP_findByXXAndXX = "findBy.+(?=And.).+";
+	public static final String findByXXAndYY = "findBy.+(?=And.).+";
+	public static final String findByXXAndYYAndYY = "findBy.+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
+	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
 
 
 	public 	static final String findByXXXEndingWith = GROUP_findByXXXEndingWith;
 	public 	static final String findByXXXStartingWith = GROUP_findByXXXStartingWith;
 	public 	static final String findByXXNot = GROUP_findByxxNot;
 	public 	static final String findByXXIn = GROUP_findByxx_in;
-	public static final String findByXXInAndYYIn = "findBy(.*)InAnd(.*)In";
-	public static final String findByXXInAndYYInAndYYIn = "findBy(.*)InAnd(.*)InAnd(.*)In";
-	public static final String findByXXInAndYYInAndYYInAndYYIn = "findBy(.*)InAnd(.*)InAnd(.*)InAnd(.*)In";
+	public static final String findByXXInAndYYIn = "findBy.+(?=InAnd.).+In";
+	public static final String findByXXInAndYYInAndYYIn = "findBy.+(?=InAnd.).+(?=InAnd.).+In";
+	public static final String findByXXInAndYYInAndYYInAndYYIn = "findBy.+(?=InAnd.).+(?=InAnd.).+(?=InAnd.).+In";
 
-	public static final String findByXXOrYY = "findBy(.*)Or(.*)";
-	public static final String findByXXOrYYOrYY = "findBy(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
-	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)Or(.*)";
+	// FIXME 2024年5月27日 下午8:13:34 zhangzhen: 正则表达式都要改，.+ 是0个也可以的，显然不符合要求
+	public static final String findByXXOrYY = "findBy.+(?=Or.).+";
+//	public static final String findByXXOrYY = "findBy.+Or.+";
+	public static final String findByXXOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYY = "findBy.+Or.+Or.+Or.+";
+	public static final String findByXXOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
+	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
 
-	public 	static final String findByXXBetween = "findBy(.*)Between";
+	public 	static final String findByXXBetween = "findBy.+Between";
 
 	public 	static final String findByXXGreaterThanEquals = GROUP_findByXXGreaterThanEquals;
 	public 	static final String findByXXGreaterThan = GROUP_findByXXGreaterThan;
@@ -122,23 +124,23 @@ public class MethodRegex {
 	public 	static final String findByXXLessThan = GROUP_findByXXLessThan;
 
 	public 	static final String findByXXOrderByXXDescLimit = GROUP_findByXXOrderByXXDescLimit;
-	public 	static final String findByXXAndXXOrderByXXDescLimit = "findBy(.*)And(.*)OrderBy(.*)DescLimit";
-	public 	static final String findByXXAndXXAndXXOrderByXXDescLimit = "findBy(.*)And(.*)And(.*)OrderBy(.*)DescLimit";
-	public 	static final String findByXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy(.*)And(.*)And(.*)And(.*)OrderBy(.*)DescLimit";
-	public 	static final String findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy(.*)And(.*)And(.*)And(.*)And(.*)OrderBy(.*)DescLimit";
-	public 	static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)OrderBy(.*)DescLimit";
+	public 	static final String findByXXAndXXOrderByXXDescLimit = "findBy.+And.+OrderBy.+DescLimit";
+	public 	static final String findByXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+OrderBy.+DescLimit";
+	public 	static final String findByXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+OrderBy.+DescLimit";
+	public 	static final String findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+OrderBy.+DescLimit";
+	public 	static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+And.+OrderBy.+DescLimit";
 	public 	static final String findByXXOrderByXXLimit = GROUP_findByXXOrderByXXLimit;
-	public static final String findByXXAndXXOrderByXXLimit = "findBy(.*)And(.*)OrderBy(.*)Limit";
-	public static final String findByXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)OrderBy(.*)Limit";
-	public static final String findByXXAndXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)And(.*)OrderBy(.*)Limit";
-	public static final String findByXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)And(.*)And(.*)OrderBy(.*)Limit";
-	public static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy(.*)And(.*)And(.*)And(.*)And(.*)And(.*)OrderBy(.*)Limit";
+	public static final String findByXXAndXXOrderByXXLimit = "findBy.+And.+OrderBy.+Limit";
+	public static final String findByXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+OrderBy.+Limit";
+	public static final String findByXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+OrderBy.+Limit";
+	public static final String findByXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+And.+OrderBy.+Limit";
+	public static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+And.+And.+OrderBy.+Limit";
 	public 	static final String count = GROUP_count;
 	public 	static final String page = GROUP_page;
 	public 	static final String countingByXXX = GROUP_CountingByXXX;
-	public 	static final String countingByXXXAndXX = "countingBy(.*)And(.*)";
-	public 	static final String countingByXXXAndXXAndXX = "countingBy(.*)And(.*)And(.*)";
-	public 	static final String countingByXXXAndXXAndXXAndXX = "countingBy(.*)And(.*)And(.*)And(.*)";
+	public 	static final String countingByXXXAndXX = "countingBy.+And.+";
+	public 	static final String countingByXXXAndXXAndXX = "countingBy.+And.+And.+";
+	public 	static final String countingByXXXAndXXAndXXAndXX = "countingBy.+And.+And.+And.+";
 	public 	static final String existById = GROUP_EXISTBYId;
 	public 	static final String existByIdIn = "existByIdIn";
 	public 	static final String deleteById = GROUP_DeleteById;
@@ -367,6 +369,10 @@ public class MethodRegex {
 			final Set<Entry<String, String>> es = hashMap.entrySet();
 			for (final Entry<String, String> entry : es) {
 				if (methodName.matches(entry.getKey())) {
+					// FIXME 2024年5月27日 下午8:10:15 zhangzhen: debug 代码，记得删除
+					if("findByOrderCOUNT".equals(methodName)) {
+						final int x = 1;
+					}
 					return new MethodSQL(false,entry.getKey(), entry.getValue());
 				}
 			}
