@@ -572,7 +572,6 @@ public class SU {
 		return false;
 	}
 
-	// FIXME 2024年5月27日 下午3:00:33 zhangzhen: sqlite问题：saveAll 方法没法返回自增的主键值，save 可以
 	public static <T> List<Object> saveAll(final Mode mode, final Class<T> cls, final String sqlParam,
 			final List<T> tList) {
 
@@ -580,6 +579,45 @@ public class SU {
 			return Collections.emptyList();
 		}
 
+		final DBEnum db = ZRepositoryMain.getDB();
+		switch (db) {
+
+		case SQLITE:
+			// FIXME 2024年5月27日 下午5:54:36 zhangzhen: 对于sqlite而专门特别处理，从批量插入改为在一个事务里执行多次insert.
+			// save0里的日志还要改，区分是从save还是saveAll方法来的
+			final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+			final Connection connection = zc.getConnection();
+
+			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
+			for (final T t : tList) {
+				try {
+					final Object[] a = save0(cls, t, sqlParam, connection);
+					final ResultSet rs = (ResultSet) a[0];
+					if (rs.next()) {
+						final Object id = rs.getObject(1);
+						idl.add(id);
+					}
+					close((AutoCloseable)a[0],(AutoCloseable)a[1]);
+				} catch (final SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			returnZC(zc);
+			return idl;
+
+		case MYSQL:
+		case POSTGRESQL:
+			return saveAllMysqlAndPGSQL(mode, cls, sqlParam, tList);
+
+		default:
+			break;
+		}
+
+		return Collections.emptyList();
+	}
+
+	private static <T> List<Object> saveAllMysqlAndPGSQL(final Mode mode, final Class<T> cls, final String sqlParam,
+			final List<T> tList) {
 		final Field[] declaredFields = cls.getDeclaredFields();
 		final Optional<Field> zid = Lists.newArrayList(declaredFields).stream()
 				.filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
@@ -696,6 +734,42 @@ public class SU {
 			e1.printStackTrace();
 		}
 
+		try {
+			final Object[] a = save0(cls, t, sql, connection);
+			final ResultSet rs = (ResultSet) a[0];
+			try {
+
+				if (rs.next()) {
+					final Object id = rs.getObject(1);
+					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
+
+					// XXX 这个sql就这样写了，因为在 findById0 里面已经把*替换为具体column了
+					// FIXME 2024年5月27日 下午2:58:04 zhangzhen: 这个sql写死了，我想改@ZID字段测试，结果ZR中的方法模板都提前规定了必须包含Id，
+					// 改起来改动太多了，那就这样：@ZID字段名称必须是id，不允许为其他？表中必须有id字段并且必须是主键？
+					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
+					final T findByIdNew = findById0(mode, id, entityTName, selectById, zc);
+					return findByIdNew;
+				}
+			} finally {
+				close((AutoCloseable)a[0],(AutoCloseable)a[1]);
+			}
+
+		} catch (final SQLException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZC(zc);
+		}
+
+		return null;
+	}
+
+	private static <T> Object[] save0(final Class<T> cls, final T t, final String sql, final Connection connection)
+			throws SQLException {
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = cls.getDeclaredFields();
 		int fieldCount = 0;
@@ -717,56 +791,27 @@ public class SU {
 		}
 
 		final String sql2 = sql.replace("F", arg.toString()).replace("A", joiner.toString());
-		PreparedStatement ps = null;
-		try {
-			if (ZDP.getShowSql()) {
-				LOG.info("[{}],[{}]", sql2, t);
-			}
-			ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
-			int i = 0;
-			for (final Field field : fs) {
-				if (field.isAnnotationPresent(ZTransient.class)) {
-					continue;
-				}
-				if(field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY)) {
-					continue;
-				}
-
-				i++;
-				addPS(t, ps, i, field, SUMode.SAVE);
-			}
-			final int executeUpdate = ps.executeUpdate();
-			final ResultSet rs = ps.getGeneratedKeys();
-			try {
-
-				if (rs.next()) {
-					final Object id = rs.getObject(1);
-					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
-
-					// XXX 这个sql就这样写了，因为在 findById0 里面已经把*替换为具体column了
-					// FIXME 2024年5月27日 下午2:58:04 zhangzhen: 这个sql写死了，我想改@ZID字段测试，结果ZR中的方法模板都提前规定了必须包含Id，
-					// 改起来改动太多了，那就这样：@ZID字段名称必须是id，不允许为其他？表中必须有id字段并且必须是主键？
-					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-					final T findByIdNew = findById0(mode, id, entityTName, selectById, zc);
-					return findByIdNew;
-				}
-			} finally {
-				rs.close();
-			}
-
-		} catch (final SQLException e) {
-			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
-		} finally {
-			close(ps);
-			returnZC(zc);
+		PreparedStatement ps;
+		if (ZDP.getShowSql()) {
+			LOG.info("[{}],[{}]", sql2, t);
 		}
+		ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
+		int i = 0;
+		for (final Field field : fs) {
+			if (field.isAnnotationPresent(ZTransient.class)) {
+				continue;
+			}
+			if(field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY)) {
+				continue;
+			}
 
-		return null;
+			i++;
+			addPS(t, ps, i, field, SUMode.SAVE);
+		}
+		final int executeUpdate = ps.executeUpdate();
+		final ResultSet rs = ps.getGeneratedKeys();
+//		ps.close();
+		return new Object[] {rs,ps};
 	}
 
 	private static <T> boolean addPS(final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
