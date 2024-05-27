@@ -9,6 +9,8 @@ package com.vo;
  */
 public enum DBEnum {
 
+	SQLITE,
+
 	MYSQL,
 
 	POSTGRESQL;

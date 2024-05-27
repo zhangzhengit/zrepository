@@ -24,15 +24,26 @@ public class DBType {
 	// FIXME 2024年5月13日 上午12:34:27 zhangzhen: TODO aliyun 已启动 pgsql，开始写pgsql相关的
 
 	/**
+	 * java > sqlite
+	 */
+	private static final Multimap<String, String> JAVA_SQLITE = ArrayListMultimap.create();
+	
+	/**
 	 * java > pgsql
 	 */
 	private static final Multimap<String, String> JAVA_PGSQL = ArrayListMultimap.create();
+	
 	/**
 	 * java > mysql
 	 */
 	private static final Multimap<String, String> JAVA_MYSQL = ArrayListMultimap.create();
 	public static final Set<String> JAVA = Sets.newHashSet("byte", "short", "int", "long", "float", "double",
 			"boolean", "char");
+
+	public static Collection<String> getSQLiteType(final String javaTypeName) {
+		final Collection<String> v = JAVA_SQLITE.get(javaTypeName);
+		return v;
+	}
 
 	public static Collection<String> getPGSqlType(final String javaTypeName) {
 		final Collection<String> v = JAVA_PGSQL.get(javaTypeName);
@@ -69,6 +80,9 @@ public class DBType {
 		}
 		if (db == DBEnum.POSTGRESQL) {
  			return getPGSqlType(javaType).contains(dbType);
+		}
+		if (db == DBEnum.SQLITE) {
+			return getSQLiteType(javaType).contains(dbType);
 		}
 
 		return false;
@@ -180,6 +194,33 @@ public class DBType {
 		JAVA_MYSQL.put("java.sql.Timestamp", "TIMESTAMP");
 
 		// FIXME 2024年5月3日 下午9:01:52 zhangzhen: 加入Enum、Set类型
+
+		// java -> sqlite
+		JAVA_SQLITE.put("java.lang.Byte", "TINYINT");
+		JAVA_SQLITE.put("java.lang.Short", "SMALLINT");
+		JAVA_SQLITE.put("java.lang.Integer", "int");
+		JAVA_SQLITE.put("java.lang.Integer", "INT");
+		JAVA_SQLITE.put("java.lang.Integer", "INTEGER");
+		JAVA_SQLITE.put("java.lang.Boolean", "TINYINT");
+		JAVA_SQLITE.put("java.lang.Long", "bigint");
+		JAVA_SQLITE.put("java.lang.Long", "BIGINT");
+		JAVA_SQLITE.put("java.lang.Float", "FLOAT");
+		JAVA_SQLITE.put("java.lang.Double", "DOUBLE");
+		JAVA_SQLITE.put("java.math.BigDecimal", "DECIMAL");
+		JAVA_SQLITE.put("byte[]", "BLOB");
+		JAVA_SQLITE.put("java.lang.Character", "CHAR");
+		JAVA_SQLITE.put("java.lang.String", "varchar");
+		JAVA_SQLITE.put("java.lang.String", "VARCHAR");
+		JAVA_SQLITE.put("java.lang.String", "text");
+		JAVA_SQLITE.put("java.lang.String", "TEXT");
+		JAVA_SQLITE.put("java.sql.Time", "TIME");
+		JAVA_SQLITE.put("java.sql.Timestamp", "DATETIME");
+		JAVA_SQLITE.put("java.sql.Timestamp", "TIMESTAMP");
+		JAVA_SQLITE.put("java.sql.Date", "DATE");
+		JAVA_SQLITE.put("java.sql.Date", "DATETIME");
+		JAVA_SQLITE.put("java.util.Date", "DATE");
+		JAVA_SQLITE.put("java.util.Date", "DATETIME");
+
 
 	}
 }

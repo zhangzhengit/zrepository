@@ -96,13 +96,15 @@ public class ZDatasourcePropertiesLoader {
 			LOG.error("datasource.read.url[" + i + "]不存在");
 			System.exit(0);
 		}
+		final boolean notNeedUserNameAndPassword = url.contains("jdbc:sqlite");
 		read.setDatasourceUrl(url);
 
 		final String userName = gs().getString("datasource.read.username[" + i + "]");
-		if (StrUtil.isEmpty(userName)) {
+		if (StrUtil.isEmpty(userName) && !notNeedUserNameAndPassword) {
 			LOG.error("datasource.read.userName[" + i + "]不存在");
 			System.exit(0);
 		}
+
 		read.setDatasourceUsername(userName);
 
 		final String password = gs().getString("datasource.read.password[" + i + "]");
@@ -154,14 +156,18 @@ public class ZDatasourcePropertiesLoader {
 	private static P newWriteDP() {
 		final ZDatasourceProperties.P write = new P();
 		final String url = gs().getString("datasource.write.url");
+
 		if (StrUtil.isEmpty(url)) {
 			LOG.error("datasource.write.url 不存在");
 			System.exit(0);
 		}
+
+		final boolean notNeedUserNameAndPassword = url.contains("jdbc:sqlite");
 		write.setDatasourceUrl(url);
 
 		final String userName = gs().getString("datasource.write.username");
-		if (StrUtil.isEmpty(userName)) {
+		if(StrUtil.isEmpty(userName) && !notNeedUserNameAndPassword) {
+
 			LOG.error("datasource.write.username 不存在");
 			System.exit(0);
 		}

@@ -1512,6 +1512,24 @@ public class ZRepositoryMain {
 			DB_ENUM = DBEnum.POSTGRESQL;
 			return substring;
 		}
+
+		if (url.toLowerCase().contains("sqlite")) {
+			final String keyword = "/";
+			final String k = ".db";
+			final int i = url.lastIndexOf(k);
+			if (i > -1) {
+				final int is = url.lastIndexOf("\\", i);
+				if (is > -1) {
+					final String name = url.substring(is + 1, i);
+					final int x = 1;
+					DB_ENUM = DBEnum.SQLITE;
+					return name;
+				}
+			}
+			throw new IllegalArgumentException("sqlite 配置不支持：" + url);
+		}
+
+
 		throw new IllegalArgumentException("JDBC 配置不支持：" + url);
 	}
 

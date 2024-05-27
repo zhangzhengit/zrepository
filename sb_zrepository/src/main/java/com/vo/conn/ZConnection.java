@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import com.vo.core.ZLog2;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 
 /**
@@ -46,7 +47,9 @@ public class ZConnection {
 		final String userName = p.getDatasourceUsername();
 		final String pwd = p.getDatasourcePassword();
 		try {
-			final Connection connection = DriverManager.getConnection(url, userName, pwd);
+			final Connection connection =
+					StrUtil.isEmpty(userName) ? DriverManager.getConnection(url)
+							: DriverManager.getConnection(url, userName, pwd);
 			final ZConnection zc = new ZConnection();
 
 			zc.setDriverClass(p.getDatasourceDriverClass());

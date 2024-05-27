@@ -15,6 +15,7 @@
 	  配置详见文件 zdatasource.properties
 	  	
 	  	目前支持：mysql和postgresql，只测试了ubuntu上的mysql-8.0 percona-mysql-5.7 postgresql-14和11版本
+	  	20240527：支持了sqlite，仅测试了3.30.1版本，并且saveAll没法返回自增的主键值
 		
 	3 声明一个Entity，如：
 	

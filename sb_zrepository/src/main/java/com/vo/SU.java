@@ -572,6 +572,7 @@ public class SU {
 		return false;
 	}
 
+	// FIXME 2024年5月27日 下午3:00:33 zhangzhen: sqlite问题：saveAll 方法没法返回自增的主键值，save 可以
 	public static <T> List<Object> saveAll(final Mode mode, final Class<T> cls, final String sqlParam,
 			final List<T> tList) {
 
@@ -741,6 +742,8 @@ public class SU {
 					final ZEntity zEntity = t.getClass().getAnnotation(ZEntity.class);
 
 					// XXX 这个sql就这样写了，因为在 findById0 里面已经把*替换为具体column了
+					// FIXME 2024年5月27日 下午2:58:04 zhangzhen: 这个sql写死了，我想改@ZID字段测试，结果ZR中的方法模板都提前规定了必须包含Id，
+					// 改起来改动太多了，那就这样：@ZID字段名称必须是id，不允许为其他？表中必须有id字段并且必须是主键？
 					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
 					final T findByIdNew = findById0(mode, id, entityTName, selectById, zc);
 					return findByIdNew;
@@ -785,7 +788,8 @@ public class SU {
 			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
 			if (fn.equals(Boolean.class.getCanonicalName())) {
 				final DBEnum db = ZRepositoryMain.getDB();
-				if (db == DBEnum.MYSQL) {
+				// XXX sqlite也暂时Boolean和tinyint 对应，和mysql一样
+				if ((db == DBEnum.MYSQL) || (db==DBEnum.SQLITE)) {
 					final boolean equals = Boolean.TRUE.equals(v2);
 					final byte vb = (byte) (equals ? 1 : 0);
 					ps.setByte(i, vb);
@@ -1133,9 +1137,35 @@ public class SU {
 					field.set(object, Character.valueOf(String.valueOf(value).charAt(0)));
 				} else if (cn.equals(String.class.getCanonicalName())) {
 					field.set(object, String.valueOf(value));
-				} else {
-					if ((cn.equals(java.sql.Date.class.getCanonicalName()) || cn.equals(java.util.Date.class.getCanonicalName())) || (field.getClass().isArray())) {
+				} else if (cn.equals(java.util.Date.class.getCanonicalName()) || cn.equals(java.sql.Date.class.getCanonicalName())) {
+					final DBEnum db = ZRepositoryMain.getDB();
+					if (value.getClass().equals(java.sql.Date.class) || value.getClass().equals(java.util.Date.class)) {
+						field.set(object, value);
+					} else if (value.getClass() == Long.class) {
+						// sqlite 中此值为long类型
+						final Date date = new Date((long) value);
+						field.set(object, date);
 					}
+				} else if (cn.equals(java.sql.Timestamp.class.getCanonicalName())) {
+					final DBEnum db = ZRepositoryMain.getDB();
+					if (value.getClass().equals(Timestamp.class)) {
+						field.set(object, value);
+					} else if (value.getClass() == Long.class) {
+						// sqlite 中此值为long类型
+						final Timestamp time = new Timestamp((long) value);
+						field.set(object, time);
+					}
+				} else if (cn.equals(java.sql.Time.class.getCanonicalName())) {
+					final DBEnum db = ZRepositoryMain.getDB();
+					if (value.getClass().equals(Time.class)) {
+						field.set(object, value);
+					} else if (value.getClass() == Long.class) {
+						// sqlite 中此值为long类型
+						final Time time = new Time((long) value);
+						field.set(object, time);
+					}
+				} else if (field.getClass().isArray()) {
+				} else {
 					field.set(object, value);
 				}
 			} catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
