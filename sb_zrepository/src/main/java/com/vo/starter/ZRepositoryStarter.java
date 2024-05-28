@@ -50,6 +50,8 @@ public class ZRepositoryStarter implements InstantiationAwareBeanPostProcessor {
 				throw new IllegalArgumentException("zrepository.scanPackageName 未配置！");
 			}
 
+			LOG.info("zrepository.scanPackageName={}", this.scanPackageName);
+
 			ScanPackage.set(this.scanPackageName);
 			final String[] array = this.scanPackageName.toArray(new String[0]);
 
