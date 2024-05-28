@@ -890,7 +890,7 @@ public class SU {
 //				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
 				// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
 				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
-			} else if (fn.equals(fn.equals(java.sql.Date.class.getCanonicalName()))) {
+			} else if (fn.equals(java.sql.Date.class.getCanonicalName())) {
 				ps.setDate(i, (java.sql.Date)v2);
 			} else if (fn.equals(Time.class.getCanonicalName())) {
 				ps.setTime(i, (Time) v2);
@@ -1189,14 +1189,21 @@ public class SU {
 					field.set(object, Character.valueOf(String.valueOf(value).charAt(0)));
 				} else if (cn.equals(String.class.getCanonicalName())) {
 					field.set(object, String.valueOf(value));
-				} else if (cn.equals(java.util.Date.class.getCanonicalName()) || cn.equals(java.sql.Date.class.getCanonicalName())) {
-					final DBEnum db = ZRepositoryMain.getDB();
-					if (value.getClass().equals(java.sql.Date.class) || value.getClass().equals(java.util.Date.class)) {
-						field.set(object, value);
-					} else if (value.getClass() == Long.class) {
+				} else if (cn.equals(java.util.Date.class.getCanonicalName())) {
+					if ((ZRepositoryMain.getDB() == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
-						final Date date = new Date((long) value);
+						final java.util.Date date = new Date((long) value);
 						field.set(object, date);
+					} else {
+						field.set(object, value);
+					}
+				} else if (cn.equals(java.sql.Date.class.getCanonicalName())) {
+					if ((ZRepositoryMain.getDB() == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
+						// sqlite 中此值为long类型
+						final java.sql.Date date = new java.sql.Date((long) value);
+						field.set(object, date);
+					} else {
+						field.set(object, value);
 					}
 				} else if (cn.equals(java.sql.Timestamp.class.getCanonicalName())) {
 					final DBEnum db = ZRepositoryMain.getDB();
