@@ -1011,7 +1011,7 @@ public class ZRepositoryMain {
 		final String k = method.getName() + "@" + sqlTemplate;
 		synchronized (k.intern()) {
 
-			final int[] v = C.get(k);
+			final int[] v = (int[]) C.get(k);
 			if(v !=null) {
 				return v;
 			}
@@ -1066,7 +1066,7 @@ public class ZRepositoryMain {
 		return argOrderArray;
 	}
 
-	private static final WeakHashMap<String, int[]> C = new WeakHashMap<>();
+	private static final WeakHashMap<String, Object> C = new WeakHashMap<>();
 
 	private static Class getClassType(final Method method) {
 
@@ -1243,8 +1243,10 @@ public class ZRepositoryMain {
 			connection.setAutoCommit(false);
 			final DatabaseMetaData metaData = connection.getMetaData();
 
-			final String catalog = findCatalog(zConnection.getUrl());
-			try (ResultSet columns = metaData.getColumns(catalog, null, tableName, null)) {
+			final DataSourceDTO dataSourceDTO = findCatalog(zConnection.getUrl());
+			final DBEnum db = getDB();
+			System.out.println("db = " + db);
+			try (ResultSet columns = metaData.getColumns(dataSourceDTO.getCatalog(), null, tableName, null)) {
 				System.out.println("开始校验[" + zConnection.getMode().name() + "]数据表 = " + tableName);
 
 				int columnsCount = 0;
@@ -1513,7 +1515,22 @@ public class ZRepositoryMain {
 	 * @param url
 	 * @return
 	 */
-	private static String findCatalog(final String url) {
+	private static DataSourceDTO findCatalog(final String url) {
+		final String k = "findCatalog" + "@" + url;
+		final Object d = C.get(k);
+		if (d != null) {
+			return (DataSourceDTO) d;
+		}
+
+		synchronized (k.intern()) {
+			final DataSourceDTO d2 = findCatalog0(url);
+			C.put(k, d2);
+			return d2;
+		}
+
+	}
+
+	private static DataSourceDTO findCatalog0(final String url) {
 		// FIXME 2024年5月4日 下午6:19:00 zhangzhen: 在程序启动时就严格校验url
 		// jdbc:mysql://192.168.1.10:3306/learn?useSSL=false&characterEncoding=utf8
 
@@ -1529,7 +1546,7 @@ public class ZRepositoryMain {
 			final String x = url.substring(s + start.length(), e);
 
 			DB_ENUM = DBEnum.MYSQL;
-			return x;
+			return new DataSourceDTO(x, DBEnum.MYSQL);
 		}
 		if (url.toLowerCase().contains("postgresql")) {
 			final String keyword = "/";
@@ -1538,7 +1555,7 @@ public class ZRepositoryMain {
 			final String substring = url.substring(lastIndexOf + keyword.length());
 
 			DB_ENUM = DBEnum.POSTGRESQL;
-			return substring;
+			return new DataSourceDTO(substring, DBEnum.POSTGRESQL);
 		}
 
 		if (url.toLowerCase().contains("sqlite")) {
@@ -1551,7 +1568,7 @@ public class ZRepositoryMain {
 					final String name = url.substring(is + 1, i);
 					final int x = 1;
 					DB_ENUM = DBEnum.SQLITE;
-					return name;
+					return new DataSourceDTO(name, DBEnum.SQLITE);
 				}
 			}
 			throw new IllegalArgumentException("sqlite 配置不支持：" + url);
@@ -1585,6 +1602,11 @@ public class ZRepositoryMain {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static DBEnum getDB(final String url) {
+		final DataSourceDTO dataSourceDTO = findCatalog(url);
+		return dataSourceDTO.getDbEnum();
 	}
 
 	public static DBEnum getDB() {

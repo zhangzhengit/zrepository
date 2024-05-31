@@ -596,14 +596,15 @@ public class SU {
 			return Collections.emptyList();
 		}
 
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final DBEnum db = ZRepositoryMain.getDB();
+		final DBEnum db = getDBFromDataSourceName(dataSourceName);
 		switch (db) {
 
 		case SQLITE:
 			// FIXME 2024年5月27日 下午5:54:36 zhangzhen: 对于sqlite而专门特别处理，从批量插入改为在一个事务里执行多次insert.
 			// save0里的日志还要改，区分是从save还是saveAll方法来的
-			final String dataSourceName = getDataSourceNameFromClassType(cls);
+
 			final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 			final Connection connection = zc.getConnection();
 
@@ -633,6 +634,18 @@ public class SU {
 		}
 
 		return Collections.emptyList();
+	}
+
+	private static DBEnum getDBFromDataSourceName(final String dataSourceName) {
+		final ZCPool pool = ZCPool.getInstance(dataSourceName);
+		final ZConnection zConnection = pool.getZConnection(Mode.WRITE);
+		try {
+			final DBEnum db = ZRepositoryMain.getDB(zConnection.getUrl());
+			return db;
+
+		} finally {
+			pool.returnZConnectionAndCommit(zConnection);
+		}
 	}
 
 	private static <T> List<Object> saveAllMysqlAndPGSQL(final Mode mode, final Class<T> cls, final String sqlParam,
