@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,38 +73,9 @@ public class ZRepositoryMain {
 
 	public static final String _Z_CLASS = "_ZClass";
 
-	public static <T> List<T> test_select_1(final Class<T> cls) throws SQLException, InstantiationException,
-			IllegalAccessException, NoSuchFieldException, SecurityException {
-		final ZConnection zc = ZCPool.getInstance().getZConnection(Mode.WRITE);
-		final Connection connection = zc.getConnection();
-
-		final PreparedStatement ps = connection.prepareStatement("select * from user where id = ?");
-
-		ps.setInt(1, 1);
-
-		final ResultSet rs = ps.executeQuery();
-
-		final ResultSetMetaData metaData = rs.getMetaData();
-		final List<T> r = Lists.newArrayList();
-		while (rs.next()) {
-			final int count = metaData.getColumnCount();
-			final T t = cls.newInstance();
-			for (int i = 0; i < count; i++) {
-				final Object columValue = rs.getObject(i + 1);
-				final String columnName = metaData.getColumnLabel(i + 1);
-				final String javaFieldName = ZFieldConverter.toJavaField(columnName);
-				final Field field = cls.getDeclaredField(javaFieldName);
-				field.setAccessible(true);
-				field.set(t, columValue);
-			}
-
-			r.add(t);
-//			System.out.println("T =" + t);
-		}
-
-		ZCPool.getInstance().returnZConnectionAndCommit(zc);
-
-		return r;
+	private static ZCPool getPoolInstance(final String dataSourceName) {
+		final ZCPool instance = ZCPool.getInstance(dataSourceName);
+		return instance;
 	}
 
 	public static void start() {
@@ -114,55 +84,53 @@ public class ZRepositoryMain {
 
 
 		// 0 checkZEntityField
-//		checkZEntityField();
+		//		checkZEntityField();
 
 		// 1 建立连接池
-//		ZCPool.getInstance();
+		//		ZCPool.getInstance();
 
 		// 2 扫描 @ZEntity的类
-//		final Set<Class<?>> zeClassSet = scanZEntity();
-//		gWrapperRepository(zeClassSet);
+		//		final Set<Class<?>> zeClassSet = scanZEntity();
+		//		gWrapperRepository(zeClassSet);
 
 		// 3给 ZR 的子类根据方法名称来生成对应的sql
-//		gSqlForZRSubclass(zeClassSet);
-//		final Set<Class<?>> zrSubclassSet = scanZRSubclass();
+		//		gSqlForZRSubclass(zeClassSet);
+		//		final Set<Class<?>> zrSubclassSet = scanZRSubclass();
 
-//		generateSqlForZRSubclass(zrSubclassSet);
+		//		generateSqlForZRSubclass(zrSubclassSet);
 
 
 		// 测试 插入一条数据
 
 		// FIXME 2023年6月16日 上午11:08:00 zhanghen: 先生成ZR的子接口的实现类
-//		generateClassForZRSubinterface(zrSubclassSet);
+		//		generateClassForZRSubinterface(zrSubclassSet);
 
 
-// FIXME 2023年6月16日 上午10:59:52 zhanghen: 自己写一个aop
+		// FIXME 2023年6月16日 上午10:59:52 zhanghen: 自己写一个aop
 
 	}
 
 	public static Map<Class, ZClass> generateClassForZRSubinterfaceMap(final Set<Class<?>> zrSubclassSet) {
 
-		ZCPool.getInstance();
-
 		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
 
 		final Map<Class, ZClass> map = Maps.newConcurrentMap();
 
-//		final Set<ZClass> zrsubIZClass = Sets.newHashSet();
+		//		final Set<ZClass> zrsubIZClass = Sets.newHashSet();
 		for (final Class<?> cls : zrSubclassSet) {
 			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
 			final String canonicalName = cls.getCanonicalName();
-//			System.out.println("canonicalName = \n\n" + canonicalName);
+			//			System.out.println("canonicalName = \n\n" + canonicalName);
 
 			final ZClass generateZRepositorySubclass = generateMyZRepositorySubclass(cls);
 			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
 					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
 					generateZRepositorySubclass.toString());
 
-//			zrsubIZClass.add(generateZRepositorySubclass);
+			//			zrsubIZClass.add(generateZRepositorySubclass);
 			map.put(cls, generateZRepositorySubclass);
-//			final Object newInstance = generateZRepositorySubclass.newInstance();
-//			System.out.println("generateZRepositorySubclass-newInstance = \n\n" + newInstance);
+			//			final Object newInstance = generateZRepositorySubclass.newInstance();
+			//			System.out.println("generateZRepositorySubclass-newInstance = \n\n" + newInstance);
 		}
 
 		return map;
@@ -200,7 +168,7 @@ public class ZRepositoryMain {
 	public static Set<Class<?>> scanZRepositorySubinterface(final String packageName) {
 
 		// FIXME 2024年5月4日 下午2:32:49 zhangzhen: 暂时允许字段中出现sql关键字
-//		checkZEntityField(packageName);
+		//		checkZEntityField(packageName);
 
 		final Set<Class<?>> zrSubclassSet = Sets.newHashSet();
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
@@ -259,10 +227,10 @@ public class ZRepositoryMain {
 		for (final Object object : zel) {
 			final ZEntity annotation = (ZEntity) ((Class)object).getAnnotation(ZEntity.class);
 			final String tableName = annotation.tableName();
-			final ZConnection write = ZCPool.getInstance().getZConnection(Mode.WRITE);
-			showCreateTable0(tableName, write);
-			final ZConnection read = ZCPool.getInstance().getZConnection(Mode.READ);
-			showCreateTable0(tableName, read);
+			final ZConnection write = getPoolInstance(annotation.dataSourceName()).getZConnection(Mode.WRITE);
+			showCreateTable0(tableName, write, annotation.dataSourceName());
+			final ZConnection read = getPoolInstance(annotation.dataSourceName()).getZConnection(Mode.READ);
+			showCreateTable0(tableName, read, annotation.dataSourceName());
 		}
 
 	}
@@ -270,11 +238,12 @@ public class ZRepositoryMain {
 	/**
 	 * @param tableName
 	 * @param zc
+	 * @param dataSourceName TODO
 	 */
 	// FIXME 2024年5月13日 上午12:03:38 zhangzhen: 考虑要做什么功能，在此得到了create table语句了，要不要做比如：
 	// 1 校验读写数据源的引擎什么的必须保持一致（引擎似乎没必要一致，比如：写用innodb 读用myisam ）？
 	// 2 之后是否做比如：根据 @ZEntity 注解来生成表结果DDL语句的功能，参考create table的返回结果
-	private static void showCreateTable0(final String tableName, final ZConnection zc) {
+	private static void showCreateTable0(final String tableName, final ZConnection zc, final String dataSourceName) {
 
 		final Connection connection = zc.getConnection();
 		try {
@@ -294,7 +263,7 @@ public class ZRepositoryMain {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zc);
+			getPoolInstance(dataSourceName).returnZConnectionAndCommit(zc);
 		}
 	}
 
@@ -337,8 +306,8 @@ public class ZRepositoryMain {
 					throw new IllegalArgumentException(m);
 				}
 
-				checkZEntity_TableNameExist(zEntity.tableName(), ZCPool.getInstance().getZConnection(Mode.WRITE));
-				checkZEntity_TableNameExist(zEntity.tableName(), ZCPool.getInstance().getZConnection(Mode.READ));
+				checkZEntity_TableNameExist(zEntity.tableName(), getPoolInstance(zEntity.dataSourceName()).getZConnection(Mode.WRITE), zEntity.dataSourceName());
+				checkZEntity_TableNameExist(zEntity.tableName(), getPoolInstance(zEntity.dataSourceName()).getZConnection(Mode.READ), zEntity.dataSourceName());
 			} catch (final ClassNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -369,7 +338,7 @@ public class ZRepositoryMain {
 				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getCanonicalName(), m.getName());
 
 				final MethodSQL methodSQL = MethodRegex.check(m.getName(), m);
-//				final Entry<String, String> check = MethodRegex.check(m.getName(), m);
+				//				final Entry<String, String> check = MethodRegex.check(m.getName(), m);
 
 				try {
 					final Class<?> typeClass = Class.forName(tType);
@@ -404,9 +373,10 @@ public class ZRepositoryMain {
 	 *
 	 * @param tableName
 	 * @param zc TODO
+	 * @param dataSourceName TODO
 	 *
 	 */
-	private static void checkZEntity_TableNameExist(final String tableName, final ZConnection zc) {
+	private static void checkZEntity_TableNameExist(final String tableName, final ZConnection zc, final String dataSourceName) {
 
 		ResultSet rs = null;
 		final Connection connection = zc.getConnection();
@@ -426,7 +396,7 @@ public class ZRepositoryMain {
 				e1.printStackTrace();
 			}
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zc);
+			getPoolInstance(dataSourceName).returnZConnectionAndCommit(zc);
 			if (rs != null) {
 				try {
 					rs.close();
@@ -505,8 +475,8 @@ public class ZRepositoryMain {
 		if (ml.size() > 1) {
 			throw new IllegalArgumentException(
 					"@" + ZRepository.class.getCanonicalName() + " 类 " + typeClass.getSimpleName()
-							+ " 有重复的方法 [" + ml + "] ，不允许重名！"
-			);
+					+ " 有重复的方法 [" + ml + "] ，不允许重名！"
+					);
 		}
 
 		final Method method = ml.get(0);
@@ -575,13 +545,13 @@ public class ZRepositoryMain {
 			final boolean isDaxie = SqlPattern.daxie.contains(ch[i]);
 			if (isDaxie) {
 				final String temp = zRepositoryMethodName.substring(from, i);
-//				System.out.println("temp = " + temp);
+				//				System.out.println("temp = " + temp);
 				aL.add(temp);
 				from = i;
 			}
 			if (i == (ch.length - 1)) {
 				final String temp2 = zRepositoryMethodName.substring(from,  ch.length);
-//				System.out.println("temp2 = " + temp2);
+				//				System.out.println("temp2 = " + temp2);
 				aL.add(temp2);
 			}
 
@@ -605,7 +575,7 @@ public class ZRepositoryMain {
 		zClass.setPackage1(new ZPackage("com"));
 
 		//		userR.setImplementsSet(Sets.newHashSet(canonicalName + " <T, ID> "));
-//		userR.setName(canonicalName + "_ZClass" + "<T,ID>");
+		//		userR.setName(canonicalName + "_ZClass" + "<T,ID>");
 
 		zClass.setImportSet(Sets.newHashSet(myZRClass.getName()));
 		zClass.setImplementsSet(Sets.newHashSet(myZRClass.getSimpleName()));
@@ -632,7 +602,7 @@ public class ZRepositoryMain {
 		final Method[] ms = myZRClass.getMethods();
 
 		final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(myZRClass);
-//		System.out.println("typeArray = " + Arrays.toString(typeArray));
+		//		System.out.println("typeArray = " + Arrays.toString(typeArray));
 
 		final Set<ZMethod> zmSet = new HashSet<>();
 		for (final Method method : ms) {
@@ -656,7 +626,7 @@ public class ZRepositoryMain {
 			zm.setName(method.getName());
 			final Class<?> returnType = method.getReturnType();
 			zm.setReturnType(returnType.getCanonicalName());
-//			System.out.println("returnType.getCanonicalName() = " + returnType.getCanonicalName());
+			//			System.out.println("returnType.getCanonicalName() = " + returnType.getCanonicalName());
 			if (returnType.getCanonicalName().equals(Object.class.getCanonicalName())) {
 				zm.setReturnType(typeArray[0]);
 			}
@@ -748,8 +718,8 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(methodName, method);
 
 
-//			final Entry<String, String> check = MethodRegex.check(methodName, method);
-//			System.out.println("getSuMethod-check = " + check);
+			//			final Entry<String, String> check = MethodRegex.check(methodName, method);
+			//			System.out.println("getSuMethod-check = " + check);
 			final String methodname = methodSQL.getMethodName();
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
 			if("pageByNameOrderById".equals(method.getName())) {
@@ -783,9 +753,9 @@ public class ZRepositoryMain {
 			}
 
 			if (	methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
-				 || methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)
-				 || methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)
-				 || methodname.matches(MethodRegex.GROUP_findByXXLessThan)
+					|| methodname.matches(MethodRegex.GROUP_findByXXGreaterThan)
+					|| methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)
+					|| methodname.matches(MethodRegex.GROUP_findByXXLessThan)
 					) {
 				return gROUP_findByXXGreaterThanEquals(method);
 			}
@@ -812,7 +782,7 @@ public class ZRepositoryMain {
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				final Class returnType = getClassType(method);
 				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,"
-						+ returnType.getCanonicalName() + ",sql);";
+				+ returnType.getCanonicalName() + ",sql);";
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
@@ -843,7 +813,7 @@ public class ZRepositoryMain {
 			// 最后面是@ZQuery自定义方法
 			if (methodSQL.isZQuery()) {
 				final String sqlTemplate = methodSQL.getSqlTemplate();
-				final String x = zQuery(method, methodSQL.getSqlTemplate());
+				final String x = zQuery(method, methodSQL.getSqlTemplate(), entityTName);
 				return x;
 			}
 
@@ -871,7 +841,7 @@ public class ZRepositoryMain {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final String r = "return " + SU.class.getCanonicalName() + ".pageByXXOrderByXX(" + modeString + ",classType,sql,"
-		+ joiner.toString() + ");";
+				+ joiner.toString() + ");";
 		return r;
 	}
 
@@ -880,7 +850,7 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
 		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXXStartingWith(final Method method) {
@@ -889,7 +859,7 @@ public class ZRepositoryMain {
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
 		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXGreaterThanEquals(final Method method) {
@@ -898,7 +868,7 @@ public class ZRepositoryMain {
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
 		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXOrderByXXLimit(final Method method, final String key) {
@@ -915,7 +885,7 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
 		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_CountingByXXX(final Method method, final String key) {
@@ -940,7 +910,7 @@ public class ZRepositoryMain {
 		final String suMethodName =
 				ac == 0 ? "countingByXX" : "countingByXXAndXX";
 		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
+		+ joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXOrYY(final Method method) {
@@ -970,7 +940,7 @@ public class ZRepositoryMain {
 		final Class returnType = getClassType(method);
 
 		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,"
-				+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXBetween(final Method method) {
@@ -992,13 +962,13 @@ public class ZRepositoryMain {
 		return r;
 	}
 
-	private static String zQuery(final Method method, final String sqlTemplate) {
+	private static String zQuery(final Method method, final String sqlTemplate, final String entityTName) {
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
 		}
 
-        final Class classType = getClassType(method);
+		final Class classType = getClassType(method);
 
 		final String modeString = modeString(method);
 
@@ -1018,7 +988,9 @@ public class ZRepositoryMain {
 					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
 		}
 
-		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName + "(" + modeString + ","
+		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName 
+				+ "(" + modeString + ","
+				+ entityTName + ","
 				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
@@ -1101,16 +1073,16 @@ public class ZRepositoryMain {
 		final Type returnType = method.getGenericReturnType();
 		// 如果有泛型参数，如List<MyEntity>
 		if (returnType instanceof ParameterizedType) {
-            final ParameterizedType parameterizedType = (ParameterizedType) returnType;
-            final Type[] typeArguments = parameterizedType.getActualTypeArguments();
-            if (typeArguments.length > 0) {
-                final Type typeArgument = typeArguments[0];
-                if (typeArgument instanceof Class) {
-                    final Class<?> typeClass = (Class<?>) typeArgument;
-                    return typeClass;
-                }
-            }
-        }
+			final ParameterizedType parameterizedType = (ParameterizedType) returnType;
+			final Type[] typeArguments = parameterizedType.getActualTypeArguments();
+			if (typeArguments.length > 0) {
+				final Type typeArgument = typeArguments[0];
+				if (typeArgument instanceof Class) {
+					final Class<?> typeClass = (Class<?>) typeArgument;
+					return typeClass;
+				}
+			}
+		}
 
 		return method.getReturnType();
 	}
@@ -1124,7 +1096,7 @@ public class ZRepositoryMain {
 		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 
 		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + modeString + ",classType,"+returnType.getCanonicalName()+",sql,"
-				+ joiner.toString() + ");";
+		+ joiner.toString() + ");";
 	}
 
 	/**
@@ -1187,22 +1159,22 @@ public class ZRepositoryMain {
 
 		if (CollUtil.isEmpty(zidList)) {
 			throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
-					+ " 必须有 " + ZID.class.getSimpleName() + " 字段");
+			+ " 必须有 " + ZID.class.getSimpleName() + " 字段");
 		}
 
 		if (zidList.size() != 1) {
 			final String fsA = zidList.stream().map(Field::getName).collect(Collectors.joining(DELIMITER));
 			throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
-					+ " 只能有一个 " + ZID.class.getSimpleName() + " 字段，现有有两个：" + fsA);
+			+ " 只能有一个 " + ZID.class.getSimpleName() + " 字段，现有有两个：" + fsA);
 		}
 
 		final String name = zidList.get(0).getName();
 
-		checkZEntityPrimaryKey(typeClass, name, ZCPool.getInstance().getZConnection(Mode.WRITE));
-		checkZEntityPrimaryKey(typeClass, name, ZCPool.getInstance().getZConnection(Mode.READ));
+		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.WRITE), ze.dataSourceName());
+		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.READ), ze.dataSourceName());
 
-		checkZEntityFiled(typeClass, ZCPool.getInstance().getZConnection(Mode.WRITE));
-		checkZEntityFiled(typeClass, ZCPool.getInstance().getZConnection(Mode.READ));
+		checkZEntityFiled(typeClass, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.WRITE));
+		checkZEntityFiled(typeClass, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.READ));
 
 	}
 
@@ -1309,8 +1281,8 @@ public class ZRepositoryMain {
 					final boolean match = DBType.match(o.get().getType().getCanonicalName(), columnType);
 					if (!match) {
 						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
-								+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
-								+ "] 与数据表[" + tableName + "] 的字段 [" + columnName + "] 类型 [" + columnType + "] 不匹配";
+						+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
+						+ "] 与数据表[" + tableName + "] 的字段 [" + columnName + "] 类型 [" + columnType + "] 不匹配";
 						throw new IllegalArgumentException(m);
 					}
 				}
@@ -1376,7 +1348,7 @@ public class ZRepositoryMain {
 				e1.printStackTrace();
 			}
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zConnection);
+			getPoolInstance(typeClass.getAnnotation(ZEntity.class).dataSourceName()).returnZConnectionAndCommit(zConnection);
 		}
 
 	}
@@ -1392,14 +1364,14 @@ public class ZRepositoryMain {
 			primaryKeys = metaDataREAD.getPrimaryKeys(null, null, tableName);
 			if (!primaryKeys.next()) {
 				throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
-						+ " " + ZID.class.getSimpleName() + " 字段 " + name + " 在数据库中不存在");
+				+ " " + ZID.class.getSimpleName() + " 字段 " + name + " 在数据库中不存在");
 			}
 
 			final String columnName = primaryKeys.getString(COLUMN_NAME);
 			if (!Objects.equals(name, columnName)) {
 				throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
-						+ " " + ZID.class.getSimpleName() + " 字段名称与数据库主键名称不一致，" + ZID.class.getSimpleName() + " 名称："
-						+ name + "，数据库主键名称：" + columnName);
+				+ " " + ZID.class.getSimpleName() + " 字段名称与数据库主键名称不一致，" + ZID.class.getSimpleName() + " 名称："
+				+ name + "，数据库主键名称：" + columnName);
 			}
 
 		} catch (final SQLException e) {
@@ -1418,7 +1390,7 @@ public class ZRepositoryMain {
 
 	static HashSet<Class> cc = Sets.newHashSet();
 
-	private static void checkZEntityPrimaryKey(final Class<?> typeClass, final String name, final ZConnection zConnection) {
+	private static void checkZEntityPrimaryKey(final Class<?> typeClass, final String name, final ZConnection zConnection, final String dataSourceName) {
 		final Connection connection = zConnection.getConnection();
 		try {
 			connection.setAutoCommit(false);
@@ -1434,7 +1406,7 @@ public class ZRepositoryMain {
 				e1.printStackTrace();
 			}
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zConnection);
+			getPoolInstance(dataSourceName).returnZConnectionAndCommit(zConnection);
 		}
 	}
 
@@ -1497,7 +1469,7 @@ public class ZRepositoryMain {
 
 		final ArrayList<Field> fl = Lists.newArrayList(fs);
 		final List<String> fnl = fl.stream().map(Field::getName).map(n -> String.valueOf(n.charAt(0)).toUpperCase() + n.substring(1))
-		.collect(Collectors.toList());
+				.collect(Collectors.toList());
 
 		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
 		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
@@ -1597,15 +1569,15 @@ public class ZRepositoryMain {
 			final Optional<Field> idO = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
 			if (!idO.isPresent()) {
 				throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + tClass.getSimpleName()
-						+ " 必须有 " + ZID.class.getSimpleName() + " 字段");
+				+ " 必须有 " + ZID.class.getSimpleName() + " 字段");
 			}
 			final Field idField = idO.get();
 
 			if (!idField.getType().getCanonicalName().equals(idType)) {
 				final String m = ZRepository.class.getSimpleName() + " 的子接口 " + zrSubClass.getSimpleName()
-						+ " 泛型参数<T,ID> 设置错误. "
-						+ "泛型参数ID类型("+idType+")应和T("+tClass.getSimpleName()+")中的@" + ZID.class.getSimpleName()
-						+ "标记的Field的类型("+idField.getType().getCanonicalName()+")保持一致";
+				+ " 泛型参数<T,ID> 设置错误. "
+				+ "泛型参数ID类型("+idType+")应和T("+tClass.getSimpleName()+")中的@" + ZID.class.getSimpleName()
+				+ "标记的Field的类型("+idField.getType().getCanonicalName()+")保持一致";
 				throw new IllegalArgumentException(m);
 			}
 

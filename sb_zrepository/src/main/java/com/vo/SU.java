@@ -36,7 +36,6 @@ import com.vo.anno.ZTransient;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
-import com.vo.conn.ZDatasourceProperties;
 import com.vo.conn.ZDatasourcePropertiesLoader;
 import com.vo.core.Page;
 import com.vo.core.Sort;
@@ -60,19 +59,19 @@ import cn.hutool.core.util.StrUtil;
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 // FIXME 2024年5月18日 下午12:29:49 zhangzhen: LOG 要不要使用 PreparedStatement.toString 代替？
 public class SU {
-// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
+	// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
 	private static final int NO_DELETE_OR_DELETE = -1;
 	private static final int NO_DELETE = -1;
 	private static final int NO_UPDATE = -1;
 	private static final String COLUMN = "COLUMN";
 	private static final String LIMIT = "limit";
 	private static final ZLog2 LOG = ZLog2.getInstance();
-	private static final ZDatasourceProperties ZDP = ZDatasourcePropertiesLoader.getInstance();
 
-	private static final ZCPool INSTANCE = ZCPool.getInstance();
 
 	public static <T> Page<T> page(final Mode mode, final Class<T> cls,final Class<T> returnType, final T t, final Sort sort, final String sql,
 			final Integer size, final Integer page) {
+
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
 		if (size <= 0) {
 			throw new IllegalArgumentException("size 必须大于0！size = " + size);
@@ -85,7 +84,7 @@ public class SU {
 		ResultSet rs=null;
 		PreparedStatement psc = null;
 		ResultSet pscRS = null;
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 		try {
 			connection.setAutoCommit(false);
@@ -119,13 +118,13 @@ public class SU {
 
 			final String pageCountSql = columnBuilder.length() > 0
 					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
-					: pageCountSQLT.replace(" where " + COLUMN, columnBuilder.toString());
+							: pageCountSQLT.replace(" where " + COLUMN, columnBuilder.toString());
 
 			final String pageSqlFinal = pageSql.replace(LIMIT, sort.done() + Sort.SPACE + LIMIT);
 			final int offset = (page - 1) * size;
 			final int rows = size;
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				if (fMap.isEmpty()) {
 					LOG.info("page分页查询-[{}]-[{},{}]", pageSqlFinal, rows, offset);
 					LOG.info("page总条数查询-[{}]", pageCountSql);
@@ -198,11 +197,15 @@ public class SU {
 			}
 		} finally {
 			close(ps, rs, psc, pscRS);
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 
 		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L,
 				ImmutableList.copyOf(Collections.emptyList()));
+	}
+
+	private static Boolean isShowSQL(final String dataSourceName) {
+		return ZDatasourcePropertiesLoader.getInstance(dataSourceName).getShowSql();
 	}
 
 	/**
@@ -253,7 +256,9 @@ public class SU {
 
 		final String sqlF = sql.replace(COLUMN, gUpdateColumn);
 
-		final ZConnection zc = ZCPool.getInstance().getZConnection(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
 		final Connection connection = zc.getConnection();
 		try {
@@ -285,7 +290,7 @@ public class SU {
 			// 最后面的where id = ？ 赋值
 			ps.setObject((fs.length) - zTransientCount, idValue);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}],[{}]", sqlF, t,idValue);
 			}
 
@@ -300,11 +305,12 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 		// XXX 直接返回T可以吗？
 		return t;
 	}
+
 
 	private static <T> Object getUpdateIdValue(final T t, final Optional<Field> zidO) {
 		final Field idField = zidO.get();
@@ -321,7 +327,9 @@ public class SU {
 
 	public static <T> boolean deleteAll(final Mode mode, final Class<T> cls, final String sql) {
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 		try {
 			connection.setAutoCommit(false);
@@ -335,7 +343,7 @@ public class SU {
 			// FIXME 2023年9月6日 上午2:39:45 zhanghen: 配置为参数
 			ps.setQueryTimeout(22);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", s);
 			}
 
@@ -351,7 +359,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(ps);
 		}
 
@@ -359,8 +367,8 @@ public class SU {
 	}
 
 	public static <T> boolean deleteByIdIn(final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 		try {
 			connection.setAutoCommit(false);
@@ -384,7 +392,7 @@ public class SU {
 				index++;
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("根据主键批量删除 - [{}]个主键值 - [{}]", idList.size(), sql);
 			}
 
@@ -400,7 +408,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(ps);
 		}
 
@@ -408,7 +416,8 @@ public class SU {
 	}
 
 	public static <T> boolean deleteById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 		try {
 			connection.setAutoCommit(false);
@@ -421,7 +430,7 @@ public class SU {
 			ps= connection.prepareStatement(s);
 			ps.setObject(1, id);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s,id);
 			}
 
@@ -443,7 +452,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 			close(ps);
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 
 		return false;
@@ -482,13 +491,14 @@ public class SU {
 		}
 		final String sqlF2 = sqlF.replaceFirst("\\?", idJoiner.toString());
 
-		// 开始查询
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		if (ZDP.getShowSql()) {
+		// 开始查询
+		if (isShowSQL(dataSourceName)) {
 			LOG.info("根据[{}]个ID批量查询是否存在-[{}]", idNotNullList.size(), sqlF);
 		}
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -506,7 +516,7 @@ public class SU {
 			while (rs.next()) {
 				final Object id = rs.getObject(1);
 				final Object count = rs.getObject(2);
-				v.put(id, (count!=null) && (Long.parseLong(String.valueOf(count)) >= 1));
+				v.put(id, (count != null) && (Long.parseLong(String.valueOf(count)) >= 1));
 			}
 
 		} catch (SQLException | SecurityException e) {
@@ -518,7 +528,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 
 		for (final Object id : idNotNullList) {
@@ -536,7 +546,9 @@ public class SU {
 			return false;
 		}
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -552,7 +564,7 @@ public class SU {
 			ps = connection.prepareStatement(s);
 			ps.setObject(1, id);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s,id);
 			}
 
@@ -570,7 +582,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -584,13 +596,15 @@ public class SU {
 			return Collections.emptyList();
 		}
 
+
 		final DBEnum db = ZRepositoryMain.getDB();
 		switch (db) {
 
 		case SQLITE:
 			// FIXME 2024年5月27日 下午5:54:36 zhangzhen: 对于sqlite而专门特别处理，从批量插入改为在一个事务里执行多次insert.
 			// save0里的日志还要改，区分是从save还是saveAll方法来的
-			final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+			final String dataSourceName = getDataSourceNameFromClassType(cls);
+			final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 			final Connection connection = zc.getConnection();
 
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
@@ -607,7 +621,7 @@ public class SU {
 					e.printStackTrace();
 				}
 			}
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			return idl;
 
 		case MYSQL:
@@ -631,7 +645,8 @@ public class SU {
 					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + cls.getCanonicalName());
 		}
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		final String sql = generateSaveAllSQL(cls, sqlParam);
@@ -655,7 +670,7 @@ public class SU {
 				ps.addBatch();
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("批量插入{}条数据 - [{}]", tList.size(),sql);
 			}
 
@@ -705,7 +720,7 @@ public class SU {
 			}
 
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -730,7 +745,10 @@ public class SU {
 	}
 
 	public static <T> T save(final Mode mode, final Class<T> cls, final Class entityTName, final T t, final String sql) {
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -767,7 +785,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 
 		return null;
@@ -797,7 +815,7 @@ public class SU {
 
 		final String sql2 = sql.replace("F", arg.toString()).replace("A", joiner.toString());
 		PreparedStatement ps;
-		if (ZDP.getShowSql()) {
+		if (isShowSQL(getDataSourceNameFromClassType(cls))) {
 			LOG.info("[{}],[{}]", sql2, t);
 		}
 		ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
@@ -815,7 +833,7 @@ public class SU {
 		}
 		final int executeUpdate = ps.executeUpdate();
 		final ResultSet rs = ps.getGeneratedKeys();
-//		ps.close();
+		//		ps.close();
 		return new Object[] {rs,ps};
 	}
 
@@ -861,7 +879,7 @@ public class SU {
 				ps.setLong(i, (Long) v2);
 			} else if (fn.equals(Float.class.getCanonicalName())) {
 				// FIXME 2024年5月17日 上午1:51:06 zhangzhen: 继续测这个mysql是否要改为setDouble
-//				ps.setFloat(i, (Float) v2);
+				//				ps.setFloat(i, (Float) v2);
 
 				// FIXME 2024年5月21日 下午10:46:17 zhangzhen:
 				// guoguang docker run 1071324756/percona-mysql-5.7 遇到了问题： setFloat查不出数据，还要用setDouble才行。
@@ -881,13 +899,13 @@ public class SU {
 				// blob类型
 				// FIXME 2024年5月5日 下午9:14:57 zhangzhen: saveAll 时，setBlob和setBinaryStream都会导致ps.excuteBatch NPE,所有在此用setObject
 				ps.setObject(i, v2);
-//				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-//				ps.setBlob(i, inputStream);
-//				ps.setBinaryStream(i, inputStream);
+				//				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
+				//				ps.setBlob(i, inputStream);
+				//				ps.setBinaryStream(i, inputStream);
 			} else if (fn.equals(java.util.Date.class.getCanonicalName()) ) {
 				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
 				// 日期时间的字段，新增注解：表示插入的格式
-//				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+				//				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
 				// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
 				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
 			} else if (fn.equals(java.sql.Date.class.getCanonicalName())) {
@@ -899,7 +917,7 @@ public class SU {
 			} else {
 				// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
 				// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
-//							throw new IllegalArgumentException("size 必须大于0！size = " + size);
+				//							throw new IllegalArgumentException("size 必须大于0！size = " + size);
 			}
 
 			return true;
@@ -910,9 +928,12 @@ public class SU {
 		return false;
 	}
 
-	private static ZConnection getZCAndSetAutoCommitFALSE(final Mode mode) {
+	private static ZConnection getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
 		// FIXME 2023年6月18日 上午12:00:42 zhanghen: 先从 ZTAs 拿，无再从下面方法拿
 		final ZConnection zcT = ZTransactionAspect.ZCONNECTION_THREADLOCAL.get();
+		// FIXME 2024年5月31日 下午2:53:47 zhangzhen : 根据calssType .dataSourceName 来选择从哪个数据源来读取
+
+
 		if (zcT != null) {
 			try {
 				zcT.getConnection().setAutoCommit(false);
@@ -923,7 +944,7 @@ public class SU {
 		}
 
 		// FIXME 2023年9月6日 下午2:33:36 zhanghen: 在此setAutoCommit(false)然后在归还方法里commit?
-		final ZConnection zc = INSTANCE.getZConnection(mode);
+		final ZConnection zc = ZCPool.getInstance(dataSourceName).getZConnection(mode);
 		try {
 			zc.getConnection().setAutoCommit(false);
 		} catch (final SQLException e) {
@@ -934,7 +955,9 @@ public class SU {
 
 	public static <T> List<T> findAll(final Mode mode, final Class<T> cls, final String sql) {
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -949,7 +972,7 @@ public class SU {
 			// "select * from user where id = ?"
 			final String s = sql;
 			ps = connection.prepareStatement(s);
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", sql);
 			}
 
@@ -963,7 +986,7 @@ public class SU {
 				final T t = newT(cls, rs, metaData, count);
 				r.add(t);
 			}
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			return r;
 
 		} catch (SQLException
@@ -975,11 +998,17 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
 		return Collections.emptyList();
+	}
+
+	private static <T> String getDataSourceNameFromClassType(final Class<T> cls) {
+		final ZEntity en = cls.getAnnotation(ZEntity.class);
+		final String dataSourceName = en.dataSourceName();
+		return dataSourceName;
 	}
 
 	// FIXME 2023年9月24日 下午3:41:35 zhanghen: 继续写，测试各种db和java的日期类型转换
@@ -1012,8 +1041,8 @@ public class SU {
 	}
 
 	public static <T> List<T> findByIdIn(final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -1034,7 +1063,7 @@ public class SU {
 			final String param = joiner.toString();
 			final String s2 = s.replace("?", param);
 			ps = connection.prepareStatement(s2);
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("根据主键批量查询 - [{}]个主键值 - [{}]", idList.size(), s);
 			}
 
@@ -1058,7 +1087,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1084,7 +1113,7 @@ public class SU {
 				ps.setObject(1, id);
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(getDataSourceNameFromClassType(cls))) {
 				LOG.info("[{}],[{}]", sT, id);
 			}
 
@@ -1114,14 +1143,14 @@ public class SU {
 	}
 
 	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
 		try {
 			final T findById0 = findById0(mode, id, cls, sql, zc);
 			return findById0;
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 
 	}
@@ -1238,8 +1267,8 @@ public class SU {
 	// FIXME 2024年5月20日 上午10:22:38 zhangzhen: TODO 继续支持：声明式方法，如果值传了null，则 = null 改为 is null
 
 	public static <T> List<T> findByXXAndXX(final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 		try {
 			connection.setAutoCommit(false);
@@ -1261,7 +1290,7 @@ public class SU {
 				i++;
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, Arrays.toString(fieldArray));
 			}
 
@@ -1286,7 +1315,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1330,7 +1359,8 @@ public class SU {
 
 	public static <T> List<T> findByXX(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object fieldValue) {
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1353,7 +1383,7 @@ public class SU {
 				setXX_fieldValue(fieldValue, ps, index);
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
@@ -1378,7 +1408,7 @@ public class SU {
 			}
 			e.printStackTrace();
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1408,7 +1438,8 @@ public class SU {
 	public static <T> List<T> findByXXIn(final Mode mode, final Class<T> cls, final Class<T> returnType,
 			final String sql, final Object... fieldArray) {
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -1448,7 +1479,7 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = s.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", sqlColumn);
 			}
 			rs = statement.executeQuery(sqlColumn);
@@ -1472,7 +1503,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, statement);
 		}
 
@@ -1480,8 +1511,8 @@ public class SU {
 	}
 
 	public static <T> List<T> findByIdLessThan(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object field) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1495,7 +1526,7 @@ public class SU {
 			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, field);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn, field);
 			}
 
@@ -1519,15 +1550,15 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 		return Collections.emptyList();
 	}
 
 	public static <T> List<T> findByXXXEndingWith(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1541,7 +1572,7 @@ public class SU {
 			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, "%" + field);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn, "%" + field);
 			}
 
@@ -1566,7 +1597,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 
 			close(rs, ps);
 		}
@@ -1577,7 +1608,9 @@ public class SU {
 	public static <T> List<T> findByXXXStartingWith(final Mode mode, final Class<T> cls, final Class<T> returnType,
 			final String sql, final Object field) {
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1590,7 +1623,7 @@ public class SU {
 			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, field + "%");
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn, field + "%");
 			}
 
@@ -1615,14 +1648,15 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 		return Collections.emptyList();
 	}
 
 	public static <T> List<T> findByXXOrYY(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object... field) {
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1641,7 +1675,7 @@ public class SU {
 				index++;
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
 			}
 
@@ -1666,7 +1700,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1674,7 +1708,8 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXBetween(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql,final Object...fiedlArray) {
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1688,7 +1723,7 @@ public class SU {
 
 			ps = connection.prepareStatement(sqlColumn);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn,Arrays.toString(fiedlArray));
 			}
 
@@ -1721,7 +1756,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1729,7 +1764,8 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXNotNull(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql) {
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1742,7 +1778,7 @@ public class SU {
 
 			ps = connection.prepareStatement(sqlColumn);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", sqlColumn);
 			}
 
@@ -1767,7 +1803,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1775,8 +1811,8 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXLike(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1790,7 +1826,7 @@ public class SU {
 			ps = connection.prepareStatement(sqlColumn);
 			ps.setObject(1, "%" + field + "%");
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn, "%" + field + "%");
 			}
 
@@ -1815,20 +1851,20 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
 		return Collections.emptyList();
 	}
 
-	private static void returnZConnectionAndCommit(final ZConnection zc) {
-		INSTANCE.returnZConnectionAndCommit(zc);
+	private static void returnZConnectionAndCommit(final String dataSourceName, final ZConnection zc) {
+		ZCPool.getInstance(dataSourceName).returnZConnectionAndCommit(zc);
 	}
 
 	public static <T> List<T> findByXXIsNull(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1840,7 +1876,7 @@ public class SU {
 
 			ps = connection.prepareStatement(sqlColumn);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", sqlColumn);
 			}
 
@@ -1865,14 +1901,14 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
 		return Collections.emptyList();
 	}
 
-	public static <T> Long count(final Mode mode, final Class<T> cls, final String sql,final ZConnection zc) {
+	private static <T> Long count(final Mode mode, final Class<T> cls, final String sql,final ZConnection zc, final String dataSourceName) {
 
 		final Connection connection = zc.getConnection();
 
@@ -1887,7 +1923,7 @@ public class SU {
 			final String s = sql;
 			ps = connection.prepareStatement(s);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", s);
 			}
 
@@ -1906,7 +1942,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(getDataSourceNameFromClassType(cls), zc);
 			close(rs, ps);
 		}
 
@@ -1914,15 +1950,16 @@ public class SU {
 	}
 
 	public static <T> Long count(final Mode mode, final Class<T> cls, final String sql) {
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
-		return count(mode, cls, sql,zc);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		return count(mode, cls, sql,zc, dataSourceName);
 	}
 
 	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
 	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[].
 	public static <T> Long countingByXXAndXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1940,7 +1977,7 @@ public class SU {
 				index++;
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, Arrays.toString(fieldValue));
 			}
 
@@ -1961,7 +1998,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -1969,8 +2006,8 @@ public class SU {
 	}
 
 	public static <T> Long countingByXX(final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -1985,7 +2022,7 @@ public class SU {
 			final int index = 1;
 			setXX_fieldValue(fieldValue, ps, index);
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
@@ -2006,7 +2043,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -2014,8 +2051,8 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object... field) {
-
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
@@ -2032,7 +2069,7 @@ public class SU {
 				i++;
 			}
 
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
 			}
 
@@ -2057,7 +2094,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
@@ -2115,12 +2152,15 @@ public class SU {
 		return column.toString();
 	}
 
-	public static <T> List<T> zQuerySelect(final Mode mode, final Object object, final String sqlT, final Object... arg)
+	public static <T> List<T> zQuerySelect(final Mode mode,final Object entityTName,final Object object, final String sqlT, final Object... arg)
 			throws InstantiationException {
 
 		final Class cls = (Class) object;
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final ZEntity ze = (ZEntity) ((Class)entityTName).getAnnotation(ZEntity.class);
+		final String dataSourceName = ze.dataSourceName();
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -2151,8 +2191,7 @@ public class SU {
 			final String select = gSelectFromReturnType(cls);
 			final String s2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s2, Arrays.toString(arg));
 			}
 
@@ -2197,23 +2236,27 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
 		}
 
 		return Collections.emptyList();
 	}
 
-	public static int zQueryUpdate(final Mode mode, final Object object, final String sql,
+	public static int zQueryUpdate(final Mode mode, final Object entityTName ,final Object object, final String sql,
 			final Object... arg) throws IllegalAccessException {
 
-		return (int) updateOrDeleteOrInsert(mode, object, sql, SUEnum.UPDATE, arg);
+		return (int) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.UPDATE, arg);
 	}
 
-	private static Object updateOrDeleteOrInsert(final Mode mode, final Object object, final String sql, final SUEnum suEnum, final Object... arg) {
+	private static Object updateOrDeleteOrInsert(final Mode mode, final Object entityTName, final Object object, final String sql, final SUEnum suEnum, final Object... arg) {
+
 		final Class cls = (Class) object;
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode);
+		final ZEntity ze = (ZEntity) ((Class)entityTName).getAnnotation(ZEntity.class);
+		final String dataSourceName = ze.dataSourceName();
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
 		try {
@@ -2224,7 +2267,7 @@ public class SU {
 
 		PreparedStatement prepareStatement = null;
 		try {
-			if (ZDP.getShowSql()) {
+			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", sql, Arrays.toString(arg));
 			}
 			prepareStatement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
@@ -2252,21 +2295,21 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(zc);
+			returnZConnectionAndCommit(dataSourceName, zc);
 			close(prepareStatement);
 		}
 
 		return NO_DELETE_OR_DELETE;
 	}
 
-	public static <T> Integer zQueryDelete(final Mode mode, final Object object, final String sql,
-			final Object... arg) {
+	public static <T> Integer zQueryDelete(final Mode mode, final Object entityTName, final Object object,
+			final String sql, final Object... arg) {
 
-		return (Integer) updateOrDeleteOrInsert(mode, object, sql, SUEnum.DELETE, arg);
+		return (Integer) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.DELETE, arg);
 	}
 
-	public static  <T> Object zQueryInsert(final Mode mode, final Class<T> cls, final String sql,final Object... arg) {
-		return updateOrDeleteOrInsert(mode, cls, sql, SUEnum.INSERT, arg);
+	public static  <T> Object zQueryInsert(final Mode mode, final Object entityTName,final Class<T> cls, final String sql,final Object... arg) {
+		return updateOrDeleteOrInsert(mode, entityTName, cls, sql, SUEnum.INSERT, arg);
 	}
 
 	/**

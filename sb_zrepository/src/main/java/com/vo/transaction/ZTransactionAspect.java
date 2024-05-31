@@ -16,6 +16,7 @@ import com.vo.anno.ZRead;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
+import com.vo.conn.ZDatasourcePropertiesLoader;
 
 
 /**
@@ -46,7 +47,10 @@ public class ZTransactionAspect {
 		final Method method = ms.getMethod();
 		final boolean isRead = method.isAnnotationPresent(ZRead.class);
 		final Mode mode = isRead ? Mode.READ : Mode.WRITE;
-		final ZCPool i = ZCPool.getInstance();
+		// FIXME 2024年5月31日 下午5:24:42 zhangzhen : 考虑好，如果依赖的数据源名称不是zdatasource.properties要怎么办？
+		// 提前把Method和dataSourceName存起来，在此根据Method取出？
+		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
+		final ZCPool i = ZCPool.getInstance(defaultDatsourceName);
 		final ZConnection zc = i.getZConnection(mode);
 
 		final Connection connection = zc.getConnection();
@@ -55,7 +59,7 @@ public class ZTransactionAspect {
 		} catch (final SQLException e1) {
 			e1.printStackTrace();
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zc);
+			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(zc);
 		}
 
 		ZCONNECTION_THREADLOCAL.set(zc);
@@ -72,7 +76,7 @@ public class ZTransactionAspect {
 			}
 			e.printStackTrace();
 		} finally {
-			ZCPool.getInstance().returnZConnectionAndCommit(zc);
+			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(zc);
 		}
 
 		return null;

@@ -1,11 +1,10 @@
 package com.vo.conn;
 
 import java.util.List;
+import java.util.WeakHashMap;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
-import org.springframework.expression.spel.ast.RealLiteral;
 
 import com.google.common.collect.Lists;
 import com.vo.conn.ZDatasourceProperties.P;
@@ -30,40 +29,41 @@ public class ZDatasourcePropertiesLoader {
 
 	public static final int DEAULT_MIN_CONNECTION = 1;
 
-	public static final String DATASOURCE_PROPERTIES = "zdatasource.properties";
+	public static final String DEFAULT_DATSOURCE_NAME = "zdatasource.properties";
 
-	public static final String DATASOURCE_PROPERTIES_1 = "config/zdatasource.properties";
-	public static final String DATASOURCE_PROPERTIES_2 = "zdatasource.properties";
-	public static final String DATASOURCE_PROPERTIES_3 = "src/main/resources/zdatasource.properties";
-	public static final String DATASOURCE_PROPERTIES_4 = "src/main/resources/config/zdatasource.properties";
+	public static final String DATASOURCE_PROPERTIES_PATH = "";
+
+	public static final String DATASOURCE_PROPERTIES_PATH_1 = "config/";
+	public static final String DATASOURCE_PROPERTIES_PATH_2 = "";
+	public static final String DATASOURCE_PROPERTIES_PATH_3 = "src/main/resources/";
+	public static final String DATASOURCE_PROPERTIES_PATH_4 = "src/main/resources/config/";
 
 	private static ZDatasourceProperties INSTANCE;
 
-	public static ZDatasourceProperties getInstance() {
-		return INSTANCE;
+	public static ZDatasourceProperties getInstance(final String dataSourceName) {
+		return initialize(dataSourceName);
 	}
 
-	static {
-
+	private static ZDatasourceProperties initialize(final String dataSourceName) {
 		final ZDatasourceProperties zDatasourceProperties = new ZDatasourceProperties();
 
 		try {
-			final P newWriteDP = newWriteDP();
+			final P newWriteDP = newWriteDP(dataSourceName);
 			zDatasourceProperties.setWrite(newWriteDP);
 		} catch (final Exception e) {
-			throw new IllegalArgumentException("读取datasource.write配置出错，请检查配置文件");
+			throw new IllegalArgumentException("读取datasource.write配置出错，请检查配置文件:" + dataSourceName);
 		}
 
-		final boolean existReadCount = gs().containsKey("datasource.read.count");
+		final boolean existReadCount = getProperties(dataSourceName).containsKey("datasource.read.count");
 		if (!existReadCount) {
 			LOG.error("datasource.read.count 不存在");
 			System.exit(0);
 		}
 
-		final int readCount = existReadCount ? gs().getInt("datasource.read.count") : DEFAULT_READ_COUNT;
+		final int readCount = existReadCount ? getProperties(dataSourceName).getInt("datasource.read.count") : DEFAULT_READ_COUNT;
 		zDatasourceProperties.setDatasourceReadUrlCount(readCount);
 
-		final boolean showSql = gs().getBoolean("datasource.showsql");
+		final boolean showSql = getProperties(dataSourceName).getBoolean("datasource.showsql");
 		if (showSql) {
 			zDatasourceProperties.setShowSql(true);
 		} else {
@@ -72,7 +72,7 @@ public class ZDatasourcePropertiesLoader {
 
 		final List<P> readList = Lists.newArrayList();
 		try {
-			final P read1 = newReadDP(0);
+			final P read1 = newReadDP(0, dataSourceName);
 			readList.add(read1);
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -80,18 +80,20 @@ public class ZDatasourcePropertiesLoader {
 		}
 
 		for (int i = 1; i < readCount; i++) {
-			readList.add(newReadDP(i));
+			readList.add(newReadDP(i, dataSourceName));
 		}
 
 		zDatasourceProperties.setReadList(readList);
 
 		INSTANCE = zDatasourceProperties;
 
+		return zDatasourceProperties;
 	}
 
-	private static P newReadDP(final int i) {
+	private static P newReadDP(final int i, final String dataSourceName) {
 		final ZDatasourceProperties.P read = new P();
-		final String url = gs().getString("datasource.read.url[" + i + "]");
+		final PropertiesConfiguration px = getProperties(dataSourceName);
+		final String url = px.getString("datasource.read.url[" + i + "]");
 		if (StrUtil.isEmpty(url)) {
 			LOG.error("datasource.read.url[" + i + "]不存在");
 			System.exit(0);
@@ -99,7 +101,7 @@ public class ZDatasourcePropertiesLoader {
 		final boolean notNeedUserNameAndPassword = url.contains("jdbc:sqlite");
 		read.setDatasourceUrl(url);
 
-		final String userName = gs().getString("datasource.read.username[" + i + "]");
+		final String userName = px.getString("datasource.read.username[" + i + "]");
 		if (StrUtil.isEmpty(userName) && !notNeedUserNameAndPassword) {
 			LOG.error("datasource.read.userName[" + i + "]不存在");
 			System.exit(0);
@@ -107,23 +109,23 @@ public class ZDatasourcePropertiesLoader {
 
 		read.setDatasourceUsername(userName);
 
-		final String password = gs().getString("datasource.read.password[" + i + "]");
+		final String password = px.getString("datasource.read.password[" + i + "]");
 		if (StrUtil.isEmpty(password)) {
 			// 允许password为空
-//			LOG.error("datasource.read.password[" + i + "]不存在");
-//			System.exit(0);
+			//			LOG.error("datasource.read.password[" + i + "]不存在");
+			//			System.exit(0);
 		}
 		read.setDatasourcePassword(password);
 
-		final String driverClass = gs().getString("datasource.read.driverClass[" + i + "]");
+		final String driverClass = px.getString("datasource.read.driverClass[" + i + "]");
 		if (StrUtil.isEmpty(driverClass)) {
 			LOG.error("datasource.read.driverClass[" + i + "]不存在");
 			System.exit(0);
 		}
 		read.setDatasourceDriverClass(driverClass);
 
-		final int min = gs().getInt("datasource.read.minConnection[" + i + "]");
-		if (!gs().containsKey("datasource.read.minConnection[" + i + "]")) {
+		final int min = px.getInt("datasource.read.minConnection[" + i + "]");
+		if (!px.containsKey("datasource.read.minConnection[" + i + "]")) {
 			LOG.error("datasource.read.minConnection[" + i + "]不存在");
 			System.exit(0);
 		}
@@ -134,11 +136,11 @@ public class ZDatasourcePropertiesLoader {
 
 		read.setDatasourceMinConnection(min);
 
-		if (!gs().containsKey("datasource.read.maxConnection[" + i + "]")) {
+		if (!px.containsKey("datasource.read.maxConnection[" + i + "]")) {
 			LOG.error("datasource.read.maxConnection[" + i + "]不存在");
 			System.exit(0);
 		}
-		final int max = gs().getInt("datasource.read.maxConnection[" + i + "]");
+		final int max = px.getInt("datasource.read.maxConnection[" + i + "]");
 		if (max <= 0) {
 			LOG.error("datasource.read.maxConnection[" + i + "]必须大于0");
 			System.exit(0);
@@ -153,9 +155,10 @@ public class ZDatasourcePropertiesLoader {
 		return read;
 	}
 
-	private static P newWriteDP() {
+	private static P newWriteDP(final String dataSourceName) {
 		final ZDatasourceProperties.P write = new P();
-		final String url = gs().getString("datasource.write.url");
+		final PropertiesConfiguration propertiesConfiguration = getProperties(dataSourceName);
+		final String url = propertiesConfiguration.getString("datasource.write.url");
 
 		if (StrUtil.isEmpty(url)) {
 			LOG.error("datasource.write.url 不存在");
@@ -165,7 +168,7 @@ public class ZDatasourcePropertiesLoader {
 		final boolean notNeedUserNameAndPassword = url.contains("jdbc:sqlite");
 		write.setDatasourceUrl(url);
 
-		final String userName = gs().getString("datasource.write.username");
+		final String userName = propertiesConfiguration.getString("datasource.write.username");
 		if(StrUtil.isEmpty(userName) && !notNeedUserNameAndPassword) {
 
 			LOG.error("datasource.write.username 不存在");
@@ -173,23 +176,23 @@ public class ZDatasourcePropertiesLoader {
 		}
 		write.setDatasourceUsername(userName);
 
-		final String password = gs().getString("datasource.write.password");
+		final String password = propertiesConfiguration.getString("datasource.write.password");
 		if (StrUtil.isEmpty(password)) {
 			// 允许password为空
-//			LOG.error("datasource.write.password 不存在");
-//			System.exit(0);
+			//			LOG.error("datasource.write.password 不存在");
+			//			System.exit(0);
 		}
 		write.setDatasourcePassword(password);
 
-		final String driverClass = gs().getString("datasource.write.driverClass");
+		final String driverClass = propertiesConfiguration.getString("datasource.write.driverClass");
 		if (StrUtil.isEmpty(driverClass)) {
 			LOG.error("datasource.write.driverClass 不存在");
 			System.exit(0);
 		}
 		write.setDatasourceDriverClass(driverClass);
 
-		final int min = gs().getInt("datasource.write.minConnection");
-		final boolean containsKeyMinConnection = gs().containsKey("datasource.write.minConnection");
+		final int min = propertiesConfiguration.getInt("datasource.write.minConnection");
+		final boolean containsKeyMinConnection = propertiesConfiguration.containsKey("datasource.write.minConnection");
 		if(!containsKeyMinConnection) {
 			LOG.error("datasource.write.minConnection 不存在");
 			System.exit(0);
@@ -201,8 +204,8 @@ public class ZDatasourcePropertiesLoader {
 
 		write.setDatasourceMinConnection(min);
 
-		final int max = gs().getInt("datasource.write.maxConnection");
-		final boolean containsKeyMaxConnection = gs().containsKey("datasource.write.maxConnection");
+		final int max = propertiesConfiguration.getInt("datasource.write.maxConnection");
+		final boolean containsKeyMaxConnection = propertiesConfiguration.containsKey("datasource.write.maxConnection");
 		if (!containsKeyMaxConnection) {
 			LOG.error("datasource.write.maxConnection 不存在");
 			System.exit(0);
@@ -221,21 +224,38 @@ public class ZDatasourcePropertiesLoader {
 		return write;
 	}
 
-	private static PropertiesConfiguration gs() {
+	private final static WeakHashMap C = new WeakHashMap<>();
+	private static PropertiesConfiguration getProperties(final String dataSourceName) {
+
+		final Object p = C.get(dataSourceName);
+		if (p != null) {
+			return (PropertiesConfiguration) p;
+		}
+
+		synchronized (dataSourceName.intern()) {
+			final PropertiesConfiguration p2 = getProperties0(dataSourceName);
+			C.put(dataSourceName, p2);
+			return p2;
+		}
+
+	}
+
+
+	private static PropertiesConfiguration getProperties0(final String dataSourceName) {
 		try {
-			return new PropertiesConfiguration(DATASOURCE_PROPERTIES);
+			return new PropertiesConfiguration(DATASOURCE_PROPERTIES_PATH + dataSourceName);
 		} catch (final ConfigurationException e) {
 			e.printStackTrace();
 			try {
-				return new PropertiesConfiguration(DATASOURCE_PROPERTIES_2);
+				return new PropertiesConfiguration(DATASOURCE_PROPERTIES_PATH_2 + dataSourceName);
 			} catch (final ConfigurationException e1) {
 				e1.printStackTrace();
 				try {
-					return new PropertiesConfiguration(DATASOURCE_PROPERTIES_3);
+					return new PropertiesConfiguration(DATASOURCE_PROPERTIES_PATH_3 + dataSourceName);
 				} catch (final ConfigurationException e2) {
 					e2.printStackTrace();
 					try {
-						return new PropertiesConfiguration(DATASOURCE_PROPERTIES_4);
+						return new PropertiesConfiguration(DATASOURCE_PROPERTIES_PATH_4 + dataSourceName);
 					} catch (final ConfigurationException e3) {
 						e3.printStackTrace();
 					}
@@ -244,6 +264,5 @@ public class ZDatasourcePropertiesLoader {
 		}
 
 		return null;
-
 	}
 }

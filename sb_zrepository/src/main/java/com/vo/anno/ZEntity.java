@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.vo.conn.ZDatasourcePropertiesLoader;
+
 /**
  * 用在数据库表对应的实体类上，表示本类各个字段与数据表字段名称和类型必须匹配。
  * 如需在本类中声明一个不与数据表对应的字段，在此字段上加入 @ZTransient 注解。
@@ -43,6 +45,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 public @interface ZEntity {
 
+
 	// FIXME 2023年6月15日 下午1:45:52 zhanghen: 支持分库分表
 
 	/**
@@ -54,4 +57,22 @@ public @interface ZEntity {
 	 */
 	String tableName();
 
+	/**
+	 * 此table所在的数据源，从哪个数据源读取/使用此table.
+	 * 
+	 * 完整的文件名，如：zdatasource-sqlite.properties
+	 * 
+	 * @return
+	 */
+	// FIXME 2024年5月31日 下午2:54:32 zhangzhen : 此字段是为了一个工程中引用了 repository_starter
+	// 并且需要使用多个数据源时，而做的功能。注意：如果一个事务逻辑中的多个操作不在一个数据源里怎么做？是否有这种可能？
+	// 如果有的话，在启动时提示都做不到吧？
+	/*如下：
+	 * @ZTransaction
+	 * void method(){
+	 * 		// a.xx		a.properties 数据源
+	 * 		// b.xx		b.properties 数据源
+	 * }
+	 */
+	String dataSourceName() default ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
 }

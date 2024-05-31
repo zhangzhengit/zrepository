@@ -2,6 +2,8 @@ package com.vo.conn;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
@@ -9,8 +11,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
+
+import cn.hutool.core.util.StrUtil;
+import lombok.Getter;
 
 /**
  *
@@ -27,18 +33,18 @@ public class ZCPool {
 	private final Vector<ZConnection> readVector = new java.util.Vector<>();
 
 	private final AtomicInteger writeI = new AtomicInteger();
+
 	private final AtomicInteger readI = new AtomicInteger();
 
-	private static final ZCPool POOL = new ZCPool();
+	@Getter
+	private String dataSourceName = null;
 
 	private final Object readLock = new Object();
 	private final Object writeLock = new Object();
 
-	private ZCPool() {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZCPool.ZCPool()");
+	private void initialize(final String dataSourceName) {
 
-		this.create();
+		this.create(dataSourceName);
 
 		final ZCPoolJob job = new ZCPoolJob();
 		job.start();
@@ -57,9 +63,31 @@ public class ZCPool {
 
 	}
 
+	static HashMap<String, ZCPool> poolMap = Maps.newHashMap();
 
-	public static ZCPool getInstance() {
-		return POOL;
+	public static Collection<ZCPool> getAllInstance() {
+		final Collection<ZCPool> values = poolMap.values();
+		return values;
+	}
+
+	public static ZCPool getInstance(final String dataSourceName) {
+		if (StrUtil.isEmpty(dataSourceName)) {
+			throw new IllegalArgumentException("dataSourceName 不能为空");
+		}
+
+		final ZCPool pool = poolMap.get(dataSourceName);
+		if (pool != null) {
+			return pool;
+		}
+
+		synchronized (dataSourceName.intern()) {
+			final ZCPool newPool = new ZCPool();
+			newPool.dataSourceName = dataSourceName;
+			newPool.initialize(dataSourceName);
+			poolMap.put(dataSourceName, newPool);
+			return newPool;
+		}
+		
 	}
 
 	void incrementWriteI() {
@@ -253,11 +281,9 @@ public class ZCPool {
 		return list;
 	}
 
-	private void create() {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZCPool.create()");
-
-		final ZDatasourceProperties zdp = ZDatasourcePropertiesLoader.getInstance();
+	private void create(final String dataSourceName) {
+		LOG.info("开始初始化数据源,properties文件名称=[{}]", dataSourceName);
+		final ZDatasourceProperties zdp = ZDatasourcePropertiesLoader.getInstance(dataSourceName);
 
 		final P write = zdp.getWrite();
 		this.newWriteConnection(write);
@@ -274,12 +300,12 @@ public class ZCPool {
 		final String url = p.getDatasourceUrl();
 		// FIXME 2023年6月16日 下午12:35:04 zhanghen:先暂时处理为从1到max
 		final int minConnection = 1;
-//		 final Integer minConnection = p.getDatasourceMinConnection();
+		//		 final Integer minConnection = p.getDatasourceMinConnection();
 		final Integer maxConnection = p.getDatasourceMaxConnection();
 
 		LOG.info("开始建立数据库[读]连接,min={},max={},url={}", minConnection, maxConnection, url);
 
- 		for (int i = minConnection; i <= maxConnection; i++) {
+		for (int i = minConnection; i <= maxConnection; i++) {
 			final ZConnection zConnection = ZConnection.newConnection(p);
 			zConnection.setMode(Mode.READ);
 			this.readVector.add(zConnection);
@@ -290,14 +316,14 @@ public class ZCPool {
 
 	private synchronized void newWriteConnection(final ZDatasourceProperties.P p) {
 		final String url = p.getDatasourceUrl();
-		 // FIXME 2023年6月16日 下午12:35:04 zhanghen:先暂时处理为从1到max
-		 final int minConnection = 1;
-//		 final Integer minConnection = p.getDatasourceMinConnection();
-		 final Integer maxConnection = p.getDatasourceMaxConnection();
+		// FIXME 2023年6月16日 下午12:35:04 zhanghen:先暂时处理为从1到max
+		final int minConnection = 1;
+		//		 final Integer minConnection = p.getDatasourceMinConnection();
+		final Integer maxConnection = p.getDatasourceMaxConnection();
 
 		LOG.info("开始建立数据库[写]连接,min={},max={},url={}", minConnection, maxConnection, url);
 
-	 	for (int i = minConnection; i <= maxConnection; i++) {
+		for (int i = minConnection; i <= maxConnection; i++) {
 			final ZConnection zConnection = ZConnection.newConnection(p);
 			zConnection.setMode(Mode.WRITE);
 			this.writeVector.add(zConnection);
