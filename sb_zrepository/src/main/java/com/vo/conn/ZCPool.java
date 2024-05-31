@@ -87,7 +87,7 @@ public class ZCPool {
 			poolMap.put(dataSourceName, newPool);
 			return newPool;
 		}
-		
+
 	}
 
 	void incrementWriteI() {
@@ -330,7 +330,7 @@ public class ZCPool {
 			LOG.info("第{}个数据库[写]连接创建成功,ZConnection={}", i, zConnection);
 		}
 	}
-
+	// FIXME 2024年6月1日 上午3:16:29 zhangzhen : shutdown 此方法 从 poolMap 取值然后关闭
 	private synchronized void shutdown() {
 		LOG.info("开始关闭连接池,当前连接数量={}", this.writeVector.size() + this.readVector.size());
 		ZCPool.close(this.writeVector);
