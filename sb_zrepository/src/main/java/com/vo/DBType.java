@@ -182,6 +182,10 @@ public class DBType {
 		JAVA_MYSQL.put("byte[]", "LONGBLOB");
 
 		JAVA_MYSQL.put("java.sql.Date", "DATE");
+
+		// FIXME 2024年6月2日 上午12:03:57 zhangzhen : mysql 是否去掉Datetime类型(带了精度也不支持，目前仅测试了5.7.25-28版本)？只对应带精度的timestamp(6)？
+		// FIXME 2024年6月2日 上午12:07:27 zhangzhen : 考虑：是否@ZEntity中不再支持java.util.Date,只支持java.sql.Timestamp?
+
 		JAVA_MYSQL.put("java.util.Date", "DATETIME");
 		JAVA_MYSQL.put("java.util.Date", "TIMESTAMP");
 
