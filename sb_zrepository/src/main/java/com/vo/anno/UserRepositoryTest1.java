@@ -16,8 +16,6 @@ import com.vo.ZRepository;
 public class UserRepositoryTest1 {
 
 	public static String[] findZRSubclassFanxing(final Class<?> cls) {
-		// FIXME 2023年6月17日 下午6:48:51 zhanghen: com改为配置
-//		final Set<Class<?>> c = ClassUtil.scanPackage("com");
 		final Set<Class<?>> classSet = ZRepositoryMain.scanPackage_COM();
 		for (final Class<?> class1 : classSet) {
 			if (!cls.getCanonicalName().equals(class1.getCanonicalName())) {
