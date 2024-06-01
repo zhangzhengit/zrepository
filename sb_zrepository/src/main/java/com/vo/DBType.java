@@ -27,12 +27,12 @@ public class DBType {
 	 * java > sqlite
 	 */
 	private static final Multimap<String, String> JAVA_SQLITE = ArrayListMultimap.create();
-	
+
 	/**
 	 * java > pgsql
 	 */
 	private static final Multimap<String, String> JAVA_PGSQL = ArrayListMultimap.create();
-	
+
 	/**
 	 * java > mysql
 	 */
@@ -79,7 +79,7 @@ public class DBType {
 			return getMysqlType(javaType).contains(dbType);
 		}
 		if (db == DBEnum.POSTGRESQL) {
- 			return getPGSqlType(javaType).contains(dbType);
+			return getPGSqlType(javaType).contains(dbType);
 		}
 		if (db == DBEnum.SQLITE) {
 			return getSQLiteType(javaType).contains(dbType);
@@ -114,10 +114,8 @@ public class DBType {
 		JAVA_PGSQL.put("java.lang.String", "text");
 		JAVA_PGSQL.put("java.lang.Boolean", "bool");
 		JAVA_PGSQL.put("java.lang.Boolean", "boolean");
-		JAVA_PGSQL.put("java.sql.Date", "timestamp");
 		JAVA_PGSQL.put("java.sql.Date", "date");
 		JAVA_PGSQL.put("java.util.Date", "timestamp");
-		JAVA_PGSQL.put("java.util.Date", "date");
 		JAVA_PGSQL.put("java.sql.Time", "time");
 		JAVA_PGSQL.put("java.sql.Timestamp", "timestamp");
 		JAVA_PGSQL.put("byte[]", "bytea");
@@ -184,9 +182,8 @@ public class DBType {
 		JAVA_MYSQL.put("byte[]", "LONGBLOB");
 
 		JAVA_MYSQL.put("java.sql.Date", "DATE");
-		JAVA_MYSQL.put("java.sql.Date", "DATETIME");
-		JAVA_MYSQL.put("java.util.Date", "DATE");
 		JAVA_MYSQL.put("java.util.Date", "DATETIME");
+		JAVA_MYSQL.put("java.util.Date", "TIMESTAMP");
 
 		JAVA_MYSQL.put("java.sql.Time", "TIME");
 
