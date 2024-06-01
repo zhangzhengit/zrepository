@@ -68,7 +68,9 @@ public class SU {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 
-	public static <T> Page<T> page(final Mode mode, final Class<T> cls,final Class<T> returnType, final T t, final Sort sort, final String sql,
+	// FIXME 2024年6月2日 上午12:09:26 zhangzhen : 本类所有方法都计入了className和callerMethodName,用来做sql执行统计功能用，待做
+
+	public static <T> Page<T> page(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final T t, final Sort sort, final String sql,
 			final Integer size, final Integer page) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
@@ -236,7 +238,7 @@ public class SU {
 		return fMap;
 	}
 
-	public static <T> T update(final Mode mode, final Class<T> cls, final T t, final String sql) {
+	public static <T> T update(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final T t, final String sql) {
 		final Field[] fs = t.getClass().getDeclaredFields();
 
 		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
@@ -325,7 +327,7 @@ public class SU {
 		return idValue;
 	}
 
-	public static <T> boolean deleteAll(final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> boolean deleteAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
@@ -366,7 +368,7 @@ public class SU {
 		return false;
 	}
 
-	public static <T> boolean deleteByIdIn(final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
+	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -415,7 +417,7 @@ public class SU {
 		return false;
 	}
 
-	public static <T> boolean deleteById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
+	public static <T> boolean deleteById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -458,7 +460,7 @@ public class SU {
 		return false;
 	}
 
-	public static <T> Map<Object, Boolean> existByIdIn(final Mode mode, final Object idList, final Class<T> cls,
+	public static <T> Map<Object, Boolean> existByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object idList, final Class<T> cls,
 			final String sql) {
 
 		final Map<Object, Boolean> v = Maps.newHashMap();
@@ -540,7 +542,7 @@ public class SU {
 		return v;
 	}
 
-	public static <T> boolean existById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
+	public static <T> boolean existById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
 
 		if (Objects.isNull(id)) {
 			return false;
@@ -589,7 +591,7 @@ public class SU {
 		return false;
 	}
 
-	public static <T> List<Object> saveAll(final Mode mode, final Class<T> cls, final String sqlParam,
+	public static <T> List<Object> saveAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sqlParam,
 			final List<T> tList) {
 
 		if (CollUtil.isEmpty(tList)) {
@@ -757,7 +759,8 @@ public class SU {
 		return sql2;
 	}
 
-	public static <T> T save(final Mode mode, final Class<T> cls, final Class entityTName, final T t, final String sql) {
+	public static <T> T save(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> cls,
+			final Class entityTName, final T t, final String sql) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
@@ -771,6 +774,7 @@ public class SU {
 		}
 
 		try {
+
 			final Object[] a = save0(cls, t, sql, connection);
 			final ResultSet rs = (ResultSet) a[0];
 			try {
@@ -830,6 +834,7 @@ public class SU {
 		PreparedStatement ps;
 		if (isShowSQL(getDataSourceNameFromClassType(cls))) {
 			LOG.info("[{}],[{}]", sql2, t);
+
 		}
 		ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
 		int i = 0;
@@ -966,7 +971,7 @@ public class SU {
 		return zc;
 	}
 
-	public static <T> List<T> findAll(final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> List<T> findAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
@@ -1053,7 +1058,7 @@ public class SU {
 		return columValue;
 	}
 
-	public static <T> List<T> findByIdIn(final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
+	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1155,7 +1160,7 @@ public class SU {
 		return null;
 	}
 
-	public static <T> T findById(final Mode mode, final Object id, final Class<T> cls, final String sql) {
+	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
@@ -1279,7 +1284,7 @@ public class SU {
 
 	// FIXME 2024年5月20日 上午10:22:38 zhangzhen: TODO 继续支持：声明式方法，如果值传了null，则 = null 改为 is null
 
-	public static <T> List<T> findByXXAndXX(final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
+	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1370,7 +1375,7 @@ public class SU {
 		return joiner.toString();
 	}
 
-	public static <T> List<T> findByXX(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object fieldValue) {
+	public static <T> List<T> findByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object fieldValue) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
@@ -1440,15 +1445,17 @@ public class SU {
 		} else if (fieldValue.getClass().equals(Float.class)) {
 			// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。 TODO 继续测试有何问题
 			ps.setDouble(index, Float.parseFloat(String.valueOf(fieldValue)));
-		} else if(fieldValue.getClass().equals(Date.class)){
-			ps.setDate(index, new java.sql.Date(((Date) fieldValue).getTime()));
+		} else if(fieldValue.getClass().equals(java.util.Date.class)){
+			ps.setTimestamp(index, new java.sql.Timestamp(((Date) fieldValue).getTime()));
+		} else if(fieldValue.getClass().equals(java.sql.Date.class)){
+			ps.setDate(index, (java.sql.Date)fieldValue);
 		} else {
 			ps.setObject(index, fieldValue);
 		}
 	}
 
 	// FIXME 2024年5月14日 下午9:49:14 zhangzhen: in 还需要特殊处理 blob类型的，还没测试，不知道要不要改？
-	public static <T> List<T> findByXXIn(final Mode mode, final Class<T> cls, final Class<T> returnType,
+	public static <T> List<T> findByXXIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,
 			final String sql, final Object... fieldArray) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
@@ -1523,7 +1530,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByIdLessThan(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object field) {
+	public static <T> List<T> findByIdLessThan(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1569,7 +1576,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXXEndingWith(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
+	public static <T> List<T> findByXXXEndingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1618,7 +1625,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXXStartingWith(final Mode mode, final Class<T> cls, final Class<T> returnType,
+	public static <T> List<T> findByXXXStartingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,
 			final String sql, final Object field) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
@@ -1667,7 +1674,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXOrYY(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object... field) {
+	public static <T> List<T> findByXXOrYY(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object... field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1720,7 +1727,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXBetween(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql,final Object...fiedlArray) {
+	public static <T> List<T> findByXXBetween(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql,final Object...fiedlArray) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1776,7 +1783,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXNotNull(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql) {
+	public static <T> List<T> findByXXNotNull(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1823,7 +1830,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXLike(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
+	public static <T> List<T> findByXXLike(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1875,7 +1882,7 @@ public class SU {
 		ZCPool.getInstance(dataSourceName).returnZConnectionAndCommit(zc);
 	}
 
-	public static <T> List<T> findByXXIsNull(final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql) {
+	public static <T> List<T> findByXXIsNull(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1962,7 +1969,7 @@ public class SU {
 		return 0L;
 	}
 
-	public static <T> Long count(final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> Long count(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		return count(mode, cls, sql,zc, dataSourceName);
@@ -1970,7 +1977,7 @@ public class SU {
 
 	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
 	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[].
-	public static <T> Long countingByXXAndXX(final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
+	public static <T> Long countingByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -2018,7 +2025,7 @@ public class SU {
 		return 0L;
 	}
 
-	public static <T> Long countingByXX(final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
+	public static <T> Long countingByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -2063,7 +2070,9 @@ public class SU {
 		return 0L;
 	}
 
-	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object... field) {
+	//	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls,
+	public static <T> List<T> findByXXOrderByXXLimit(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> cls,
+			final Class<T> returnType, final String sql, final Object... field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -2165,7 +2174,7 @@ public class SU {
 		return column.toString();
 	}
 
-	public static <T> List<T> zQuerySelect(final Mode mode,final Object entityTName,final Object object, final String sqlT, final Object... arg)
+	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName,final Mode mode,final Object entityTName,final Object object, final String sqlT, final Object... arg)
 			throws InstantiationException {
 
 		final Class cls = (Class) object;
@@ -2256,7 +2265,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static int zQueryUpdate(final Mode mode, final Object entityTName ,final Object object, final String sql,
+	public static int zQueryUpdate(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName ,final Object object, final String sql,
 			final Object... arg) throws IllegalAccessException {
 
 		return (int) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.UPDATE, arg);
@@ -2315,13 +2324,13 @@ public class SU {
 		return NO_DELETE_OR_DELETE;
 	}
 
-	public static <T> Integer zQueryDelete(final Mode mode, final Object entityTName, final Object object,
+	public static <T> Integer zQueryDelete(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName, final Object object,
 			final String sql, final Object... arg) {
 
 		return (Integer) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.DELETE, arg);
 	}
 
-	public static  <T> Object zQueryInsert(final Mode mode, final Object entityTName,final Class<T> cls, final String sql,final Object... arg) {
+	public static  <T> Object zQueryInsert(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName,final Class<T> cls, final String sql,final Object... arg) {
 		return updateOrDeleteOrInsert(mode, entityTName, cls, sql, SUEnum.INSERT, arg);
 	}
 

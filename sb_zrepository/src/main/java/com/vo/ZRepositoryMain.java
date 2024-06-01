@@ -663,63 +663,63 @@ public class ZRepositoryMain {
 
 			final String body2 = EMTPY;
 			final String entityT = typeArray[0];
-			final String methodS = getSuMethod(method.getName(), method, entityT);
+			final String methodS = getSuMethod(method, entityT, myZRClass.getCanonicalName());
 
 			zm.setBody("\t" +body + "\n\t" + body2  + "\n\t" + methodS);
 		}
 		return zmSet;
 	}
 
-	static String getSuMethod(final String methodName, final Method method, final String entityTName) {
+	private static String getSuMethod(final Method method, final String entityTName, final String zrSubClassName) {
 
 		final String modeString = modeString(method);
 
+		final String className1 = "\"" + zrSubClassName + "\"";
+		final String methodName1 = "\"" + method.getName() + "\"";
+
 		switch (method.getName()) {
 		case "findById":
-			return "return " + SU.class.getCanonicalName() + ".findById(" + modeString + ", id,classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "findByIdIn":
-			return "return " + SU.class.getCanonicalName() + ".findByIdIn(" + modeString + " ,idList,classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".findByIdIn(" + className1 + "," + methodName1 + "," + modeString + " ,idList,classType,sql);";
 
 		case "findAll":
-			return "return " + SU.class.getCanonicalName() + ".findAll(" + modeString + ", classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".findAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
 
 		case "saveAll":
-			return "return " + SU.class.getCanonicalName() + ".saveAll(" + modeString + ", classType,sql,tList);";
+			return "return " + SU.class.getCanonicalName() + ".saveAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql,tList);";
 
 		case "update":
-			return "return " + SU.class.getCanonicalName() + ".update(" + modeString + ", classType,t,sql);";
+			return "return " + SU.class.getCanonicalName() + ".update(" + className1 + "," + methodName1 + "," + modeString + ", classType,t,sql);";
 
 		case "save":
-			return "return " + SU.class.getCanonicalName() + ".save(" + modeString + ", classType," + entityTName
-					+ ",t,sql);";
+			final String r = "return " + SU.class.getCanonicalName() + ".save(" + className1 + "," + methodName1 + ","
+					+ modeString + "," + ", classType," + entityTName + ",t,sql);";
+			return r;
 
 		case "page":
-			return "return " + SU.class.getCanonicalName() + ".page(" + modeString + ", classType," + entityTName
+			return "return " + SU.class.getCanonicalName() + ".page(" + className1 + "," + methodName1 + "," + modeString + ", classType," + entityTName
 					+ ",t,sort,sql,size,page);";
 
 		case "existByIdIn":
-			return "return " + SU.class.getCanonicalName() + ".existByIdIn(" + modeString + ", idList,classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".existByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
 		case "existById":
-			return "return " + SU.class.getCanonicalName() + ".existById(" + modeString + ", id,classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".existById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "deleteById":
-			return "return " + SU.class.getCanonicalName() + ".deleteById(" + modeString + ", id,classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".deleteById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "deleteByIdIn":
-			return "return " + SU.class.getCanonicalName() + ".deleteByIdIn(" + modeString + ", idList,classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".deleteByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
 
 		case "deleteAll":
-			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + modeString + ", classType,sql);";
+			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
 
 		default:
 
 			// default  ZR的子类声明的方法
-			final MethodSQL methodSQL = MethodRegex.check(methodName, method);
-
-
-			//			final Entry<String, String> check = MethodRegex.check(methodName, method);
-			//			System.out.println("getSuMethod-check = " + check);
+			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodname = methodSQL.getMethodName();
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
 			if("pageByNameOrderById".equals(method.getName())) {
@@ -732,7 +732,7 @@ public class ZRepositoryMain {
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
 					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
-				return gROUP_findByXXOrderByXXDescLimit(method);
+				return gROUP_findByXXOrderByXXDescLimit(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
@@ -741,15 +741,15 @@ public class ZRepositoryMain {
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
-				return gROUP_findByXXOrderByXXLimit(method, methodname);
+				return gROUP_findByXXOrderByXXLimit(className1, method, methodname);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
-				return gROUP_findByXXXEndingWith(method);
+				return gROUP_findByXXXEndingWith(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
-				return gROUP_findByXXXStartingWith(method);
+				return gROUP_findByXXXStartingWith(className1, method);
 			}
 
 			if (	methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
@@ -757,36 +757,36 @@ public class ZRepositoryMain {
 					|| methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)
 					|| methodname.matches(MethodRegex.GROUP_findByXXLessThan)
 					) {
-				return gROUP_findByXXGreaterThanEquals(method);
+				return gROUP_findByXXGreaterThanEquals(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.findByXXBetween)) {
-				return gROUP_findByXXBetween(method);
+				return gROUP_findByXXBetween(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
-				return gROUP_findByxx_in(method);
+				return gROUP_findByxx_in(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
 					|| methodname.matches(MethodRegex.countingByXXXAndXXAndXX)
 					|| methodname.matches(MethodRegex.countingByXXXAndXX)
 					|| methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
-				return gROUP_CountingByXXX(method, methodname);
+				return gROUP_CountingByXXX(className1, method, methodname);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
-				return GROUP_findByXXNotNull(method);
+				return GROUP_findByXXNotNull(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				final Class returnType = getClassType(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql);";
+				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
+						+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
-				return gROUP_findByXXLike(method);
+				return gROUP_findByXXLike(className1,method);
 			}
 			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
 					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
@@ -798,22 +798,23 @@ public class ZRepositoryMain {
 					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)
 					|| methodname.matches(MethodRegex.findByXXOrYYOrYY)
 					|| methodname.matches(MethodRegex.findByXXOrYY)) {
-				return gROUP_findByXXOrYY(method);
+				return gROUP_findByXXOrYY(className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_count)) {
-				return "return " + SU.class.getCanonicalName() + ".count(" + modeString + ",classType,sql);";
+				return "return " + SU.class.getCanonicalName() + ".count(" + className1 + "," + methodName1
+						+ ","  + modeString + ",classType,sql);";
 			}
 
 			// 最短的排最后
 			if (methodname.matches(MethodRegex.GROUP_findByXXAndXX) || methodname.matches(MethodRegex.GROUP_findByXX)) {
-				return gROUP_findByXX(method);
+				return gROUP_findByXX(className1, method);
 			}
 
 			// 最后面是@ZQuery自定义方法
 			if (methodSQL.isZQuery()) {
 				final String sqlTemplate = methodSQL.getSqlTemplate();
-				final String x = zQuery(method, methodSQL.getSqlTemplate(), entityTName);
+				final String x = zQuery(className1, method, methodSQL.getSqlTemplate(), entityTName);
 				return x;
 			}
 
@@ -845,50 +846,62 @@ public class ZRepositoryMain {
 		return r;
 	}
 
-	private static String gROUP_findByXXXEndingWith(final Method method) {
+	private static String gROUP_findByXXXEndingWith(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXXStartingWith(final Method method) {
+	private static String gROUP_findByXXXStartingWith(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXGreaterThanEquals(final Method method) {
+	private static String gROUP_findByXXGreaterThanEquals(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-	}
+		final String methodName1 = "\"" + method.getName() + "\"";
 
-	private static String gROUP_findByXXOrderByXXLimit(final Method method, final String key) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString
+		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + className1 + "," + methodName1 + "," + modeString
 				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static String gROUP_findByXXOrderByXXLimit(final String className1, final Method method, final String key) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class returnType = getClassType(method);
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
+				+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
-	private static String gROUP_findByXXOrderByXXDescLimit(final Method method) {
+	private static String gROUP_findByXXOrderByXXDescLimit(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
+
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
-		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		final String methodName1 = "\"" + method.getName() + "\"";
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + "," 
+				+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return r;
 	}
 
-	private static String gROUP_CountingByXXX(final Method method, final String key) {
+	private static String gROUP_CountingByXXX(final String className1, final Method method, final String key) {
 
 		// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
 		if("countingByContent".equals(method.getName())) {
@@ -907,62 +920,67 @@ public class ZRepositoryMain {
 		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
 		// 而不是a.length=1并且这唯一的值是一个byte[]
 
+		final String methodName1 = "\"" + method.getName() + "\"";
 		final String suMethodName =
 				ac == 0 ? "countingByXX" : "countingByXXAndXX";
-		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + modeString + ",classType,sql,"
-		+ joiner.toString() + ");";
+		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType,sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXOrYY(final Method method) {
+	private static String gROUP_findByXXOrYY(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
 
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + modeString + ",classType,"
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return r;
+	}
+
+	private static String GROUP_findByXXNotNull(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
 				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
-	private static String GROUP_findByXXNotNull(final Method method) {
+	private static String gROUP_findByXXLike(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final Class returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static String gROUP_findByXXBetween(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final Class returnType = getClassType(method);
+
+		final String modeString = modeString(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
+				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return r;
+	}
+
+	private static String gROUP_findByxx_in(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
-
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + modeString + ",classType,"
+		final String methodName1 = "\"" + method.getName() + "\"";
+		final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
 				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
 	}
 
-	private static String gROUP_findByXXLike(final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-
-		final Class returnType = getClassType(method);
-
-		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
-	}
-
-	private static String gROUP_findByXXBetween(final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final Class returnType = getClassType(method);
-
-		final String modeString = modeString(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
-	}
-
-	private static String gROUP_findByxx_in(final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn(" + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
-	}
-
-	private static String zQuery(final Method method, final String sqlTemplate, final String entityTName) {
+	private static String zQuery(final String className1, final Method method, final String sqlTemplate, final String entityTName) {
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
@@ -988,8 +1006,10 @@ public class ZRepositoryMain {
 					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
 		}
 
+		final String methodName1 = "\"" + method.getName() + "\"";
+
 		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName 
-				+ "(" + modeString + ","
+				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
 				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 		return r;
@@ -1087,15 +1107,16 @@ public class ZRepositoryMain {
 		return method.getReturnType();
 	}
 
-	private static String gROUP_findByXX(final Method method) {
+	private static String gROUP_findByXX(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 
 		final Class returnType = getClassType(method);
 
 		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
+		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + modeString + ",classType,"+returnType.getCanonicalName()+",sql,"
+		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getCanonicalName()+",sql,"
 		+ joiner.toString() + ");";
 	}
 
