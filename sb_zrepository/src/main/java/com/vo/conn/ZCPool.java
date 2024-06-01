@@ -6,7 +6,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.ImmutableList;
@@ -42,6 +44,8 @@ public class ZCPool {
 	private final Object readLock = new Object();
 	private final Object writeLock = new Object();
 
+	private static final AtomicBoolean addShutdownHook = new AtomicBoolean(false);
+
 	private void initialize(final String dataSourceName) {
 
 		this.create(dataSourceName);
@@ -49,17 +53,21 @@ public class ZCPool {
 		final ZCPoolJob job = new ZCPoolJob();
 		job.start();
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				Thread.sleep(500);
-			} catch (final InterruptedException e) {
-				e.printStackTrace();
-			}
+		if (!addShutdownHook.get()) {
 
-			LOG.info("JVM钩子执行，开始关闭连接池");
-			this.shutdown();
-			LOG.info("JVM钩子已成功关闭连接池");
-		}));
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					Thread.sleep(100);
+				} catch (final InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				LOG.info("JVM钩子执行:开始关闭数据源");
+				this.shutdown();
+				LOG.info("JVM钩子已成功关闭数据源");
+			}));
+			addShutdownHook.set(true);
+		}
 
 	}
 
@@ -294,6 +302,7 @@ public class ZCPool {
 			this.newReadConnection(r.get(i));
 		}
 
+		LOG.info("初始化数据源完成,properties文件名称=[{}],ZDatasourceProperties={}", dataSourceName, zdp);
 	}
 
 	private synchronized void newReadConnection(final ZDatasourceProperties.P p) {
@@ -332,10 +341,17 @@ public class ZCPool {
 	}
 	// FIXME 2024年6月1日 上午3:16:29 zhangzhen : shutdown 此方法 从 poolMap 取值然后关闭
 	private synchronized void shutdown() {
-		LOG.info("开始关闭连接池,当前连接数量={}", this.writeVector.size() + this.readVector.size());
-		ZCPool.close(this.writeVector);
-		ZCPool.close(this.readVector);
-		LOG.info("成功关闭连接池");
+		final Set<String> keySet = poolMap.keySet();
+		LOG.info("开始关闭数据源:当前[{}]个数据源-[{}]", keySet.size(), keySet);
+		int c = 0;
+		for (final String k : keySet) {
+			final ZCPool pool = poolMap.get(k);
+			ZCPool.close(pool.writeVector);
+			ZCPool.close(pool.readVector);
+			c += (pool.writeVector.size() + pool.readVector.size());
+		}
+
+		LOG.info("成功关闭[{}]个数据源里的[{}]个连接",keySet.size(),c);
 	}
 
 	private static void close(final Vector<ZConnection> writeVector2) {
