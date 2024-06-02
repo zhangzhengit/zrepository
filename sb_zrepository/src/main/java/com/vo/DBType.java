@@ -41,18 +41,15 @@ public class DBType {
 			"boolean", "char");
 
 	public static Collection<String> getSQLiteType(final String javaTypeName) {
-		final Collection<String> v = JAVA_SQLITE.get(javaTypeName);
-		return v;
+		return JAVA_SQLITE.get(javaTypeName);
 	}
 
 	public static Collection<String> getPGSqlType(final String javaTypeName) {
-		final Collection<String> v = JAVA_PGSQL.get(javaTypeName);
-		return v;
+		return JAVA_PGSQL.get(javaTypeName);
 	}
 
 	public static Collection<String> getMysqlType(final String javaTypeName) {
-		final Collection<String> v = JAVA_MYSQL.get(javaTypeName);
-		return v;
+		return JAVA_MYSQL.get(javaTypeName);
 	}
 
 	/**
@@ -68,20 +65,19 @@ public class DBType {
 
 	/**
 	 * java类型和DB类型是否匹配
-	 *
+	 * @param dbEnum TODO
 	 * @param javaType
 	 * @param dbType
 	 * @return
 	 */
-	public static boolean match(final String javaType, final String dbType) {
-		final DBEnum db = ZRepositoryMain.getDB();
-		if (db == DBEnum.MYSQL) {
+	public static boolean match(final DBEnum dbEnum, final String javaType, final String dbType) {
+		if (dbEnum == DBEnum.MYSQL) {
 			return getMysqlType(javaType).contains(dbType);
 		}
-		if (db == DBEnum.POSTGRESQL) {
+		if (dbEnum == DBEnum.POSTGRESQL) {
 			return getPGSqlType(javaType).contains(dbType);
 		}
-		if (db == DBEnum.SQLITE) {
+		if (dbEnum == DBEnum.SQLITE) {
 			return getSQLiteType(javaType).contains(dbType);
 		}
 
@@ -186,6 +182,7 @@ public class DBType {
 		// FIXME 2024年6月2日 上午12:03:57 zhangzhen : mysql 是否去掉Datetime类型(带了精度也不支持，目前仅测试了5.7.25-28版本)？只对应带精度的timestamp(6)？
 		// FIXME 2024年6月2日 上午12:07:27 zhangzhen : 考虑：是否@ZEntity中不再支持java.util.Date,只支持java.sql.Timestamp?
 
+		// FIXME 2024年6月2日 下午8:33:42 zhangzhen : 是否支持java.time.LocalTime/LocalDate/LocaDateTime?
 		JAVA_MYSQL.put("java.util.Date", "DATETIME");
 		JAVA_MYSQL.put("java.util.Date", "TIMESTAMP");
 

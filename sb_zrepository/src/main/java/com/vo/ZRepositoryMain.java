@@ -74,8 +74,7 @@ public class ZRepositoryMain {
 	public static final String _Z_CLASS = "_ZClass";
 
 	private static ZCPool getPoolInstance(final String dataSourceName) {
-		final ZCPool instance = ZCPool.getInstance(dataSourceName);
-		return instance;
+		return ZCPool.getInstance(dataSourceName);
 	}
 
 	public static void start() {
@@ -522,8 +521,7 @@ public class ZRepositoryMain {
 
 	private static List<String> getDeclaredFieldName(final Class<?> typeClass) {
 		final Field[] fs = typeClass.getDeclaredFields();
-		final List<String> fieldNameList = Arrays.asList(fs).stream().map(Field::getName).collect(Collectors.toList());
-		return fieldNameList;
+		return Arrays.asList(fs).stream().map(Field::getName).collect(Collectors.toList());
 	}
 
 	/**
@@ -694,9 +692,8 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".update(" + className1 + "," + methodName1 + "," + modeString + ", classType,t,sql);";
 
 		case "save":
-			final String r = "return " + SU.class.getCanonicalName() + ".save(" + className1 + "," + methodName1 + ","
-					+ modeString + "," + ", classType," + entityTName + ",t,sql);";
-			return r;
+			return "return " + SU.class.getCanonicalName() + ".save(" + className1 + "," + methodName1 + ","
+			+ modeString + "," + ", classType," + entityTName + ",t,sql);";
 
 		case "page":
 			return "return " + SU.class.getCanonicalName() + ".page(" + className1 + "," + methodName1 + "," + modeString + ", classType," + entityTName
@@ -814,8 +811,7 @@ public class ZRepositoryMain {
 			// 最后面是@ZQuery自定义方法
 			if (methodSQL.isZQuery()) {
 				final String sqlTemplate = methodSQL.getSqlTemplate();
-				final String x = zQuery(className1, method, methodSQL.getSqlTemplate(), entityTName);
-				return x;
+				return zQuery(className1, method, methodSQL.getSqlTemplate(), entityTName);
 			}
 
 			break;
@@ -841,9 +837,8 @@ public class ZRepositoryMain {
 	private static String gROUP_pageByXX_orderByXX(final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		final String r = "return " + SU.class.getCanonicalName() + ".pageByXXOrderByXX(" + modeString + ",classType,sql,"
-				+ joiner.toString() + ");";
-		return r;
+		return "return " + SU.class.getCanonicalName() + ".pageByXXOrderByXX(" + modeString + ",classType,sql,"
+		+ joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXXEndingWith(final String className1, final Method method) {
@@ -885,9 +880,8 @@ public class ZRepositoryMain {
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
-				+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
+		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXOrderByXXDescLimit(final String className1, final Method method) {
@@ -896,9 +890,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + "," 
-				+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
+		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_CountingByXXX(final String className1, final Method method, final String key) {
@@ -933,9 +926,8 @@ public class ZRepositoryMain {
 		final Class returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
+		return "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
 	}
 
 	private static String GROUP_findByXXNotNull(final String className1, final Method method) {
@@ -943,9 +935,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
+		return "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXLike(final String className1, final Method method) {
@@ -965,9 +956,8 @@ public class ZRepositoryMain {
 
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
+		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
 				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
 	}
 
 	private static String gROUP_findByxx_in(final String className1, final Method method) {
@@ -975,9 +965,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		final String r = "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
+		return "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String zQuery(final String className1, final Method method, final String sqlTemplate, final String entityTName) {
@@ -1008,11 +997,10 @@ public class ZRepositoryMain {
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		final String r = "return " + SU.class.getCanonicalName() + "." + subClassMethodName 
+		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
 				+ classType.getCanonicalName() + ",sql," + joiner.toString() + ");";
-		return r;
 	}
 
 	/**
@@ -1098,8 +1086,7 @@ public class ZRepositoryMain {
 			if (typeArguments.length > 0) {
 				final Type typeArgument = typeArguments[0];
 				if (typeArgument instanceof Class) {
-					final Class<?> typeClass = (Class<?>) typeArgument;
-					return typeClass;
+					return (Class<?>) typeArgument;
 				}
 			}
 		}
@@ -1265,8 +1252,7 @@ public class ZRepositoryMain {
 			final DatabaseMetaData metaData = connection.getMetaData();
 
 			final DataSourceDTO dataSourceDTO = findCatalog(zConnection.getUrl());
-			final DBEnum db = getDB();
-			System.out.println("db = " + db);
+			System.out.println("dataSourceDTO= " + dataSourceDTO);
 			try (ResultSet columns = metaData.getColumns(dataSourceDTO.getCatalog(), null, tableName, null)) {
 				System.out.println("开始校验[" + zConnection.getMode().name() + "]数据表 = " + tableName);
 
@@ -1275,6 +1261,7 @@ public class ZRepositoryMain {
 
 				while (columns.next()) {
 					columnsCount++;
+					System.out.println("校验字段数 = " + columnsCount);
 					final String columnName = columns.getString(COLUMN_NAME);
 					columnNameList.add(columnName);
 					final String columnType = columns.getString(TYPE_NAME);
@@ -1301,7 +1288,7 @@ public class ZRepositoryMain {
 
 					}
 
-					final boolean match = DBType.match(o.get().getType().getCanonicalName(), columnType);
+					final boolean match = DBType.match(dataSourceDTO.getDbEnum(), o.get().getType().getCanonicalName(), columnType);
 					if (!match) {
 						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
 						+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
@@ -1447,8 +1434,7 @@ public class ZRepositoryMain {
 		Arrays.sort(fs, (o1, o2) -> {
 			final String name1 = o1.getName();
 			final String name2 = o2.getName();
-			final int v = Integer.compare(name2.length(), name1.length());
-			return v;
+			return Integer.compare(name2.length(), name1.length());
 		});
 
 		for (final Field f : fs) {
@@ -1536,7 +1522,7 @@ public class ZRepositoryMain {
 	 * @param url
 	 * @return
 	 */
-	private static DataSourceDTO findCatalog(final String url) {
+	public static DataSourceDTO findCatalog(final String url) {
 		final String k = "findCatalog" + "@" + url;
 		final Object d = C.get(k);
 		if (d != null) {
@@ -1625,14 +1611,27 @@ public class ZRepositoryMain {
 
 	}
 
-	public static DBEnum getDB(final String url) {
-		final DataSourceDTO dataSourceDTO = findCatalog(url);
-		return dataSourceDTO.getDbEnum();
+	public static DBEnum getDB(final String dataSourceName) {
+
+		final ZCPool pool = ZCPool.getInstance(dataSourceName);
+		final ZConnection zc = pool.getZConnection(Mode.WRITE);
+		try {
+			zc.getConnection().setAutoCommit(false);
+			final DataSourceDTO dataSourceDTO = findCatalog(zc.getUrl());
+			return dataSourceDTO.getDbEnum();
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		} finally {
+			pool.returnZConnectionAndCommit(zc);
+		}
+
+		return null;
+
 	}
 
-	public static DBEnum getDB() {
-		return DB_ENUM;
-	}
+	//	public static DBEnum getDB() {
+	//		return DB_ENUM;
+	//	}
 
 	private static StringJoiner getParameterNameFromMethod(final Method method) {
 		final StringJoiner joiner = new StringJoiner(DELIMITER);

@@ -13,9 +13,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -43,7 +45,6 @@ import com.vo.core.ZLog2;
 import com.vo.transaction.ZTransactionAspect;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -148,7 +149,7 @@ public class SU {
 				if (fv == null) {
 					continue;
 				}
-				addPS(t, ps, index, field, SUMode.SAVE);
+				addPS(zc.getDbEnum(), t, ps, index, field, SUMode.SAVE);
 				index++;
 			}
 
@@ -161,7 +162,7 @@ public class SU {
 			final int count = metaData.getColumnCount();
 			final List<T> rL = Lists.newArrayList();
 			while (rs.next()) {
-				final T tR = newT(returnType, rs, metaData, count);
+				final T tR = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				rL.add(tR);
 			}
 
@@ -176,7 +177,7 @@ public class SU {
 				if (fv == null) {
 					continue;
 				}
-				addPS(t, psc, indexPSC, field, SUMode.SAVE);
+				addPS(zc.getDbEnum(), t, psc, indexPSC, field, SUMode.SAVE);
 				indexPSC++;
 			}
 
@@ -186,9 +187,8 @@ public class SU {
 			final Long countR = pscRS.getLong(1);
 			final long pages = (countR.longValue() % size) == 0 ? countR.longValue() / size
 					: (countR.longValue() / size) + 1;
-			final Page<T> pageR = new Page(size, Long.valueOf(String.valueOf(page)), pages, countR,
+			return new Page(size, Long.valueOf(String.valueOf(page)), pages, countR,
 					ImmutableList.copyOf(rL));
-			return pageR;
 
 		} catch (final SQLException | IllegalArgumentException | IllegalAccessException  e1) {
 			e1.printStackTrace();
@@ -286,7 +286,7 @@ public class SU {
 
 				f.setAccessible(true);
 				index++;
-				addPS(t, ps, index, f, SUMode.UPDATE);
+				addPS(zc.getDbEnum(), t, ps, index, f, SUMode.UPDATE);
 			}
 
 			// 最后面的where id = ？ 赋值
@@ -613,7 +613,7 @@ public class SU {
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
 			for (final T t : tList) {
 				try {
-					final Object[] a = save0(cls, t, sqlParam, connection);
+					final Object[] a = save0(null, cls, t, sqlParam, connection);
 					final ResultSet rs = (ResultSet) a[0];
 					if (rs.next()) {
 						final Object id = rs.getObject(1);
@@ -639,15 +639,7 @@ public class SU {
 	}
 
 	private static DBEnum getDBFromDataSourceName(final String dataSourceName) {
-		final ZCPool pool = ZCPool.getInstance(dataSourceName);
-		final ZConnection zConnection = pool.getZConnection(Mode.WRITE);
-		try {
-			final DBEnum db = ZRepositoryMain.getDB(zConnection.getUrl());
-			return db;
-
-		} finally {
-			pool.returnZConnectionAndCommit(zConnection);
-		}
+		return ZRepositoryMain.getDB(dataSourceName);
 	}
 
 	private static <T> List<Object> saveAllMysqlAndPGSQL(final Mode mode, final Class<T> cls, final String sqlParam,
@@ -679,7 +671,7 @@ public class SU {
 					if (f.isAnnotationPresent(ZID.class) || f.isAnnotationPresent(ZTransient.class)) {
 						continue;
 					}
-					addPS(t, ps, index, f, SUMode.SAVE);
+					addPS(zc.getDbEnum(), t, ps, index, f, SUMode.SAVE);
 					index++;
 				}
 				ps.addBatch();
@@ -755,14 +747,13 @@ public class SU {
 			v.add("?");
 		}
 
-		final String sql2 = sql.replace("F", arg.toString()).replace("A", v.toString());
-		return sql2;
+		return sql.replace("F", arg.toString()).replace("A", v.toString());
 	}
 
-	public static <T> T save(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> cls,
+	public static <T> T save(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> entityClass,
 			final Class entityTName, final T t, final String sql) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -775,7 +766,7 @@ public class SU {
 
 		try {
 
-			final Object[] a = save0(cls, t, sql, connection);
+			final Object[] a = save0(zc.getDbEnum(), entityClass, t, sql, connection);
 			final ResultSet rs = (ResultSet) a[0];
 			try {
 
@@ -787,8 +778,7 @@ public class SU {
 					// FIXME 2024年5月27日 下午2:58:04 zhangzhen: 这个sql写死了，我想改@ZID字段测试，结果ZR中的方法模板都提前规定了必须包含Id，
 					// 改起来改动太多了，那就这样：@ZID字段名称必须是id，不允许为其他？表中必须有id字段并且必须是主键？
 					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
-					final T findByIdNew = findById0(mode, id, entityTName, selectById, zc);
-					return findByIdNew;
+					return findById0(zc.getDbEnum(), mode, id, entityTName, selectById, zc);
 				}
 			} finally {
 				close((AutoCloseable)a[0],(AutoCloseable)a[1]);
@@ -808,16 +798,13 @@ public class SU {
 		return null;
 	}
 
-	private static <T> Object[] save0(final Class<T> cls, final T t, final String sql, final Connection connection)
+	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> cls, final T t, final String sql, final Connection connection)
 			throws SQLException {
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = cls.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
-			if (field.isAnnotationPresent(ZTransient.class)) {
-				continue;
-			}
-			if(field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY)) {
+			if(field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY))) {
 				continue;
 			}
 			fieldCount++;
@@ -834,28 +821,25 @@ public class SU {
 		PreparedStatement ps;
 		if (isShowSQL(getDataSourceNameFromClassType(cls))) {
 			LOG.info("[{}],[{}]", sql2, t);
-
 		}
+
 		ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
 		int i = 0;
 		for (final Field field : fs) {
-			if (field.isAnnotationPresent(ZTransient.class)) {
-				continue;
-			}
-			if(field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY)) {
+			if (field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class)
+					&& (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY))) {
 				continue;
 			}
 
 			i++;
-			addPS(t, ps, i, field, SUMode.SAVE);
+			addPS(dbEunum, t, ps, i, field, SUMode.SAVE);
 		}
 		final int executeUpdate = ps.executeUpdate();
 		final ResultSet rs = ps.getGeneratedKeys();
-		//		ps.close();
 		return new Object[] {rs,ps};
 	}
 
-	private static <T> boolean addPS(final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
+	private static <T> boolean addPS(final DBEnum dbEnum, final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
 			throws SQLException {
 		final String dbFieldname = ZFieldConverter.toDbField(field.getName());
 		field.setAccessible(true);
@@ -875,7 +859,7 @@ public class SU {
 
 			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
 			if (fn.equals(Boolean.class.getCanonicalName())) {
-				final DBEnum db = ZRepositoryMain.getDB();
+				final DBEnum db = dbEnum;
 				// XXX sqlite也暂时Boolean和tinyint 对应，和mysql一样
 				if ((db == DBEnum.MYSQL) || (db==DBEnum.SQLITE)) {
 					final boolean equals = Boolean.TRUE.equals(v2);
@@ -928,8 +912,10 @@ public class SU {
 				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
 			} else if (fn.equals(java.sql.Date.class.getCanonicalName())) {
 				ps.setDate(i, (java.sql.Date)v2);
-			} else if (fn.equals(Time.class.getCanonicalName())) {
-				ps.setTime(i, (Time) v2);
+			} else if (fn.equals(java.sql.Time.class.getCanonicalName())) {
+				ps.setTime(i, (java.sql.Time)v2);
+			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
+				ps.setTime(i, Time.valueOf((LocalTime) v2));
 			} else if (fn.equals(Timestamp.class.getCanonicalName())) {
 				ps.setTimestamp(i, (Timestamp) v2);
 			} else {
@@ -1001,7 +987,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
 				r.add(t);
 			}
 			returnZConnectionAndCommit(dataSourceName, zc);
@@ -1025,8 +1011,7 @@ public class SU {
 
 	private static <T> String getDataSourceNameFromClassType(final Class<T> cls) {
 		final ZEntity en = cls.getAnnotation(ZEntity.class);
-		final String dataSourceName = en.dataSourceName();
-		return dataSourceName;
+		return en.dataSourceName();
 	}
 
 	// FIXME 2023年9月24日 下午3:41:35 zhanghen: 继续写，测试各种db和java的日期类型转换
@@ -1038,8 +1023,7 @@ public class SU {
 				return utilDate;
 			}
 			if( field.getType().equals(java.sql.Date.class)) {
-				final java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-				return sqlDate;
+				return new java.sql.Date(utilDate.getTime());
 			}
 			final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);
 			if (zdf != null) {
@@ -1048,8 +1032,7 @@ public class SU {
 
 				final String format2 = sss.format(utilDate);
 
-				final DateTime parse = DateUtil.parse(format2, format);
-				return parse;
+				return DateUtil.parse(format2, format);
 			}
 
 			return utilDate;
@@ -1092,7 +1075,7 @@ public class SU {
 			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idList.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(cls, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
 				rList.add(t);
 			}
 			return rList;
@@ -1112,7 +1095,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static <T> T findById0(final Mode mode, final Object id, final Class cls,final String sql, final ZConnection zc) {
+	private static <T> T findById0(final DBEnum dbEnum, final Mode mode, final Object id,final Class cls, final String sql, final ZConnection zc) {
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1141,8 +1124,7 @@ public class SU {
 
 			if (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = (T) newT(cls, rs, metaData, count);
-				return t;
+				return (T) newT(dbEnum, cls, rs, metaData, count);
 			}
 
 		} catch (SQLException
@@ -1165,16 +1147,15 @@ public class SU {
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
 		try {
-			final T findById0 = findById0(mode, id, cls, sql, zc);
-			return findById0;
+			return findById0(zc.getDbEnum(), mode, id, cls, sql, zc);
 		} finally {
 			returnZConnectionAndCommit(dataSourceName, zc);
 		}
 
 	}
 
-	private static <T> T newT(final Class<T> cls, final ResultSet rs, final ResultSetMetaData metaData,
-			final int count) {
+	private static <T> T newT(final DBEnum dbEnum, final Class<T> cls, final ResultSet rs,
+			final ResultSetMetaData metaData, final int count) {
 		T object = null;
 		try {
 			object = cls.newInstance();
@@ -1237,7 +1218,7 @@ public class SU {
 				} else if (cn.equals(String.class.getCanonicalName())) {
 					field.set(object, String.valueOf(value));
 				} else if (cn.equals(java.util.Date.class.getCanonicalName())) {
-					if ((ZRepositoryMain.getDB() == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
+					if ((dbEnum == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
 						final java.util.Date date = new Date((long) value);
 						field.set(object, date);
@@ -1245,7 +1226,7 @@ public class SU {
 						field.set(object, value);
 					}
 				} else if (cn.equals(java.sql.Date.class.getCanonicalName())) {
-					if ((ZRepositoryMain.getDB() == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
+					if ((dbEnum == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
 						final java.sql.Date date = new java.sql.Date((long) value);
 						field.set(object, date);
@@ -1253,7 +1234,7 @@ public class SU {
 						field.set(object, value);
 					}
 				} else if (cn.equals(java.sql.Timestamp.class.getCanonicalName())) {
-					final DBEnum db = ZRepositoryMain.getDB();
+					final DBEnum db = dbEnum;
 					if (value.getClass().equals(Timestamp.class)) {
 						field.set(object, value);
 					} else if (value.getClass() == Long.class) {
@@ -1261,10 +1242,42 @@ public class SU {
 						final Timestamp time = new Timestamp((long) value);
 						field.set(object, time);
 					}
+				} else if (cn.equals(LocalTime.class.getCanonicalName())) {
+					if (value.getClass().equals(Time.class)) {
+						final Time t1 = (Time) value;
+						final Calendar c = Calendar.getInstance();
+						c.clear();
+						c.setTimeInMillis(t1.getTime());
+
+						final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
+								c.get(Calendar.SECOND));
+						field.set(object, of);
+					} else if (value.getClass() == LocalTime.class) {
+						field.set(object, value);
+					} else if (value.getClass() == Integer.class) {
+
+						final Time time = new Time((int) value);
+						final Calendar c = Calendar.getInstance();
+						c.clear();
+						c.setTimeInMillis(time.getTime());
+
+						final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
+								c.get(Calendar.SECOND));
+						field.set(object, of);
+
+					} else if (value.getClass() == Long.class) {
+						// sqlite 中此值为long类型
+						final Time time = new Time((long) value);
+						field.set(object, time);
+					}
+
 				} else if (cn.equals(java.sql.Time.class.getCanonicalName())) {
-					final DBEnum db = ZRepositoryMain.getDB();
+					final DBEnum db = dbEnum;
 					if (value.getClass().equals(Time.class)) {
 						field.set(object, value);
+					} else if (value.getClass() == Integer.class) {
+						final Time time = new Time((int) value);
+						field.set(object, time);
 					} else if (value.getClass() == Long.class) {
 						// sqlite 中此值为long类型
 						final Time time = new Time((long) value);
@@ -1319,7 +1332,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1412,7 +1425,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1509,7 +1522,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1557,7 +1570,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1603,7 +1616,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1654,7 +1667,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1706,7 +1719,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1762,7 +1775,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1809,7 +1822,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1857,7 +1870,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1907,7 +1920,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1950,8 +1963,7 @@ public class SU {
 			rs = ps.executeQuery();
 
 			if (rs.next()) {
-				final Long count = rs.getLong(1);
-				return count;
+				return rs.getLong(1);
 			}
 
 		} catch (SQLException | SecurityException e) {
@@ -2006,8 +2018,7 @@ public class SU {
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			if (rs.next()) {
-				final Long count = rs.getLong(1);
-				return count;
+				return rs.getLong(1);
 			}
 
 		} catch (SQLException | SecurityException e) {
@@ -2051,8 +2062,7 @@ public class SU {
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			if (rs.next()) {
-				final Long count = rs.getLong(1);
-				return count;
+				return rs.getLong(1);
 			}
 
 		} catch (SQLException | SecurityException e) {
@@ -2102,7 +2112,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(returnType, rs, metaData, count);
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2149,11 +2159,8 @@ public class SU {
 		for (int i = 0; i < fs.length; i++) {
 			final Field f = fs[i];
 
-			if (f.isAnnotationPresent(ZTransient.class)) {
-				continue;
-			}
 			// 兼顾pgsql，@ZID字段不可以update
-			if (f.isAnnotationPresent(ZID.class)) {
+			if (f.isAnnotationPresent(ZTransient.class) || f.isAnnotationPresent(ZID.class)) {
 				continue;
 			}
 
@@ -2245,7 +2252,7 @@ public class SU {
 			final List<T> ra = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = (T) newT(cls, rs, metaData, count);
+				final T t = (T) newT(zc.getDbEnum(), cls, rs, metaData, count);
 				ra.add(t);
 			}
 
@@ -2304,8 +2311,7 @@ public class SU {
 			if (suEnum == SUEnum.INSERT) {
 				final ResultSet rs = prepareStatement.getGeneratedKeys();
 				if (rs.next()) {
-					final Object idINSERT = rs.getObject(1);
-					return idINSERT;
+					return rs.getObject(1);
 				}
 			}
 			return executeUpdate;

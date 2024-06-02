@@ -74,8 +74,7 @@ public class ZCPool {
 	static HashMap<String, ZCPool> poolMap = Maps.newHashMap();
 
 	public static Collection<ZCPool> getAllInstance() {
-		final Collection<ZCPool> values = poolMap.values();
-		return values;
+		return poolMap.values();
 	}
 
 	public static ZCPool getInstance(final String dataSourceName) {
@@ -285,8 +284,7 @@ public class ZCPool {
 	public ImmutableList<ZConnection> getAll() {
 		final List<ZConnection> r = Lists.newArrayList(this.writeVector);
 		r.addAll(this.readVector);
-		final ImmutableList<ZConnection> list = ImmutableList.copyOf(r);
-		return list;
+		return ImmutableList.copyOf(r);
 	}
 
 	private void create(final String dataSourceName) {

@@ -7,6 +7,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import com.vo.DBEnum;
+import com.vo.DataSourceDTO;
+import com.vo.ZRepositoryMain;
 import com.vo.core.ZLog2;
 
 import cn.hutool.core.util.StrUtil;
@@ -26,6 +29,7 @@ public class ZConnection {
 
 	private Boolean busy;
 	private Mode mode;
+	private DBEnum dbEnum;
 
 	private String driverClass;
 	private String url;
@@ -57,6 +61,9 @@ public class ZConnection {
 			zc.setUserName(p.getDatasourceUsername());
 			zc.setPwd(p.getDatasourcePassword());
 
+			final DataSourceDTO dataSourceDTO = ZRepositoryMain.findCatalog(p.getDatasourceUrl());
+			zc.setDbEnum(dataSourceDTO.getDbEnum());
+
 			zc.setBusy(false);
 			zc.setConnection(connection);
 
@@ -81,9 +88,7 @@ public class ZConnection {
 		final PrintWriter writer = new PrintWriter(stringWriter);
 		e.printStackTrace(writer);
 
-		final String eMessage = stringWriter.toString();
-
-		return eMessage;
+		return stringWriter.toString();
 	}
 
 }
