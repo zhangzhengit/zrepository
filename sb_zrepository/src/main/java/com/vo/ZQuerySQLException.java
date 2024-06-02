@@ -20,6 +20,12 @@ public class ZQuerySQLException extends SQLException {
 
 	private String message;
 
+
+	@Override
+	public String getMessage() {
+		return this.message;
+	}
+
 	public ZQuerySQLException(final String message) {
 		this.message = message;
 	}
