@@ -753,6 +753,7 @@ public class SU {
 	public static <T> T save(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> entityClass,
 			final Class entityTName, final T t, final String sql) {
 
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
@@ -2362,5 +2363,26 @@ public class SU {
 			}
 		}
 		return null;
+	}
+
+	// FIXME 2024年6月2日 下午9:57:46 zhangzhen : 测试
+	public static void createTable(final String dataSourceName, final String createTable) {
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(Mode.WRITE, dataSourceName);
+
+		try {
+			zc.getConnection().setAutoCommit(false);
+
+			final PreparedStatement ps = zc.getConnection().prepareStatement(createTable);
+			final int executeUpdate = ps.executeUpdate();
+			LOG.info("创建表结果-executeUpdate=[{}],sql=[{}]", executeUpdate, createTable);
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}finally {
+			returnZConnectionAndCommit(dataSourceName, zc);
+		}
+
 	}
 }
