@@ -76,6 +76,9 @@ public class MethodRegex {
 	public 	static final String GROUP_findByXXLike = "findBy.+Like";
 
 	public 	static final String GROUP_findByXXIsNull = "findBy.+IsNull";
+	public 	static final String GROUP_findByXXIsNullAndXX = "findBy.+IsNullAnd.+";
+	// FIXME 2024年6月4日 下午5:00:12 zhangzhen : 继续支持更多的模板，如：findByXXAndXXAndXXIsNull
+//	public 	static final String GROUP_findByXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+And.+";
 
 	public static final String saveAll = GROUP_SAVEALL;
 	public static final String save = GROUP_SAVE;
@@ -147,7 +150,7 @@ public class MethodRegex {
 	public 	static final String deleteAll = "deleteAll";
 
 	public 	static final String findByXXLike = GROUP_findByXXLike;
-//	IsNull
+	//	IsNull
 	public 	static final String findByXXIsNull = GROUP_findByXXIsNull;
 
 	public static ArrayList<String> regexList = Lists.newArrayList();
@@ -170,6 +173,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNull = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXEndingWith = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_StartingWith = new LinkedHashMap<>();
@@ -255,6 +259,8 @@ public class MethodRegex {
 		// findAll
 		REGEX_MAP_FINDALL.put(findAll, SELECT + " * from TABLE_NAME");
 
+		// findByXXIsNullAndXX
+		REGEX_MAP_findByXXXIsNullAndXX.put(GROUP_findByXXIsNullAndXX, SELECT + " * from TABLE_NAME where @ is null and @ = ?");
 		// findByXXIsNull
 		REGEX_MAP_findByXXXIsNull.put(findByXXIsNull, SELECT + " * from TABLE_NAME where @ is null");
 
@@ -301,7 +307,7 @@ public class MethodRegex {
 
 		// Between
 		// FIXME 2023年6月16日 下午5:37:32 zhanghen: between先不做
-//		REGEX_MAP_BETWEEN.put(findByXXBetween, SELECT + " * from TABLE_NAME where @ in (?)");
+		//		REGEX_MAP_BETWEEN.put(findByXXBetween, SELECT + " * from TABLE_NAME where @ in (?)");
 
 		R_M.put(GROUP_findByXXGreaterThanEquals, REGEX_MAP_GreaterThanEquals);
 		R_M.put(GROUP_findByXXGreaterThan, REGEX_MAP_GreaterThan);
@@ -311,7 +317,9 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
 		R_M.put(GROUP_findByXXXEndingWith, REGEX_MAP_findByXXXEndingWith);
 		R_M.put(GROUP_findByXXXStartingWith, REGEX_MAP_StartingWith);
+		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
 		R_M.put(GROUP_findByXXIsNull, REGEX_MAP_findByXXXIsNull);
+		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
 		R_M.put(GROUP_findByxx_in, REGEX_MAP_FINDBYXXIN);
@@ -355,8 +363,8 @@ public class MethodRegex {
 
 			final int x = 20;
 
-//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
-//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
+			//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
+			//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
 
 			return new MethodSQL(true,methodName, zQuery.sql());
 		}
@@ -382,8 +390,7 @@ public class MethodRegex {
 	}
 
 	public static ArrayList<String> getFieldFromMethodname(final String methdoName) {
-		final ArrayList<String> sp = SqlPattern.sp(methdoName);
-		return sp;
+		return SqlPattern.sp(methdoName);
 
 	}
 
@@ -392,8 +399,7 @@ public class MethodRegex {
 			final Set<Entry<String, String>> es = hashMap.entrySet();
 			for (final Entry<String, String> entry : es) {
 				if (method.getName().matches(entry.getKey())) {
-					final boolean contains = ANALYSIS_BY_METHOD_PARAMETERS.contains(entry.getKey());
-					return contains;
+					return ANALYSIS_BY_METHOD_PARAMETERS.contains(entry.getKey());
 				}
 			}
 		}
@@ -406,8 +412,7 @@ public class MethodRegex {
 			final Set<Entry<String, String>> es = hashMap.entrySet();
 			for (final Entry<String, String> entry : es) {
 				if (method.getName().matches(entry.getKey())) {
-					final boolean contains = ANALYSIS_BY_ZENTITY_FIELD.contains(entry.getKey());
-					return contains;
+					return ANALYSIS_BY_ZENTITY_FIELD.contains(entry.getKey());
 				}
 			}
 		}
@@ -460,6 +465,7 @@ public class MethodRegex {
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThan);
 
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXBetween);
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit);
