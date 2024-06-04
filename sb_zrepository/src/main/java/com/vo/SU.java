@@ -1463,7 +1463,13 @@ public class SU {
 			ps.setTimestamp(index, new java.sql.Timestamp(((Date) fieldValue).getTime()));
 		} else if(fieldValue.getClass().equals(java.sql.Date.class)){
 			ps.setDate(index, (java.sql.Date)fieldValue);
-		} else {
+		}
+		//		else if(fieldValue.getClass().isArray()){
+		//			final int x = 20;
+		//			final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) fieldValue);
+		//			ps.setBlob(index, inputStream);
+		//		}
+		else {
 			ps.setObject(index, fieldValue);
 		}
 	}
@@ -1794,6 +1800,115 @@ public class SU {
 			close(rs, ps);
 		}
 
+		return Collections.emptyList();
+	}
+
+	// XXX 不和findByXXIsNullAndXX 复用代码，最后一个参数不同，区分Object... 仅传一个值并且为数组的情况，有bug
+	public static <T> List<T> findByXXIsNullAndXXAndXX(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Object... fieldArray) {
+
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			connection.setAutoCommit(false);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(fieldArray));
+			}
+
+			ps = connection.prepareStatement(sqlColumn);
+
+			int i = 1;
+			for (final Object object : fieldArray) {
+				setXX_fieldValue(object, ps, i);
+				i++;
+			}
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final ArrayList<T> r = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				r.add(t);
+			}
+
+			return r;
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZConnectionAndCommit(dataSourceName, zc);
+			close(rs, ps);
+		}
+		return Collections.emptyList();
+	}
+
+	public static <T> List<T> findByXXIsNullAndXX(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Object fieldValue) {
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			connection.setAutoCommit(false);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			if (isShowSQL(dataSourceName)) {
+				// FIXME 2024年6月4日 下午8:29:01 zhangzhen : 要区分fieldValue是否数组类型
+				final Object v = fieldValue.getClass().isArray()
+						? Arrays.toString(new Object[] { fieldValue})
+								: fieldValue;
+				LOG.info("[{}],[{}]", sqlColumn, v);
+			}
+
+			ps = connection.prepareStatement(sqlColumn);
+
+			final int i = 1;
+			setXX_fieldValue(fieldValue, ps, i);
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final ArrayList<T> r = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				r.add(t);
+			}
+
+			return r;
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZConnectionAndCommit(dataSourceName, zc);
+			close(rs, ps);
+		}
 		return Collections.emptyList();
 	}
 

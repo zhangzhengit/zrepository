@@ -78,7 +78,8 @@ public class MethodRegex {
 	public 	static final String GROUP_findByXXIsNull = "findBy.+IsNull";
 	public 	static final String GROUP_findByXXIsNullAndXX = "findBy.+IsNullAnd.+";
 	// FIXME 2024年6月4日 下午5:00:12 zhangzhen : 继续支持更多的模板，如：findByXXAndXXAndXXIsNull
-//	public 	static final String GROUP_findByXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+And.+";
+	public 	static final String GROUP_findByXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+And.+";
+	public 	static final String GROUP_findByXXIsNullAndXXAndXXAndXX = "findBy.+IsNullAnd.+And.+And.+";
 
 	public static final String saveAll = GROUP_SAVEALL;
 	public static final String save = GROUP_SAVE;
@@ -173,6 +174,8 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNull = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXEndingWith = new LinkedHashMap<>();
@@ -259,6 +262,10 @@ public class MethodRegex {
 		// findAll
 		REGEX_MAP_FINDALL.put(findAll, SELECT + " * from TABLE_NAME");
 
+		// findByXXIsNullAndXXAndXXAndXX
+		REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXXAndXX, SELECT + " * from TABLE_NAME where @ is null and @ = ? and @ = ? and @ = ?");
+		// findByXXIsNullAndXXAndXX
+		REGEX_MAP_findByXXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXX, SELECT + " * from TABLE_NAME where @ is null and @ = ? and @ = ?");
 		// findByXXIsNullAndXX
 		REGEX_MAP_findByXXXIsNullAndXX.put(GROUP_findByXXIsNullAndXX, SELECT + " * from TABLE_NAME where @ is null and @ = ?");
 		// findByXXIsNull
@@ -317,6 +324,8 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
 		R_M.put(GROUP_findByXXXEndingWith, REGEX_MAP_findByXXXEndingWith);
 		R_M.put(GROUP_findByXXXStartingWith, REGEX_MAP_StartingWith);
+		R_M.put(GROUP_findByXXIsNullAndXXAndXXAndXX, REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX);
+		R_M.put(GROUP_findByXXIsNullAndXXAndXX, REGEX_MAP_findByXXXIsNullAndXXAndXX);
 		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
 		R_M.put(GROUP_findByXXIsNull, REGEX_MAP_findByXXXIsNull);
 		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
@@ -465,6 +474,8 @@ public class MethodRegex {
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThan);
 
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXAndXXAndXX);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXBetween);
 

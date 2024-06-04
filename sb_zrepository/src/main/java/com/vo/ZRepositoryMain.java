@@ -484,7 +484,7 @@ public class ZRepositoryMain {
 		String sqlA = sql;
 
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByOrderCOUNTOrNAMEOrIdOrI1OrBYTE1".equals(method.getName())) {
+		if("findByNameIsNullAndDateAndTimeAndTimestamp".equals(method.getName())) {
 			final int x2 = 1;
 		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
@@ -719,7 +719,7 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodname = methodSQL.getMethodName();
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("pageByNameOrderById".equals(method.getName())) {
+			if("findByF1IsNullAndD1AndId".equals(method.getName())) {
 				final int x =1;
 			}
 
@@ -774,6 +774,18 @@ public class ZRepositoryMain {
 
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
 				return GROUP_findByXXNotNull(className1, method);
+			}
+
+			if (
+					methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX)
+					||	methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXX)) {
+				final String GROUP_findByXXIsNullAndXXAndXX = GROUP_findByXXIsNullAndXXAndXX(className1, method);
+				return GROUP_findByXXIsNullAndXXAndXX;
+			}
+
+			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXX)) {
+				final String group_findByXXIsNullAndXX = GROUP_findByXXIsNullAndXX(className1, method);
+				return group_findByXXIsNullAndXX;
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
@@ -928,6 +940,24 @@ public class ZRepositoryMain {
 
 		return "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static String GROUP_findByXXIsNullAndXXAndXX(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class<?> returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static String GROUP_findByXXIsNullAndXX(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class<?> returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String GROUP_findByXXNotNull(final String className1, final Method method) {
@@ -1465,7 +1495,8 @@ public class ZRepositoryMain {
 		d.setFiledNameOriginalOrder(filedNameOriginalOrder);
 
 		// FIXME 2024年5月19日 上午7:48:57 zhangzhen: debug 代码
-		if("findByDateAndNameOrderByNameDescLimit".equals(methodName)) {
+		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
+		if("findByNameIsNullAndDateAndTimeAndTimestamp".equals(methodName)) {
 			final int x2 = 1;
 		}
 		final List<String> fieldNameArray = getFieldNameArray(methodName, fs);
@@ -1477,19 +1508,23 @@ public class ZRepositoryMain {
 	private static List<String> getFieldNameArray(final String methodName,final Field[] fs) {
 
 		final ArrayList<Field> fl = Lists.newArrayList(fs);
-		final List<String> fnl = fl.stream().map(Field::getName).map(n -> String.valueOf(n.charAt(0)).toUpperCase() + n.substring(1))
-				.collect(Collectors.toList());
+		final List<String> fnl = fl.stream().map(Field::getName)
+				.map(n -> String.valueOf(n.charAt(0)).toUpperCase() + n.substring(1)).collect(Collectors.toList());
 
 		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
 		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
 		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
 		skList.sort(Comparator.comparing(String::length).reversed());
 
-		final String ffN= methodName;
+		//		for (final String sk : skList) {
+		//			ffN = ffN.replaceAll(sk, "");
+		//		}
+		//		final String ffN= methodName;
 
-		if("findByDateAndNameOrderByNameDescLimit".equals(methodName)) {
+		if("findByNameIsNullAndDateAndTimeAndTimestamp".equals(methodName)) {
 			final int x2 = 1;
 		}
+		String ffN = methodName;
 
 		final ArrayList<String> x = Lists.newArrayList();
 		for (final String fn : fnl) {
@@ -1504,6 +1539,10 @@ public class ZRepositoryMain {
 				x.add(one);
 
 				from = i + fn.length();
+				// 在此把已处理的字段替换为"",防止下面这种方法[Time]出现两次
+				// 按现在的做法，Field.getName.length倒序排并且已处理的替换为""，则不会出现Time出现两次了
+				// findByNameIsNullAndDateAndTimeAndTimestamp
+				ffN = new StringBuilder(ffN).replace(i, i + fn.length(), EMTPY).toString();
 			}
 		}
 
