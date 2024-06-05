@@ -484,7 +484,7 @@ public class SU {
 
 		final Field zidF = getZID(cls);
 		final String dbColumnName = ZFieldConverter.toDbField(zidF.getName());
-		final String sqlF = sql.replace("ZID", dbColumnName);
+		final String sqlF = sql.replace(MethodRegex.ZID, dbColumnName);
 
 		final StringJoiner idJoiner = new StringJoiner(",");
 		for (final Object id : idNotNullList) {

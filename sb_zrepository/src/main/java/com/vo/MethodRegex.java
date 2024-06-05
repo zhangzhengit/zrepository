@@ -30,6 +30,7 @@ public class MethodRegex {
 	public static final String LIMIT = "LIMIT";
 	public static final String COLUMN = "COLUMN";
 	public static final String COLUMNS = "COLUMNS";
+	public static final String ZID = "ZID";
 	public static final String COLUMN_VALUES = "COLUMN_VALUES";
 
 	public static final String GROUP_findByXXOrderByXXLimit = "findBy.+OrderBy.+Limit";
@@ -251,7 +252,8 @@ public class MethodRegex {
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? OR @ = ?;");
 
 		// existByIdIn
-		REGEX_MAP_EXISTBYIDIN.put(existByIdIn, SELECT + " ZID,COUNT(*) " + FROM + " TABLE_NAME " + WHERE + " @ IN (?) GROUP BY ZID;");
+		REGEX_MAP_EXISTBYIDIN.put(existByIdIn,
+				SELECT + " " + ZID + ",COUNT(*) " + FROM + " TABLE_NAME " + WHERE + " @ IN (?) GROUP BY " + ZID + ";");
 		// existById
 		REGEX_MAP_EXISTBYID.put(existById, SELECT + " COUNT(*) " + FROM + " TABLE_NAME " + WHERE + " @ = ?;");
 
