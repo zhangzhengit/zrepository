@@ -59,6 +59,12 @@ import cn.hutool.core.util.StrUtil;
 
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 // FIXME 2024年5月18日 下午12:29:49 zhangzhen: LOG 要不要使用 PreparedStatement.toString 代替？
+
+// FIXME 2024年6月5日 下午10:46:38 zhangzhen : 所有log.xx信息，要仔细考虑参数类型，
+// 如：
+//	1、Date类型，要统一格式输出yyyy-MM-dd HH:mm:ss
+//	2、数组类型，要Arrays.toString输出 等等
+
 public class SU {
 	// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
 
@@ -1748,7 +1754,9 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXBetween(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql,final Object...fiedlArray) {
+	public static <T> List<T> findByXXBetween(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Object... fiedlArray) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
@@ -1759,14 +1767,13 @@ public class SU {
 			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
-			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
-
-
-			ps = connection.prepareStatement(sqlColumn);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn,Arrays.toString(fiedlArray));
+				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(fiedlArray));
 			}
+
+			ps = connection.prepareStatement(sqlColumn);
 
 			int index = 1;
 			for (final Object f : fiedlArray) {
@@ -1788,8 +1795,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException
-				| SecurityException e) {
+		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 			try {
 				connection.rollback();

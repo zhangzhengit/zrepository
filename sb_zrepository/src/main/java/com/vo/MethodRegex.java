@@ -129,6 +129,7 @@ public class MethodRegex {
 	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
 
 	public static final String findByXXBetween = "findBy.+Between";
+	public static final String findByXXNotBetween = "findBy.+NotBetween";
 
 	public static final String findByXXGreaterThanEquals = GROUP_findByXXGreaterThanEquals;
 	public static final String findByXXGreaterThan = GROUP_findByXXGreaterThan;
@@ -172,6 +173,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_GROUP_pageByXX_orderByXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_PAGE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_CountingByXXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXNotBetween = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXBetween = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrYY = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_EXISTBYIDIN = new LinkedHashMap<>();
@@ -231,6 +233,8 @@ public class MethodRegex {
 		// count
 		REGEX_MAP_Count.put(count, SELECT + " count(*) " + FROM + " TABLE_NAME");
 
+		// findByXXNotBetween
+		REGEX_MAP_findByXXNotBetween.put(findByXXNotBetween, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ NOT BETWEEN ? AND ?;");
 		// findByXXBetween
 		REGEX_MAP_findByXXBetween.put(findByXXBetween, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ BETWEEN ? AND ?;");
 
@@ -352,6 +356,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
 		R_M.put(GROUP_findByxx_in, REGEX_MAP_FINDBYXXIN);
+		R_M.put(findByXXNotBetween, REGEX_MAP_findByXXNotBetween);
 		R_M.put(findByXXBetween, REGEX_MAP_findByXXBetween);
 		R_M.put(GROUP_findByxxNotNull, REGEX_MAP_findByXXNotNull);
 		R_M.put(GROUP_findByxxNot, REGEX_MAP_findByXXNot);
@@ -499,6 +504,7 @@ public class MethodRegex {
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXAndXXAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXX);
+		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXNotBetween);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXBetween);
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit);

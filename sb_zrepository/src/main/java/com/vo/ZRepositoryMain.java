@@ -757,6 +757,10 @@ public class ZRepositoryMain {
 				return gROUP_findByXXGreaterThanEquals(className1, method);
 			}
 
+			if (methodname.matches(MethodRegex.findByXXNotBetween)) {
+				return gROUP_findByXXBetween(className1, method);
+			}
+
 			if (methodname.matches(MethodRegex.findByXXBetween)) {
 				return gROUP_findByXXBetween(className1, method);
 			}
@@ -1005,6 +1009,15 @@ public class ZRepositoryMain {
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
+	private static String gROUP_findByXXNotBetween(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final Class returnType = getClassType(method);
+
+		final String modeString = modeString(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
+				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
 	private static String gROUP_findByXXBetween(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final Class returnType = getClassType(method);
