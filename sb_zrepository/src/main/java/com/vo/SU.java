@@ -746,7 +746,7 @@ public class SU {
 			v.add("?");
 		}
 
-		return sql.replace("F", arg.toString()).replace("A", v.toString());
+		return sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES, v.toString());
 	}
 
 	public static <T> T save(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> entityClass,
