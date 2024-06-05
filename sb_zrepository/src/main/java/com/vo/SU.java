@@ -1858,6 +1858,61 @@ public class SU {
 		return Collections.emptyList();
 	}
 
+	public static <T> List<T> findByXXIsNullAndXXIsNullAndXX(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Object fieldValue) {
+
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			connection.setAutoCommit(false);
+
+			final String select = gSelectFromReturnType(returnType);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			if (isShowSQL(dataSourceName)) {
+				final Object v = fieldValue.getClass().isArray()
+						? Arrays.toString(new Object[] { fieldValue})
+								: fieldValue;
+				LOG.info("[{}],[{}]", sqlColumn, v);
+			}
+
+			ps = connection.prepareStatement(sqlColumn);
+
+			final int i = 1;
+			setXX_fieldValue(fieldValue, ps, i);
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final ArrayList<T> r = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				r.add(t);
+			}
+
+			return r;
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZConnectionAndCommit(dataSourceName, zc);
+			close(rs, ps);
+		}
+
+		return Collections.emptyList();
+	}
+
 	public static <T> List<T> findByXXIsNullAndXX(final String zrSubClassName, final String callerMethodName,
 			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
 			final Object fieldValue) {

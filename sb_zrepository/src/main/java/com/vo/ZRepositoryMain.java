@@ -484,7 +484,7 @@ public class ZRepositoryMain {
 		String sqlA = sql;
 
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByNameIsNullAndDateAndTimeAndTimestamp".equals(method.getName())) {
+		if("findByNameIsNullAndByte1IsNullAndCreateTime".equals(method.getName())) {
 			final int x2 = 1;
 		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
@@ -776,6 +776,10 @@ public class ZRepositoryMain {
 				return GROUP_findByXXNotNull(className1, method);
 			}
 
+			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX)) {
+				return GROUP_findByXXIsNullAndXXIsNullAndXX(className1, method);
+			}
+
 			if (
 					methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX)
 					||	methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXX)) {
@@ -940,6 +944,15 @@ public class ZRepositoryMain {
 
 		return "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static String GROUP_findByXXIsNullAndXXIsNullAndXX(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class<?> returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String GROUP_findByXXIsNullAndXXAndXX(final String className1, final Method method) {
@@ -1496,7 +1509,7 @@ public class ZRepositoryMain {
 
 		// FIXME 2024年5月19日 上午7:48:57 zhangzhen: debug 代码
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByNameIsNullAndDateAndTimeAndTimestamp".equals(methodName)) {
+		if("findByNameIsNullAndByte1IsNullAndCreateTime".equals(methodName)) {
 			final int x2 = 1;
 		}
 		final List<String> fieldNameArray = getFieldNameArray(methodName, fs);
