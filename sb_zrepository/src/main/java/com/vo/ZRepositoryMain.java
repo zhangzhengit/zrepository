@@ -484,7 +484,7 @@ public class ZRepositoryMain {
 		String sqlA = sql;
 
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByNameIsNullAndByte1IsNullAndCreateTimeAndId".equals(method.getName())) {
+		if("findByIdNotLike".equals(method.getName())) {
 			final int x2 = 1;
 		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
@@ -719,8 +719,8 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodname = methodSQL.getMethodName();
 			// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-			if("findByF1IsNullAndD1AndId".equals(method.getName())) {
-				final int x =1;
+			if("findByIdNotLike".equals(method.getName())) {
+				final int x2 = 1;
 			}
 
 			if (methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
@@ -757,11 +757,7 @@ public class ZRepositoryMain {
 				return gROUP_findByXXGreaterThanEquals(className1, method);
 			}
 
-			if (methodname.matches(MethodRegex.findByXXNotBetween)) {
-				return gROUP_findByXXBetween(className1, method);
-			}
-
-			if (methodname.matches(MethodRegex.findByXXBetween)) {
+			if (methodname.matches(MethodRegex.findByXXNotBetween) || methodname.matches(MethodRegex.findByXXBetween)) {
 				return gROUP_findByXXBetween(className1, method);
 			}
 
@@ -805,9 +801,11 @@ public class ZRepositoryMain {
 						+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
+			if (methodname.matches(MethodRegex.GROUP_findByXXNotLike)
+					|| methodname.matches(MethodRegex.GROUP_findByXXLike)) {
 				return gROUP_findByXXLike(className1,method);
 			}
+
 			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
 					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
 					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
