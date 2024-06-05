@@ -73,15 +73,16 @@ public class MethodRegex {
 	public static final String GROUP_findByXXLessThanEquals = "findBy.+LessThanEquals";
 	public static final String GROUP_findByXXLessThan = "findBy.+LessThan";
 
-	public 	static final String GROUP_findByXXLike = "findBy.+Like";
+	public static final String GROUP_findByXXLike = "findBy.+Like";
 
-	public 	static final String GROUP_findByXXIsNull = "findBy.+IsNull";
-	public 	static final String GROUP_findByXXIsNullAndXX = "findBy.+IsNullAnd.+";
+	public static final String GROUP_findByXXIsNull = "findBy.+IsNull";
+	public static final String GROUP_findByXXIsNullAndXX = "findBy.+IsNullAnd.+";
 	// FIXME 2024年6月4日 下午5:00:12 zhangzhen : 继续支持更多的模板，如：findByXXAndXXAndXXIsNull
-	public 	static final String GROUP_findByXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+And.+";
-	public 	static final String GROUP_findByXXIsNullAndXXAndXXAndXX = "findBy.+IsNullAnd.+And.+And.+";
+	public static final String GROUP_findByXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+And.+";
+	public static final String GROUP_findByXXIsNullAndXXAndXXAndXX = "findBy.+IsNullAnd.+And.+And.+";
 
-	public 	static final String GROUP_findByXXIsNullAndXXIsNullAndXX= "findBy.+IsNullAnd.+IsNullAnd.+";
+	public static final String GROUP_findByXXIsNullAndXXIsNullAndXX = "findBy.+IsNullAnd.+IsNullAnd.+";
+	public static final String GROUP_findByXXIsNullAndXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+IsNullAnd.+And.+";
 
 	public static final String saveAll = GROUP_SAVEALL;
 	public static final String save = GROUP_SAVE;
@@ -100,11 +101,10 @@ public class MethodRegex {
 	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
 	public static final String findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY = "findBy.+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+(?=And.).+";
 
-
-	public 	static final String findByXXXEndingWith = GROUP_findByXXXEndingWith;
-	public 	static final String findByXXXStartingWith = GROUP_findByXXXStartingWith;
-	public 	static final String findByXXNot = GROUP_findByxxNot;
-	public 	static final String findByXXIn = GROUP_findByxx_in;
+	public static final String findByXXXEndingWith = GROUP_findByXXXEndingWith;
+	public static final String findByXXXStartingWith = GROUP_findByXXXStartingWith;
+	public static final String findByXXNot = GROUP_findByxxNot;
+	public static final String findByXXIn = GROUP_findByxx_in;
 	public static final String findByXXInAndYYIn = "findBy.+(?=InAnd.).+In";
 	public static final String findByXXInAndYYInAndYYIn = "findBy.+(?=InAnd.).+(?=InAnd.).+In";
 	public static final String findByXXInAndYYInAndYYInAndYYIn = "findBy.+(?=InAnd.).+(?=InAnd.).+(?=InAnd.).+In";
@@ -121,40 +121,40 @@ public class MethodRegex {
 	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
 	public static final String findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY = "findBy.+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+(?=Or.).+";
 
-	public 	static final String findByXXBetween = "findBy.+Between";
+	public static final String findByXXBetween = "findBy.+Between";
 
-	public 	static final String findByXXGreaterThanEquals = GROUP_findByXXGreaterThanEquals;
-	public 	static final String findByXXGreaterThan = GROUP_findByXXGreaterThan;
-	public 	static final String findByXXLessThanEquals = GROUP_findByXXLessThanEquals;
-	public 	static final String findByXXLessThan = GROUP_findByXXLessThan;
+	public static final String findByXXGreaterThanEquals = GROUP_findByXXGreaterThanEquals;
+	public static final String findByXXGreaterThan = GROUP_findByXXGreaterThan;
+	public static final String findByXXLessThanEquals = GROUP_findByXXLessThanEquals;
+	public static final String findByXXLessThan = GROUP_findByXXLessThan;
 
-	public 	static final String findByXXOrderByXXDescLimit = GROUP_findByXXOrderByXXDescLimit;
-	public 	static final String findByXXAndXXOrderByXXDescLimit = "findBy.+And.+OrderBy.+DescLimit";
-	public 	static final String findByXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+OrderBy.+DescLimit";
-	public 	static final String findByXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+OrderBy.+DescLimit";
-	public 	static final String findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+OrderBy.+DescLimit";
-	public 	static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+And.+OrderBy.+DescLimit";
-	public 	static final String findByXXOrderByXXLimit = GROUP_findByXXOrderByXXLimit;
+	public static final String findByXXOrderByXXDescLimit = GROUP_findByXXOrderByXXDescLimit;
+	public static final String findByXXAndXXOrderByXXDescLimit = "findBy.+And.+OrderBy.+DescLimit";
+	public static final String findByXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+OrderBy.+DescLimit";
+	public static final String findByXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+OrderBy.+DescLimit";
+	public static final String findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+OrderBy.+DescLimit";
+	public static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+And.+OrderBy.+DescLimit";
+	public static final String findByXXOrderByXXLimit = GROUP_findByXXOrderByXXLimit;
 	public static final String findByXXAndXXOrderByXXLimit = "findBy.+And.+OrderBy.+Limit";
 	public static final String findByXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+OrderBy.+Limit";
 	public static final String findByXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+OrderBy.+Limit";
 	public static final String findByXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+And.+OrderBy.+Limit";
 	public static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+And.+And.+OrderBy.+Limit";
-	public 	static final String count = GROUP_count;
-	public 	static final String page = GROUP_page;
-	public 	static final String countingByXXX = GROUP_CountingByXXX;
-	public 	static final String countingByXXXAndXX = "countingBy.+And.+";
-	public 	static final String countingByXXXAndXXAndXX = "countingBy.+And.+And.+";
-	public 	static final String countingByXXXAndXXAndXXAndXX = "countingBy.+And.+And.+And.+";
-	public 	static final String existById = GROUP_EXISTBYId;
-	public 	static final String existByIdIn = "existByIdIn";
-	public 	static final String deleteById = GROUP_DeleteById;
-	public 	static final String deleteByIdIn = GROUP_DeleteByIdIn;
-	public 	static final String deleteAll = "deleteAll";
+	public static final String count = GROUP_count;
+	public static final String page = GROUP_page;
+	public static final String countingByXXX = GROUP_CountingByXXX;
+	public static final String countingByXXXAndXX = "countingBy.+And.+";
+	public static final String countingByXXXAndXXAndXX = "countingBy.+And.+And.+";
+	public static final String countingByXXXAndXXAndXXAndXX = "countingBy.+And.+And.+And.+";
+	public static final String existById = GROUP_EXISTBYId;
+	public static final String existByIdIn = "existByIdIn";
+	public static final String deleteById = GROUP_DeleteById;
+	public static final String deleteByIdIn = GROUP_DeleteByIdIn;
+	public static final String deleteAll = "deleteAll";
 
-	public 	static final String findByXXLike = GROUP_findByXXLike;
-	//	IsNull
-	public 	static final String findByXXIsNull = GROUP_findByXXIsNull;
+	public static final String findByXXLike = GROUP_findByXXLike;
+	// IsNull
+	public static final String findByXXIsNull = GROUP_findByXXIsNull;
 
 	public static ArrayList<String> regexList = Lists.newArrayList();
 
@@ -177,6 +177,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNull = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXIsNullAndXXIsNullAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXX = new LinkedHashMap<>();
@@ -265,6 +266,8 @@ public class MethodRegex {
 		// findAll
 		REGEX_MAP_FINDALL.put(findAll, SELECT + " * from TABLE_NAME");
 
+		// findByXXIsNullAndXXIsNullAndXXAndXX
+		REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXIsNullAndXXAndXX, SELECT + " * from TABLE_NAME where @ is null and @ is null and @ = ? and @ = ?");
 		// findByXXIsNullAndXXIsNullAndXX
 		REGEX_MAP_findByXXIsNullAndXXIsNullAndXX.put(GROUP_findByXXIsNullAndXXIsNullAndXX, SELECT + " * from TABLE_NAME where @ is null and @ is null and @ = ?");
 		// findByXXIsNullAndXXAndXXAndXX
@@ -329,6 +332,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
 		R_M.put(GROUP_findByXXXEndingWith, REGEX_MAP_findByXXXEndingWith);
 		R_M.put(GROUP_findByXXXStartingWith, REGEX_MAP_StartingWith);
+		R_M.put(GROUP_findByXXIsNullAndXXIsNullAndXXAndXX, REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX);
 		R_M.put(GROUP_findByXXIsNullAndXXIsNullAndXX, REGEX_MAP_findByXXIsNullAndXXIsNullAndXX);
 		R_M.put(GROUP_findByXXIsNullAndXXAndXXAndXX, REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX);
 		R_M.put(GROUP_findByXXIsNullAndXXAndXX, REGEX_MAP_findByXXXIsNullAndXXAndXX);
@@ -480,6 +484,7 @@ public class MethodRegex {
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThan);
 
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXIsNullAndXXAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXIsNullAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXAndXXAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullAndXXAndXX);
