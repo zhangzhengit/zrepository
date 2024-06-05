@@ -157,7 +157,7 @@ public interface ZRepository<T, ID> {
 	/**
 	 * 删除全部的对象
 	 *
-	 * @return 是否全部删除了
+	 * @return 是否全部删除了,表里没有数据会返回false,全部删除了会返回true
 	 *
 	 */
 	boolean deleteAll();
