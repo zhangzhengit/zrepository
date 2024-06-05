@@ -4,6 +4,8 @@ import java.util.HashSet;
 
 import com.google.common.collect.Sets;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  * 数据库字段 <> java对象字段转换, 如： order_count <> orderCount
  *
@@ -13,8 +15,8 @@ import com.google.common.collect.Sets;
  */
 public class ZFieldConverter {
 
-// FIXME 2024年5月27日 下午8:50:47 zhangzhen: 这个要好好测，万一出了问题，容易导致认为是后续代码的问题
-	
+	// FIXME 2024年5月27日 下午8:50:47 zhangzhen: 这个要好好测，万一出了问题，容易导致认为是后续代码的问题
+
 	public static String toJavaField(final String dbFieldName) {
 		final char[] charArray = dbFieldName.toCharArray();
 
@@ -31,11 +33,18 @@ public class ZFieldConverter {
 		return n;
 	}
 
-
 	public static String toDbField(final String javaFieldName) {
-		final char[] charArray = javaFieldName.toCharArray();
+		if (StrUtil.isEmpty(javaFieldName)) {
+			throw new IllegalArgumentException("javaFieldName 不能为空");
+		}
+		if (javaFieldName.length() == 1) {
+			return  String.valueOf(new char[] {javaFieldName.charAt(0)}).toLowerCase();
+		}
+
+		final StringBuilder x = new StringBuilder(javaFieldName).replace(0, 1,String.valueOf(new char[] {javaFieldName.charAt(0)}).toLowerCase());
+		final char[] charArray = x.toString().toCharArray();
 		int count = 0;
-		final StringBuilder n = new StringBuilder(javaFieldName);
+		final StringBuilder n = new StringBuilder(x);
 		for (int i = 0; i < charArray.length; i++) {
 			final char c = charArray[i];
 			if (daxie.contains(c)) {
