@@ -957,7 +957,7 @@ public class ZRepositoryMain {
 		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
-	
+
 	private static String GROUP_findByXXIsNullAndXXIsNullAndXX(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
@@ -1307,7 +1307,6 @@ public class ZRepositoryMain {
 			final DatabaseMetaData metaData = connection.getMetaData();
 
 			final DataSourceDTO dataSourceDTO = findCatalog(zConnection.getUrl());
-			System.out.println("dataSourceDTO= " + dataSourceDTO);
 			try (ResultSet columns = metaData.getColumns(dataSourceDTO.getCatalog(), null, tableName, null)) {
 				System.out.println("开始校验[" + zConnection.getMode().name() + "]数据表 = " + tableName);
 
@@ -1316,7 +1315,6 @@ public class ZRepositoryMain {
 
 				while (columns.next()) {
 					columnsCount++;
-					System.out.println("校验字段数 = " + columnsCount);
 					final String columnName = columns.getString(COLUMN_NAME);
 					columnNameList.add(columnName);
 					final String columnType = columns.getString(TYPE_NAME);

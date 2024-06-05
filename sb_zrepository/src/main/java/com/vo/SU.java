@@ -61,12 +61,10 @@ import cn.hutool.core.util.StrUtil;
 // FIXME 2024年5月18日 下午12:29:49 zhangzhen: LOG 要不要使用 PreparedStatement.toString 代替？
 public class SU {
 	// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
-	private static final int NO_DELETE_OR_DELETE = -1;
-	private static final int NO_DELETE = -1;
-	private static final int NO_UPDATE = -1;
-	private static final String COLUMN = "COLUMN";
-	private static final String LIMIT = "limit";
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	private static final int NO_DELETE_OR_DELETE = -1;
 
 
 	// FIXME 2024年6月2日 上午12:09:26 zhangzhen : 本类所有方法都计入了className和callerMethodName,用来做sql执行统计功能用，待做
@@ -116,14 +114,15 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final String pageSql = columnBuilder.length() > 0 ? sqlColumn.replace(COLUMN, columnBuilder.toString())
-					: sqlColumn.replace(" where " + COLUMN, columnBuilder.toString());
+			final String pageSql = columnBuilder.length() > 0
+					? sqlColumn.replace(MethodRegex.COLUMN, columnBuilder.toString())
+							: sqlColumn.replace(" " + MethodRegex.WHERE + " " + MethodRegex.COLUMN, columnBuilder.toString());
 
 			final String pageCountSql = columnBuilder.length() > 0
-					? pageCountSQLT.replace(COLUMN, columnBuilder.toString())
-							: pageCountSQLT.replace(" where " + COLUMN, columnBuilder.toString());
+					? pageCountSQLT.replace(MethodRegex.COLUMN, columnBuilder.toString())
+							: pageCountSQLT.replace(" " + MethodRegex.WHERE + " " + MethodRegex.COLUMN, columnBuilder.toString());
 
-			final String pageSqlFinal = pageSql.replace(LIMIT, sort.done() + Sort.SPACE + LIMIT);
+			final String pageSqlFinal = pageSql.replace(MethodRegex.LIMIT, sort.done() + Sort.SPACE + MethodRegex.LIMIT);
 			final int offset = (page - 1) * size;
 			final int rows = size;
 
@@ -256,7 +255,7 @@ public class SU {
 		// update blobt set COLUMN where id = ?;
 		final String gUpdateColumn = gUpdateColumn(t, fs);
 
-		final String sqlF = sql.replace(COLUMN, gUpdateColumn);
+		final String sqlF = sql.replace(MethodRegex.COLUMN, gUpdateColumn);
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
@@ -778,7 +777,8 @@ public class SU {
 					// XXX 这个sql就这样写了，因为在 findById0 里面已经把*替换为具体column了
 					// FIXME 2024年5月27日 下午2:58:04 zhangzhen: 这个sql写死了，我想改@ZID字段测试，结果ZR中的方法模板都提前规定了必须包含Id，
 					// 改起来改动太多了，那就这样：@ZID字段名称必须是id，不允许为其他？表中必须有id字段并且必须是主键？
-					final String selectById = "select * from " + zEntity.tableName() + " where id = ?";
+					final String selectById = MethodRegex.SELECT + " * " + MethodRegex.FROM + " " + zEntity.tableName()
+					+ " " + MethodRegex.WHERE + " id = ?";
 					return findById0(zc.getDbEnum(), mode, id, entityTName, selectById, zc);
 				}
 			} finally {
@@ -818,7 +818,8 @@ public class SU {
 			final StringJoiner add = joiner.add("?");
 		}
 
-		final String sql2 = sql.replace("F", arg.toString()).replace("A", joiner.toString());
+		final String sql2 = sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES,
+				joiner.toString());
 		PreparedStatement ps;
 		if (isShowSQL(getDataSourceNameFromClassType(cls))) {
 			LOG.info("[{}],[{}]", sql2, t);
@@ -1107,7 +1108,7 @@ public class SU {
 			final String s1 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (id == null) {
-				sT = s1.replaceFirst("= \\?", "is null");
+				sT = s1.replaceFirst("= \\?", "IS NULL");
 				ps = zc.getConnection().prepareStatement(sT);
 			} else {
 				sT = s1;
@@ -1406,7 +1407,7 @@ public class SU {
 			final String x = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (fieldValue == null) {
-				s = x.replaceFirst(" = \\?", " is null");
+				s = x.replaceFirst(" = \\?", " IS NULL");
 				ps = connection.prepareStatement(s);
 			} else {
 				s = x;
