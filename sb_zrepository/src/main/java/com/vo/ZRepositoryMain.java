@@ -205,9 +205,10 @@ public class ZRepositoryMain {
 
 		final HashMap<String, HashMap<String, String>> map = MethodRegex.R_M;
 		final Set<String> keySet = map.keySet();
-		System.out.println("@" + ZRepository.class.getCanonicalName() + " 子接口中支持的声明式方法(共有" + keySet.size() + "个)形式如下：");
+		System.out.println("@" + ZRepository.class.getCanonicalName() + " 子接口中支持的声明式方法形式如下：");
 		for (final String m : keySet) {
-			System.out.println("\t" + m);
+			final HashMap<String, String> hashMap = map.get(m);
+			System.out.println("\t" + hashMap.keySet());
 		}
 
 		System.out.println();
@@ -443,10 +444,33 @@ public class ZRepositoryMain {
 
 		// 只剩SQL关键字的方法名称替换掉所有的SQL关键字后，必须是""
 		if (!EMTPY.equals(sKeyword)) {
-			// FIXME 2023年8月26日 下午5:50:54 zhanghen: TODO 提示信息再详细一点
-			throw new IllegalArgumentException(ZRepository.class.getSimpleName() + " 子类自定义方法声明错误，methodName = "
-					+ methodName + "，" + "请确认方法名由SQL关键字和@ZEntity类中的字段组成，" + "方法名称命名规则见 "
-					+ MethodRegex.class.getSimpleName() + " 中以 GROUP_ 开头的常量。");
+			final List<Field> fl = gNoZTransientFieldList(typeClass);
+			final List<String> noZTFNL = fl.stream().map(Field::getName).collect(Collectors.toList());
+
+			// FIXME 2024年6月7日 下午8:18:09 zhangzhen : 要不要先再详细点，具体到模糊匹配Field看哪个更接近（因为可能笔误写错了）
+			final String m =
+					"\r\n\t"
+							+ "方法声明错误:"
+							+ "\r\n\t"
+							+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
+							+ "\r\n\t"
+							+ "请确认方法名由SQL关键字和@" + ZEntity.class.getSimpleName()
+							+ "两部分组成:"
+							+ "\r\n\t"
+							+ "SQL关键字包含:" + sqlKeyword
+							+ "\r\n\t"
+							+ "@" + typeClass.getSimpleName() + "中Field有:"
+							+ noZTFNL
+							+ "\r\n\t"
+							+ "当前方法模板为[" + methodSQL.getMethodName() + "]"
+							+ ",请检查方法名称[" + methodName + "]"
+							//							+ ",是否@" + ZEntity.class.getSimpleName() + "中的Field名称写错了?"
+							+ "\r\n\t"
+							+ "方法名称命名规则见 " + MethodRegex.class.getSimpleName()
+							+ " 中以 GROUP_ 开头的常量。"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m);
 		}
 
 		final List<String> fieldNameArray = d.getFiledName();
@@ -484,7 +508,7 @@ public class ZRepositoryMain {
 		String sqlA = sql;
 
 		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByIdNotLike".equals(method.getName())) {
+		if("findByTimestampNotLike".equals(method.getName())) {
 			final int x2 = 1;
 		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
@@ -494,8 +518,29 @@ public class ZRepositoryMain {
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
 			}
 		} else if (MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
-			for (final Parameter p : ps) {
+			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
+			for (int i = 0; i < ps.length; i++) {
+				final Parameter p = ps[i];
 				final String dbColumnName = ZFieldConverter.toDbField(p.getName());
+				final String javaFiledName = filedNameMethodNameOrder.get(i);
+				final String dbColumnNameFromJavaFieldName = ZFieldConverter.toDbField(javaFiledName);
+				if (!Objects.equals(dbColumnNameFromJavaFieldName, dbColumnName)) {
+
+					final String jfn2 = String.valueOf(javaFiledName.charAt(0)).toLowerCase() + javaFiledName.substring(1);
+					final String m =
+							"\r\n\t"
+									+ "方法参数名称声明错误:"
+									+ "\r\n\t"
+									+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
+									+ "\r\n\t"
+									+ "请检查参数名称[" + p.getName() + "]"
+									+ "和方法名称中对应的Field的名称[" + jfn2 + "]一致."
+									+ "\r\n\t"
+									;
+
+					throw new IllegalArgumentException(m);
+				}
+
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
 			}
 		}
@@ -668,7 +713,7 @@ public class ZRepositoryMain {
 			final String entityT = typeArray[0];
 			final String methodS = getSuMethod(method, entityT, myZRClass.getCanonicalName());
 
-			String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
+			final String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
 			zm.setBody(x);
 		}
 		return zmSet;
@@ -1718,6 +1763,15 @@ public class ZRepositoryMain {
 			joiner.add(parameter.getName());
 		}
 		return joiner;
+	}
+
+	private static List<Field> gNoZTransientFieldList(final Class typeClass) {
+		final Field[] fs = typeClass.getDeclaredFields();
+		final List<Field> fl = Arrays.stream(fs).filter(f -> !f.isAnnotationPresent(ZTransient.class))
+				.collect(Collectors.toList());
+
+		return fl;
+
 	}
 }
 
