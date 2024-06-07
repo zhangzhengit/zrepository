@@ -654,6 +654,11 @@ public class ZRepositoryMain {
 
 
 			zmSet.add(zm);
+			// FIXME 2024年6月7日 下午6:23:13 zhangzhen : debug 代码，记得删除
+			if("findByIdNotLike".equals(zm.getName())) {
+				final int xx2 = 1;
+			}
+
 			final String sql = ZRSqlMap.get(myZRClass.getCanonicalName(), zm.getName());
 
 			// 结束
@@ -663,7 +668,8 @@ public class ZRepositoryMain {
 			final String entityT = typeArray[0];
 			final String methodS = getSuMethod(method, entityT, myZRClass.getCanonicalName());
 
-			zm.setBody("\t" +body + "\n\t" + body2  + "\n\t" + methodS);
+			String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
+			zm.setBody(x);
 		}
 		return zmSet;
 	}
