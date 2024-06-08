@@ -63,6 +63,11 @@ import cn.hutool.core.util.StrUtil;
 public class ZRepositoryMain {
 
 	private static final int findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE = 2;
+	private static final int findByXXIsNullAndXXIsNullAndXX_PARAMETER_SIZE = 1;
+	private static final int findByXXIsNullAndXXAndXXAndXX_PARAMETER_SIZE = 3;
+	private static final int findByXXIsNullAndXXAndXX_PARAMETER_SIZE = 2;
+	private static final int findByXXIsNullAndXX_PARAMETER_SIZE = 1;
+	private static final int findByXXIsNull_PARAMETER_SIZE = 0;
 
 	private static final int FIND_BY_XX_NOT_NULL_PARAMETER_SIZE = 0;
 
@@ -768,7 +773,7 @@ public class ZRepositoryMain {
 		return null;
 	}
 
-	private static String getSuMethod(final Method method, final String entityTName, final Class myZRClass, final Class entityClass) {
+	private static String getSuMethod(final Method method, final String entityTName, final Class<?> myZRClass, final Class<?> entityClass) {
 
 		final String modeString = modeString(method);
 
@@ -812,6 +817,10 @@ public class ZRepositoryMain {
 
 		case "deleteAll":
 			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
+
+		case "count":
+			return "return " + SU.class.getCanonicalName() + ".count(" + className1 + "," + methodName1
+					+ ","  + modeString + ",classType,sql);";
 
 		default:
 
@@ -868,80 +877,129 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)) {
-				return countingByXXX(entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXXAndXX);
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXXAndXX);
 			}
 			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXX)) {
-				return countingByXXX(entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXX);
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXX);
 			}
 			if (methodname.matches(MethodRegex.countingByXXXAndXX)) {
-				return countingByXXX(entityClass, className1, method, MethodRegex.countingByXXXAndXX);
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXX);
 			}
 			if (methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
-				return countingByXXX(entityClass, className1, method, MethodRegex.GROUP_CountingByXXX);
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_CountingByXXX);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
 				return findByXXNotNull(className1, method);
 			}
 
-			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
-			// FIXME 2024年6月9日 上午4:37:40 zhangzhen : findByXXIsNullAndXXIsNullAndXXAndXX 这个先暂停，因为getFieldNameArray还有问题
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX)) {
 				return findByXXIsNullAndXXIsNullAndXXAndXX(entityClass, className1, method,
 						MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX)) {
-				return GROUP_findByXXIsNullAndXXIsNullAndXX(className1, method);
+				return findByXXIsNullAndXXIsNullAndXX(entityClass, className1, method,
+						MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX);
 			}
 
-			if (
-					methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX)
-					||	methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXX)) {
-				final String GROUP_findByXXIsNullAndXXAndXX = GROUP_findByXXIsNullAndXXAndXX(className1, method);
-				return GROUP_findByXXIsNullAndXXAndXX;
+			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX)) {
+				return findByXXIsNullAndXXAndXXAndXX(entityClass, className1, method, MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX);
+			}
+
+			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXX)) {
+				return findByXXIsNullAndXXAndXX(entityClass, className1, method, MethodRegex.GROUP_findByXXIsNullAndXXAndXX);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXX)) {
-				final String group_findByXXIsNullAndXX = GROUP_findByXXIsNullAndXX(className1, method);
-				return group_findByXXIsNullAndXX;
+				return findByXXIsNullAndXX(entityClass, className1, method, MethodRegex.GROUP_findByXXIsNullAndXX);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNull)) {
-				final Class returnType = getClassType(method);
-				return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
-						+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
+				return findByXXIsNull(method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNull);
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_findByXXNotLike)
-					|| methodname.matches(MethodRegex.GROUP_findByXXLike)) {
-				return findByXXLike(className1,method);
+			if (methodname.matches(MethodRegex.GROUP_findByXXNotLike)) {
+				return findByXXNotLike(className1, method, MethodRegex.GROUP_findByXXNotLike);
 			}
 
-			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYYOrYY)
-					|| methodname.matches(MethodRegex.findByXXOrYY)) {
-				return gROUP_findByXXOrYY(className1, method);
+			if (methodname.matches(MethodRegex.GROUP_findByXXLike)) {
+				return findByXXLike(className1, method, MethodRegex.GROUP_findByXXLike);
 			}
 
-			if (methodname.matches(MethodRegex.GROUP_count)) {
-				return "return " + SU.class.getCanonicalName() + ".count(" + className1 + "," + methodName1
-						+ ","  + modeString + ",classType,sql);";
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1,
+						method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1,
+						method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1,
+						method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYYOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXOrYY)) {
+				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYY);
 			}
 
 			// 最短的排最后
-			if (methodname.matches(MethodRegex.GROUP_findByXXAndXX) || methodname.matches(MethodRegex.GROUP_findByXX)) {
-				return gROUP_findByXX(className1, method);
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY) || methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYYAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYY);
+			}
+			if (methodname.matches(MethodRegex.findByXXAndYY)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYY);
+			}
+			if (methodname.matches(MethodRegex.GROUP_findByXX)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXX);
 			}
 
 			// 最后面是@ZQuery自定义方法
+
+			// FIXME 2024年6月9日 上午7:36:12 zhangzhen : ZR中固定的和用户声明式的方法都检验了参数个数和类型。
+			//			下面的自定义sql的怎么检验？要分析自定义sql中的占位符个数和method.getparameters.length了？
 			if (methodSQL.isZQuery()) {
 				final String sqlTemplate = methodSQL.getSqlTemplate();
 				return zQuery(className1, method, methodSQL.getSqlTemplate(), entityTName);
@@ -951,6 +1009,30 @@ public class ZRepositoryMain {
 		}
 
 		return EMTPY;
+	}
+
+	private static String findByXXIsNull(final Method method, final String modeString, final String className1,
+			final String methodName1, final String methodRegex) {
+
+		final Parameter[] parameters = method.getParameters();
+		if (parameters.length != findByXXIsNull_PARAMETER_SIZE) {
+
+			final String xxx =
+					"\r\n\t"
+							+ methodRegex + "声明式方法"
+							+ "[" + method.getName() + "]"
+							+ "\r\n\t"
+							+ "无需参数,当前参数个数为[" + parameters.length + "]"
+							+ "\r\n\t"
+							+ "请修改方法声明:去掉所有参数"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(xxx);
+		}
+
+		final Class<?> returnType = getClassType(method);
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
 	}
 
 	/**
@@ -1200,10 +1282,10 @@ public class ZRepositoryMain {
 		return null;
 	}
 
-	private static String countingByXXX(final Class<?> entityClass, final String className1, final Method method,
-			final String methodRegex) {
+	private static String countingByXXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
 
-		checkParameterTypeAndName(entityClass, method, methodRegex);
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
@@ -1224,7 +1306,7 @@ public class ZRepositoryMain {
 		+ modeString + ",classType,sql," + joiner.toString() + ");";
 	}
 
-	private static void checkParameterTypeAndName(final Class<?> entityClass, final Method method, final String methodRegex) {
+	private static void checkParameterTypeAndName(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex) {
 		final D d = findFieldName(entityClass, method.getName());
 		// 先校验method.parameters 个数
 		if (method.getParameters().length != d.getFiledNameMethodNameOrder().size()) {
@@ -1235,7 +1317,7 @@ public class ZRepositoryMain {
 					"\r\n\t"
 							+ methodRegex + " 声明式方法"
 							+ "\r\n\t"
-							+ "[" + method.getName() + "]"
+							+ "[" + myZRClass.getSimpleName() +"." + method.getName() + "]"
 							+ "\r\n\t"
 							+ "必须有且只有["+(d.getFiledNameMethodNameOrder().size())+"]个参数,"
 							+ "形式为"
@@ -1271,7 +1353,7 @@ public class ZRepositoryMain {
 						"\r\n\t"
 								+ methodRegex + " 声明式方法参数类型声明错误"
 								+ "\r\n\t"
-								+ "[" + method.getName() + "]"
+								+ "[" + myZRClass.getSimpleName() +"." + method.getName() + "]"
 								+ "\r\n\t"
 								+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
 								+ ",如:(" + collect + ")"
@@ -1286,7 +1368,10 @@ public class ZRepositoryMain {
 		}
 	}
 
-	private static String gROUP_findByXXOrYY(final String className1, final Method method) {
+	private static String findByXXOrYY(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class<?> returnType = getClassType(method);
@@ -1298,13 +1383,24 @@ public class ZRepositoryMain {
 
 	private static String findByXXIsNullAndXXIsNullAndXXAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
 
+		checkFindByXXIsNull(entityClass, method, methodRegex, findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class<?> returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static void checkFindByXXIsNull(final Class<?> entityClass, final Method method, final String methodRegex, final int PARAMETER_SIZE) {
 		final D d = findFieldName(entityClass, method.getName());
 		// 先校验method.parameters 个数
 		final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder().subList(
-				d.getFiledNameMethodNameOrder().size() - findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE,
+				d.getFiledNameMethodNameOrder().size() - PARAMETER_SIZE,
 				d.getFiledNameMethodNameOrder().size());
 
-		if (method.getParameters().length != findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE) {
+		if (method.getParameters().length != PARAMETER_SIZE) {
 			final String collect = filedNameMethodNameOrder
 					.stream().map(ff -> {
 						final Field declaredField = getDeclaredField(entityClass,
@@ -1318,7 +1414,7 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							+ "[" + method.getName() + "]"
 							+ "\r\n\t"
-							+ "必须有且只有["+(filedNameMethodNameOrder.size())+"]个参数,"
+							+ "必须有且只有["+(PARAMETER_SIZE)+"]个参数,"
 							+ "形式为"
 							+ "\r\n\t"
 							+ method.getName() + "(" + collect + ")"
@@ -1346,7 +1442,7 @@ public class ZRepositoryMain {
 				}).collect(Collectors.joining(DELIMITER));
 
 				final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
-						.collect(Collectors.joining(","));
+						.collect(Collectors.joining(DELIMITER));
 
 				final String m1 =
 						"\r\n\t"
@@ -1365,17 +1461,14 @@ public class ZRepositoryMain {
 				throw new IllegalArgumentException(m1);
 			}
 		}
-
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-		final Class<?> returnType = getClassType(method);
-		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String GROUP_findByXXIsNullAndXXIsNullAndXX(final String className1, final Method method) {
+	private static String findByXXIsNullAndXXIsNullAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+		checkFindByXXIsNull(entityClass, method, methodRegex, findByXXIsNullAndXXIsNullAndXX_PARAMETER_SIZE);
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
+
 		final String modeString = modeString(method);
 		final Class<?> returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
@@ -1383,7 +1476,10 @@ public class ZRepositoryMain {
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String GROUP_findByXXIsNullAndXXAndXX(final String className1, final Method method) {
+	private static String findByXXIsNullAndXXAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+		checkFindByXXIsNull(entityClass, method, methodRegex, findByXXIsNullAndXXAndXX_PARAMETER_SIZE);
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class<?> returnType = getClassType(method);
@@ -1392,7 +1488,22 @@ public class ZRepositoryMain {
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String GROUP_findByXXIsNullAndXX(final String className1, final Method method) {
+	private static String findByXXIsNullAndXXAndXXAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+		checkFindByXXIsNull(entityClass, method, methodRegex, findByXXIsNullAndXXAndXXAndXX_PARAMETER_SIZE);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+		final Class<?> returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static String findByXXIsNullAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+		checkFindByXXIsNull(entityClass, method, methodRegex, findByXXIsNullAndXX_PARAMETER_SIZE);
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class<?> returnType = getClassType(method);
@@ -1430,26 +1541,18 @@ public class ZRepositoryMain {
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String findByXXLike(final String className1, final Method method) {
+	private static String findByXXNotLike(final String className1, final Method method, final String methodRegex) {
+		return findByXXLike0(className1, method, methodRegex);
+	}
+
+	private static String findByXXLike(final String className1, final Method method, final String methodRegex) {
+		return findByXXLike0(className1, method, methodRegex);
+	}
+
+	private static String findByXXLike0(final String className1, final Method method, final String methodRegex) {
+		checkFindByXXLike(method, methodRegex);
+
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
-		// 所有根据method.getParameters()来生成sql的方法(@see ANALYSIS_BY_METHOD_PARAMETERS )
-		// 都在前面判断过声明的字段数必须和getParameters.length一致了.在此只判断类型就行了
-
-		// findByXXLike/findByXXNotLike 只有一个参数
-		final Parameter p0 = method.getParameters()[0];
-		// FIXME 2024年6月8日 下午9:49:26 zhangzhen : 所有方法都加入类似判断
-		if (!p0.getType().equals(String.class) && !p0.getType().equals(Character.class)) {
-			final String xxx = "findByXXLike/findByXXNotLike 方法"
-					+ "\r\n\t"
-					+ " [" + method.getName()
-					+ "] 参数类型必须为["
-					+ String.class.getSimpleName()
-					+ "/" + Character.class.getSimpleName()
-					+ "],当前为" + p0.getType()
-					;
-			throw new IllegalArgumentException(xxx);
-		}
-
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
 		}
@@ -1461,6 +1564,28 @@ public class ZRepositoryMain {
 
 		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static void checkFindByXXLike(final Method method, final String methodRegex) {
+		if (!method.getParameters()[0].getType().equals(String.class) && !method.getParameters()[0].getType().equals(Character.class)) {
+			final String xxx =
+
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + method.getName()
+							+ "] 参数类型必须为["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName()
+							+ "],当前为" + method.getParameters()[0].getType().getCanonicalName()
+							+ "\r\n\t"
+							+ "请检查代码:修改参数类型为["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName() + "]"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(xxx);
+		}
 	}
 
 	private static String findByXXNotBetween(final Class<?> entityClass, final String className1, final Method method) {
@@ -1672,11 +1797,14 @@ public class ZRepositoryMain {
 		return method.getReturnType();
 	}
 
-	private static String gROUP_findByXX(final String className1, final Method method) {
+	private static String findByXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 
-		final Class returnType = getClassType(method);
+		final Class<?> returnType = getClassType(method);
 
 		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 		final String methodName1 = "\"" + method.getName() + "\"";
