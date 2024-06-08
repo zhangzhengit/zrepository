@@ -416,7 +416,7 @@ public class ZRepositoryMain {
 	/**
 	 * 校验一下方法声明是否正确，是否符合命名规则，见MethodRegex.GROUP_ 开头的常量正则表达式
 	 *
-	 * @param typeClass  @ZEntity标记的类
+	 * @param entityClass  @ZEntity标记的类
 	 * @param methodName ZRepository 子类中的自定义的findByXX的方法名称,如findByUserId
 	 * @param sql        sql模板，如：select * from user where @ = ?
 	 * @param methodSQL TODO
@@ -425,14 +425,14 @@ public class ZRepositoryMain {
 	 *         id = ?
 	 *
 	 */
-	private static String checkMethodName(final Class<?> typeClass, final String methodName, final String sql,
+	private static String checkMethodName(final Class<?> entityClass, final String methodName, final String sql,
 			final MethodSQL methodSQL, final Class zrClass) {
 		if (methodSQL.isZQuery()) {
 			return methodSQL.getSqlTemplate();
 		}
 
 		// methodName 从每个大写字母分开分成一个数组，如findByUserId 分成[find, By, User, Id]
-		final List<String> fnLIst = getDeclaredFieldName(typeClass);
+		final List<String> fnLIst = getDeclaredFieldName(entityClass);
 
 		// findByUserId 分成[find, By, User, Id] ，从前往后计算是否sql关键字，否则按照entity字段处理
 
@@ -442,7 +442,7 @@ public class ZRepositoryMain {
 		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
 		skList.sort(Comparator.comparing(String::length).reversed());
 
-		final D d = findFieldName(typeClass, methodName);
+		final D d = findFieldName(entityClass, methodName);
 		String sKeyword = d.getSqlKeyword();
 		for (final String sk : skList) {
 			sKeyword = sKeyword.replace(sk, EMTPY);
@@ -450,7 +450,7 @@ public class ZRepositoryMain {
 
 		// 只剩SQL关键字的方法名称替换掉所有的SQL关键字后，必须是""
 		if (!EMTPY.equals(sKeyword)) {
-			final List<Field> fl = gNoZTransientFieldList(typeClass);
+			final List<Field> fl = gNoZTransientFieldList(entityClass);
 			final List<String> noZTFNL = fl.stream().map(Field::getName).collect(Collectors.toList());
 
 			// FIXME 2024年6月7日 下午8:18:09 zhangzhen : 要不要先再详细点，具体到模糊匹配Field看哪个更接近（因为可能笔误写错了）
@@ -465,7 +465,7 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							+ "SQL关键字包含:" + sqlKeyword
 							+ "\r\n\t"
-							+ "@" + typeClass.getSimpleName() + "中Field有:"
+							+ "@" + entityClass.getSimpleName() + "中Field有:"
 							+ noZTFNL
 							+ "\r\n\t"
 							+ "当前方法模板为[" + methodSQL.getMethodName() + "]"
@@ -503,7 +503,7 @@ public class ZRepositoryMain {
 				.collect(Collectors.toList());
 		if (ml.size() > 1) {
 			throw new IllegalArgumentException(
-					"@" + ZRepository.class.getCanonicalName() + " 类 " + typeClass.getSimpleName()
+					"@" + ZRepository.class.getCanonicalName() + " 类 " + entityClass.getSimpleName()
 					+ " 有重复的方法 [" + ml + "] ，不允许重名！"
 					);
 		}
@@ -531,17 +531,25 @@ public class ZRepositoryMain {
 
 				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
 
+				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
+					final Field declaredField = getDeclaredField(entityClass,
+							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+				}).collect(Collectors.joining(DELIMITER));
+
+
 				final String x1 =
 						"\r\n\t"
 								+ "方法参数个数声明错误:"
 								+ "\r\n\t"
 								+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
 								+ "\r\n\t"
-								+ "方法中声明的参数个数为[" +filedNameMethodNameOrder.size() + "]个,名称为" + jfnX
+								+ "方法中声明的参数个数必须有且只有[" +filedNameMethodNameOrder.size() + "]个,声明如:(" + collect + ")"
 								+ "\r\n\t"
 								+ "实际方法参数为[" + ps.length + "]个,名称为" + pnl
 								+ "\r\n\t"
-								+ "请检查代码"
+								+ "请检查代码:去掉多余的参数"
+								+ "\r\n\t"
 								;
 				throw new IllegalArgumentException(x1);
 			}
@@ -560,8 +568,8 @@ public class ZRepositoryMain {
 									+ "\r\n\t"
 									+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
 									+ "\r\n\t"
-									+ "请检查参数名称[" + p.getName() + "]"
-									+ "和方法名称中对应的Field的名称[" + jfn2 + "]一致."
+									+ "请检查代码:参数名称[" + p.getName() + "]"
+									+ "修改为方法名称中对应的Field的名称[" + jfn2 + "]一致."
 									+ "\r\n\t"
 									;
 
@@ -849,16 +857,17 @@ public class ZRepositoryMain {
 				return findByXXBetween(entityClass, className1, method);
 			}
 
-			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
+			// FIXME 2024年6月9日 上午3:27:39 zhangzhen : 这个in似乎功能还有问题，以后再写这个的参数检验
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
-				return gROUP_findByxx_in(className1, method);
+				return findByXXIn(className1, method);
 			}
 
+			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
 			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
 					|| methodname.matches(MethodRegex.countingByXXXAndXXAndXX)
 					|| methodname.matches(MethodRegex.countingByXXXAndXX)
 					|| methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
-				return gROUP_CountingByXXX(className1, method, methodname);
+				return countingByXXX(entityClass, className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
@@ -1177,11 +1186,72 @@ public class ZRepositoryMain {
 		return null;
 	}
 
-	private static String gROUP_CountingByXXX(final String className1, final Method method, final String key) {
+	private static String countingByXXX(final Class entityClass, final String className1, final Method method) {
 
 		// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
 		if("countingByContent".equals(method.getName())) {
 			final int x =1;
+		}
+
+		final String methodRegex = MethodRegex.countingByXXX;
+		final D d = findFieldName(entityClass, method.getName());
+		// 先校验method.parameters 个数
+		if (method.getParameters().length != d.getFiledNameMethodNameOrder().size()) {
+			final Field f2 = getDeclaredField(entityClass, ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(0))));
+			final String fnj = f2.getType().getSimpleName() + " " + f2.getName()+ "1" + "," + f2.getType().getSimpleName() + " " + f2.getName() + "2";
+
+			final String m1 =
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须有且只有["+(FIND_BY_XX_BETWEEN_PARAMETERS_SIZE)+"]个参数,"
+							+ "形式为"
+							+ "\r\n\t"
+							+ method.getName() + "(" + fnj + ")"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个,请检查代码:"
+							+ "去掉多余的参数"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
+		// 校验参数类型和名称
+		final Parameter[] ps = method.getParameters();
+		for (int i = 0; i < ps.length; i++) {
+			final Parameter p = ps[i];
+			final String fieldName = d.getFiledNameMethodNameOrder().get(i);
+			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+			final Field f = getDeclaredField(entityClass, javaFieldName);
+			if (!f.getType().equals(p.getType())) {
+
+				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
+					final Field declaredField = getDeclaredField(entityClass,
+							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+				}).collect(Collectors.joining(DELIMITER));
+
+				final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
+						.collect(Collectors.joining(","));
+
+				final String m1 =
+						"\r\n\t"
+								+ methodRegex + " 声明式方法参数类型声明错误"
+								+ "\r\n\t"
+								+ "[" + method.getName() + "]"
+								+ "\r\n\t"
+								+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
+								+ ",如:(" + collect + ")"
+								+ "\r\n\t"
+								+ "当前参数类型声明为(" + fnj + ")"
+								+ "\r\n\t"
+								+ "请检查代码:把参数声明修改为(" + collect + ")的形式.只需要修改参数类型,不需要修改参数名称"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m1);
+			}
 		}
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
@@ -1366,7 +1436,7 @@ public class ZRepositoryMain {
 		}
 	}
 
-	private static String gROUP_findByxx_in(final String className1, final Method method) {
+	private static String findByXXIn(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
