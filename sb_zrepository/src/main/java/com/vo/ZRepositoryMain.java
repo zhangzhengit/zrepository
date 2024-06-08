@@ -827,7 +827,7 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
-				return gROUP_findByXXXStartingWith(className1, method);
+				return findByXXXStartingWith(entityClass, className1, method);
 			}
 
 			if (	methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
@@ -945,13 +945,22 @@ public class ZRepositoryMain {
 
 	private static String findByXXXEndingWith(final Class entityClass, final String className1, final Method method) {
 
+		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(entityClass, method, MethodRegex.GROUP_findByXXXEndingWith);
+
+		final String modeString = modeString(method);
+		final Class returnType = getClassType(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static StringJoiner checkFindByXXEndingWithAndStartingWith(final Class entityClass, final Method method, final String methodRegex) {
 		final D d = findFieldName(entityClass, method.getName());
 		final List<String> fl = d.getFiledNameMethodNameOrder();
 		final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fl.get(0)));
 		final Field f = getDeclaredField(entityClass, javaFieldName);
 
-
-		//		final Field f = getDeclaredField(entityClass, fl.get(0));
 		if (!f.getType().equals(String.class) && !f.getType().equals(Character.class)) {
 
 			final List<Field> stringOrCharacterFieldList = Arrays.stream(entityClass.getDeclaredFields())
@@ -962,12 +971,12 @@ public class ZRepositoryMain {
 			final List<String> mm = stringOrCharacterFieldList.stream().map(fx -> ZFieldConverter.toMethodName(fx.getName()))
 					.collect(Collectors.toList());
 
-			final List<String> methodNameL = mm.stream().map(m -> MethodRegex.GROUP_findByXXXEndingWith.replaceFirst("\\.\\+", m))
+			final List<String> methodNameL = mm.stream().map(m -> methodRegex.replaceFirst("\\.\\+", m))
 					.collect(Collectors.toList());
 
 			final String xxx =
 					"\r\n\t"
-							+ "findByXXXEndingWith 方法"
+							+ methodRegex + "声明式方法"
 							+ "[" + method.getName() + "]"
 							+ "\r\n\t"
 							+ "不支持声明中" + fl + "的类型[" + f.getType().getCanonicalName() + "]"
@@ -976,13 +985,14 @@ public class ZRepositoryMain {
 							+ ","
 							+ "请修改方法声明:"
 							+ "\r\n\t"
-							+ "修改为findByXX中的XX为"
-							+ entityClass.getSimpleName() + "中的"
+							+ "修改为findByXX中的XX为["
+							+ entityClass.getSimpleName() + "]中的"
 							+ "[" + String.class.getSimpleName() + "/" + Character.class.getSimpleName() + "]类型的Field:"
 							+ "\r\n\t"
 							+ mm
 							+ "\r\n\t"
 							+ "如:" + methodNameL
+							+ "\r\n\t"
 							;
 			throw new IllegalArgumentException(xxx);
 		}
@@ -991,7 +1001,7 @@ public class ZRepositoryMain {
 		if (!p0.getType().equals(String.class) && !p0.getType().equals(Character.class)) {
 			final String xxx =
 					"\r\n\t"
-							+ "findByXXXEndingWith 方法"
+							+ methodRegex + "声明式方法"
 							+ "\r\n\t"
 							+ "[" + method.getName() + "]参数类型必须为["
 							+ String.class.getSimpleName()
@@ -1004,22 +1014,19 @@ public class ZRepositoryMain {
 							;
 			throw new IllegalArgumentException(xxx);
 		}
+		// FIXME 2024年6月8日 下午11:57:49 zhangzhen : 不继续校验了，比如findByStringEndingWith(String x)/(Character x)都可以
+		// 就这么算一个feature吧。不算bug
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
 		}
-
-		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
-		final String methodName1 = "\"" + method.getName() + "\"";
-
-		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return joiner;
 	}
 
-	private static String gROUP_findByXXXStartingWith(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+	private static String findByXXXStartingWith(final Class entityClass, final String className1, final Method method) {
+
+		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(entityClass, method, MethodRegex.GROUP_findByXXXStartingWith);
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
