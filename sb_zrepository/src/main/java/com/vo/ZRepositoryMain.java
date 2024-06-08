@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -1297,74 +1298,73 @@ public class ZRepositoryMain {
 
 	private static String findByXXIsNullAndXXIsNullAndXXAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
 
+		final D d = findFieldName(entityClass, method.getName());
+		// 先校验method.parameters 个数
+		final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder().subList(
+				d.getFiledNameMethodNameOrder().size() - findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE,
+				d.getFiledNameMethodNameOrder().size());
 
-		//		final D d = findFieldName(entityClass, method.getName());
-		//		// 先校验method.parameters 个数
-		//		final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder().subList(
-		//				d.getFiledNameMethodNameOrder().size() - findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE,
-		//				d.getFiledNameMethodNameOrder().size());
-		//
-		//		if (method.getParameters().length != findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE) {
-		//			final String collect = filedNameMethodNameOrder
-		//					.stream().map(ff -> {
-		//						final Field declaredField = getDeclaredField(entityClass,
-		//								ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
-		//						return declaredField.getType().getSimpleName() + " " + declaredField.getName();
-		//					}).collect(Collectors.joining(DELIMITER));
-		//
-		//			final String m1 =
-		//					"\r\n\t"
-		//							+ methodRegex + " 声明式方法"
-		//							+ "\r\n\t"
-		//							+ "[" + method.getName() + "]"
-		//							+ "\r\n\t"
-		//							+ "必须有且只有["+(filedNameMethodNameOrder.size())+"]个参数,"
-		//							+ "形式为"
-		//							+ "\r\n\t"
-		//							+ method.getName() + "(" + collect + ")"
-		//							+ "\r\n\t"
-		//							+ "当前有[" + method.getParameterCount() + "]个,"
-		//							+ "请检查代码:把方法参数声明修改为(" + collect + ")"
-		//							+ "\r\n\t"
-		//							;
-		//			throw new IllegalArgumentException(m1);
-		//		}
-		//
-		//		// 校验参数类型和名称
-		//		final Parameter[] ps = method.getParameters();
-		//		for (int i = 0; i < ps.length; i++) {
-		//			final Parameter p = ps[i];
-		//			final String fieldName = filedNameMethodNameOrder.get(i);
-		//			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
-		//			final Field f = getDeclaredField(entityClass, javaFieldName);
-		//			if (!f.getType().equals(p.getType())) {
-		//
-		//				final String collect = filedNameMethodNameOrder.stream().map(ff -> {
-		//					final Field declaredField = getDeclaredField(entityClass,
-		//							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
-		//					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
-		//				}).collect(Collectors.joining(DELIMITER));
-		//
-		//				final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
-		//						.collect(Collectors.joining(","));
-		//
-		//				final String m1 =
-		//						"\r\n\t"
-		//								+ methodRegex + " 声明式方法参数类型声明错误"
-		//								+ "\r\n\t"
-		//								+ "[" + method.getName() + "]"
-		//								+ "\r\n\t"
-		//								+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
-		//								+ ",如:(" + collect + ")"
-		//								+ "\r\n\t"
-		//								+ "当前参数类型声明为(" + fnj + ")"
-		//								+ "\r\n\t"
-		//								+ "请检查代码:把参数声明修改为(" + collect + ")的形式.只需要修改参数类型,不需要修改参数名称"
-		//								+ "\r\n\t"
-		//								;
-		//				throw new IllegalArgumentException(m1);
-		//			}
-		//		}
+		if (method.getParameters().length != findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE) {
+			final String collect = filedNameMethodNameOrder
+					.stream().map(ff -> {
+						final Field declaredField = getDeclaredField(entityClass,
+								ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+						return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+					}).collect(Collectors.joining(DELIMITER));
+
+			final String m1 =
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须有且只有["+(filedNameMethodNameOrder.size())+"]个参数,"
+							+ "形式为"
+							+ "\r\n\t"
+							+ method.getName() + "(" + collect + ")"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个,"
+							+ "请检查代码:把方法参数声明修改为(" + collect + ")"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
+		// 校验参数类型和名称
+		final Parameter[] ps = method.getParameters();
+		for (int i = 0; i < ps.length; i++) {
+			final Parameter p = ps[i];
+			final String fieldName = filedNameMethodNameOrder.get(i);
+			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+			final Field f = getDeclaredField(entityClass, javaFieldName);
+			if (!f.getType().equals(p.getType())) {
+
+				final String collect = filedNameMethodNameOrder.stream().map(ff -> {
+					final Field declaredField = getDeclaredField(entityClass,
+							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+				}).collect(Collectors.joining(DELIMITER));
+
+				final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
+						.collect(Collectors.joining(","));
+
+				final String m1 =
+						"\r\n\t"
+								+ methodRegex + " 声明式方法参数类型声明错误"
+								+ "\r\n\t"
+								+ "[" + method.getName() + "]"
+								+ "\r\n\t"
+								+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
+								+ ",如:(" + collect + ")"
+								+ "\r\n\t"
+								+ "当前参数类型声明为(" + fnj + ")"
+								+ "\r\n\t"
+								+ "请检查代码:把参数声明修改为(" + collect + ")的形式.只需要修改参数类型,不需要修改参数名称"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m1);
+			}
+		}
 
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
@@ -2004,9 +2004,6 @@ public class ZRepositoryMain {
 		String m = methodName;
 		final Field[] fs = entityClass.getDeclaredFields();
 
-		// 现在问题:ZEntity 有字段 time 和 timestamp ，在此会处理 findBystamp，因为time在前。
-		// 但显然不能要求用户自定义字段的顺序必须怎样，所以在此重排字段顺序
-		// fs name.length 排序看是否解决问题
 		Arrays.sort(fs, (o1, o2) -> {
 			final String name1 = o1.getName();
 			final String name2 = o2.getName();
@@ -2040,18 +2037,30 @@ public class ZRepositoryMain {
 
 		d.setFiledNameOriginalOrder(filedNameOriginalOrder);
 
-		// FIXME 2024年5月19日 上午7:48:57 zhangzhen: debug 代码
-		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByNameIsNullAndByte1IsNullAndCreateTimeAndId".equals(methodName)) {
-			final int x2 = 1;
-		}
 		final List<String> fieldNameArray = getFieldNameArray(methodName, fs);
 		d.setFiledNameMethodNameOrder(fieldNameArray);
 
 		return d;
 	}
 
+	private static boolean isMethodNameAllSQLKeyword(final String methodName) {
+		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
+		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
+		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
+		skList.sort(Comparator.comparing(String::length).reversed());
+		String mn = methodName;
+		for (final String sk : skList) {
+			mn = mn.replaceAll(sk, EMTPY);
+		}
+		return mn.isEmpty();
+	}
+
 	private static List<String> getFieldNameArray(final String methodName,final Field[] fs) {
+		final ArrayList<String> x = Lists.newArrayList();
+		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
+		if("findByNameIsNullAndByte1IsNullAndCreateTimeAndByte1".equals(methodName)) {
+			final int x2 = 1;
+		}
 
 		final ArrayList<Field> fl = Lists.newArrayList(fs);
 		final List<String> fnl = fl.stream().map(Field::getName)
@@ -2062,50 +2071,26 @@ public class ZRepositoryMain {
 		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
 		skList.sort(Comparator.comparing(String::length).reversed());
 
-		//		for (final String sk : skList) {
-		//			ffN = ffN.replaceAll(sk, "");
-		//		}
-		//		final String ffN= methodName;
+		final AtomicReference<String> ffN = new AtomicReference<>(methodName);
 
-		// FIXME 2024年6月9日 上午4:30:38 zhangzhen : debug 代码记得删除
-		if("findByNameIsNullAndByte1IsNullAndCreateTimeAndByte1".equals(methodName)) {
-			final int x = 20;
-		}
-		String ffN = methodName;
-
-		final ArrayList<String> x = Lists.newArrayList();
-		for (final String fn : fnl) {
-			int from = 0;
-			while (from< ffN.length()) {
-				final int i = ffN.indexOf(fn,from);
-				if (i < 0) {
-					break;
-				}
-
-				final String one = ffN.substring(i, i + fn.length());
-				x.add(one);
-
-				from = i + fn.length();
-				// 在此把已处理的字段替换为"",防止下面这种方法[Time]出现两次
-				// 按现在的做法，Field.getName.length倒序排并且已处理的替换为""，则不会出现Time出现两次了
-				// findByNameIsNullAndDateAndTimeAndTimestamp
-				ffN = new StringBuilder(ffN).replace(i, i + fn.length(), EMTPY).toString();
+		while (true) {
+			if (isMethodNameAllSQLKeyword(ffN.get())) {
+				break;
 			}
-		}
 
-		x.sort((s1, s2) -> {
-			// FIXME 2024年6月9日 上午4:34:56 zhangzhen : 还是有问题
-			// 对于 findByNameIsNullAndByte1IsNullAndCreateTimeAndByte1 这种有重复的名称,
-			// 还是会导致参数混乱
-			final int i1 = methodName.indexOf(s1);
-			final int i2 = methodName.indexOf(s2);
-			return Integer.compare(i1, i2);
-		});
+			final List<String> ol = fnl.stream().filter(fn -> ffN.get().indexOf(fn) > 0).collect(Collectors.toList());
+			if (ol.isEmpty()) {
+				break;
+			}
+			ol.sort(Comparator.comparing(s -> ffN.get().indexOf(s)));
+			final String firstFieldNameFromMethodName = ol.get(0);
+			final String ffNNew = ffN.get().replaceFirst(firstFieldNameFromMethodName, EMTPY);
+			ffN.set(ffNNew);
+			x.add(firstFieldNameFromMethodName);
+		}
 
 		return x;
 	}
-
-	private static DBEnum DB_ENUM = null;
 
 	/**
 	 * @param url
@@ -2141,7 +2126,6 @@ public class ZRepositoryMain {
 			final int e = url.indexOf(end, s + 1);
 			final String x = url.substring(s + start.length(), e);
 
-			DB_ENUM = DBEnum.MYSQL;
 			return new DataSourceDTO(x, DBEnum.MYSQL);
 		}
 		if (url.toLowerCase().contains("postgresql")) {
@@ -2150,7 +2134,6 @@ public class ZRepositoryMain {
 
 			final String substring = url.substring(lastIndexOf + keyword.length());
 
-			DB_ENUM = DBEnum.POSTGRESQL;
 			return new DataSourceDTO(substring, DBEnum.POSTGRESQL);
 		}
 
@@ -2163,7 +2146,6 @@ public class ZRepositoryMain {
 				if (is > -1) {
 					final String name = url.substring(is + 1, i);
 					final int x = 1;
-					DB_ENUM = DBEnum.SQLITE;
 					return new DataSourceDTO(name, DBEnum.SQLITE);
 				}
 			}
