@@ -61,6 +61,8 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
+	private static final int findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE = 2;
+
 	private static final int FIND_BY_XX_NOT_NULL_PARAMETER_SIZE = 0;
 
 	private static final int FIND_BY_XX_BETWEEN_PARAMETERS_SIZE = 2;
@@ -882,9 +884,12 @@ public class ZRepositoryMain {
 			}
 
 			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
+			// FIXME 2024年6月9日 上午4:37:40 zhangzhen : findByXXIsNullAndXXIsNullAndXXAndXX 这个先暂停，因为getFieldNameArray还有问题
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX)) {
-				return GROUP_findByXXIsNullAndXXIsNullAndXXAndXX(className1, method);
+				return findByXXIsNullAndXXIsNullAndXXAndXX(entityClass, className1, method,
+						MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX);
 			}
+
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX)) {
 				return GROUP_findByXXIsNullAndXXIsNullAndXX(className1, method);
 			}
@@ -1197,7 +1202,7 @@ public class ZRepositoryMain {
 	private static String countingByXXX(final Class<?> entityClass, final String className1, final Method method,
 			final String methodRegex) {
 
-		checkCountingByXXX(entityClass, method, methodRegex);
+		checkParameterTypeAndName(entityClass, method, methodRegex);
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
@@ -1218,7 +1223,7 @@ public class ZRepositoryMain {
 		+ modeString + ",classType,sql," + joiner.toString() + ");";
 	}
 
-	private static void checkCountingByXXX(final Class<?> entityClass, final Method method, final String methodRegex) {
+	private static void checkParameterTypeAndName(final Class<?> entityClass, final Method method, final String methodRegex) {
 		final D d = findFieldName(entityClass, method.getName());
 		// 先校验method.parameters 个数
 		if (method.getParameters().length != d.getFiledNameMethodNameOrder().size()) {
@@ -1231,7 +1236,7 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							+ "[" + method.getName() + "]"
 							+ "\r\n\t"
-							+ "必须有且只有["+(FIND_BY_XX_BETWEEN_PARAMETERS_SIZE)+"]个参数,"
+							+ "必须有且只有["+(d.getFiledNameMethodNameOrder().size())+"]个参数,"
 							+ "形式为"
 							+ "\r\n\t"
 							+ method.getName() + "(" + fnj + ")"
@@ -1283,14 +1288,84 @@ public class ZRepositoryMain {
 	private static String gROUP_findByXXOrYY(final String className1, final Method method) {
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
+		final Class<?> returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String GROUP_findByXXIsNullAndXXIsNullAndXXAndXX(final String className1, final Method method) {
+	private static String findByXXIsNullAndXXIsNullAndXXAndXX(final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+
+
+		//		final D d = findFieldName(entityClass, method.getName());
+		//		// 先校验method.parameters 个数
+		//		final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder().subList(
+		//				d.getFiledNameMethodNameOrder().size() - findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE,
+		//				d.getFiledNameMethodNameOrder().size());
+		//
+		//		if (method.getParameters().length != findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE) {
+		//			final String collect = filedNameMethodNameOrder
+		//					.stream().map(ff -> {
+		//						final Field declaredField = getDeclaredField(entityClass,
+		//								ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+		//						return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+		//					}).collect(Collectors.joining(DELIMITER));
+		//
+		//			final String m1 =
+		//					"\r\n\t"
+		//							+ methodRegex + " 声明式方法"
+		//							+ "\r\n\t"
+		//							+ "[" + method.getName() + "]"
+		//							+ "\r\n\t"
+		//							+ "必须有且只有["+(filedNameMethodNameOrder.size())+"]个参数,"
+		//							+ "形式为"
+		//							+ "\r\n\t"
+		//							+ method.getName() + "(" + collect + ")"
+		//							+ "\r\n\t"
+		//							+ "当前有[" + method.getParameterCount() + "]个,"
+		//							+ "请检查代码:把方法参数声明修改为(" + collect + ")"
+		//							+ "\r\n\t"
+		//							;
+		//			throw new IllegalArgumentException(m1);
+		//		}
+		//
+		//		// 校验参数类型和名称
+		//		final Parameter[] ps = method.getParameters();
+		//		for (int i = 0; i < ps.length; i++) {
+		//			final Parameter p = ps[i];
+		//			final String fieldName = filedNameMethodNameOrder.get(i);
+		//			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+		//			final Field f = getDeclaredField(entityClass, javaFieldName);
+		//			if (!f.getType().equals(p.getType())) {
+		//
+		//				final String collect = filedNameMethodNameOrder.stream().map(ff -> {
+		//					final Field declaredField = getDeclaredField(entityClass,
+		//							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+		//					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+		//				}).collect(Collectors.joining(DELIMITER));
+		//
+		//				final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
+		//						.collect(Collectors.joining(","));
+		//
+		//				final String m1 =
+		//						"\r\n\t"
+		//								+ methodRegex + " 声明式方法参数类型声明错误"
+		//								+ "\r\n\t"
+		//								+ "[" + method.getName() + "]"
+		//								+ "\r\n\t"
+		//								+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
+		//								+ ",如:(" + collect + ")"
+		//								+ "\r\n\t"
+		//								+ "当前参数类型声明为(" + fnj + ")"
+		//								+ "\r\n\t"
+		//								+ "请检查代码:把参数声明修改为(" + collect + ")的形式.只需要修改参数类型,不需要修改参数名称"
+		//								+ "\r\n\t"
+		//								;
+		//				throw new IllegalArgumentException(m1);
+		//			}
+		//		}
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class<?> returnType = getClassType(method);
@@ -1992,8 +2067,9 @@ public class ZRepositoryMain {
 		//		}
 		//		final String ffN= methodName;
 
-		if("findByNameIsNullAndDateAndTimeAndTimestamp".equals(methodName)) {
-			final int x2 = 1;
+		// FIXME 2024年6月9日 上午4:30:38 zhangzhen : debug 代码记得删除
+		if("findByNameIsNullAndByte1IsNullAndCreateTimeAndByte1".equals(methodName)) {
+			final int x = 20;
 		}
 		String ffN = methodName;
 
@@ -2018,6 +2094,9 @@ public class ZRepositoryMain {
 		}
 
 		x.sort((s1, s2) -> {
+			// FIXME 2024年6月9日 上午4:34:56 zhangzhen : 还是有问题
+			// 对于 findByNameIsNullAndByte1IsNullAndCreateTimeAndByte1 这种有重复的名称,
+			// 还是会导致参数混乱
 			final int i1 = methodName.indexOf(s1);
 			final int i2 = methodName.indexOf(s2);
 			return Integer.compare(i1, i2);
