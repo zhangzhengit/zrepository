@@ -17,6 +17,20 @@ public class ZFieldConverter {
 
 	// FIXME 2024年5月27日 下午8:50:47 zhangzhen: 这个要好好测，万一出了问题，容易导致认为是后续代码的问题
 
+	/**
+	 * Class中的Field.name 转为声明式方法中的一部分
+	 * 如：参数传来 createTime，本方法返回CreateTime
+	 * 
+	 * @param javaFieldName
+	 * @return
+	 */
+	public static String toMethodName(final String javaFieldName) {
+		final StringBuilder builder = new StringBuilder();
+		builder.append(String.valueOf(javaFieldName.charAt(0)).toUpperCase());
+		builder.append(javaFieldName.substring(1));
+		return builder.toString();
+	}
+
 	public static String toJavaField(final String dbFieldName) {
 		final char[] charArray = dbFieldName.toCharArray();
 

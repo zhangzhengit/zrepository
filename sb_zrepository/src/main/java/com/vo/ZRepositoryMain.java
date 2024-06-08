@@ -823,7 +823,7 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
-				return gROUP_findByXXXEndingWith(className1, method);
+				return findByXXXEndingWith(entityClass, className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
@@ -943,8 +943,73 @@ public class ZRepositoryMain {
 		+ joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXXEndingWith(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+	private static String findByXXXEndingWith(final Class entityClass, final String className1, final Method method) {
+
+		final D d = findFieldName(entityClass, method.getName());
+		final List<String> fl = d.getFiledNameMethodNameOrder();
+		final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fl.get(0)));
+		final Field f = getDeclaredField(entityClass, javaFieldName);
+
+
+		//		final Field f = getDeclaredField(entityClass, fl.get(0));
+		if (!f.getType().equals(String.class) && !f.getType().equals(Character.class)) {
+
+			final List<Field> stringOrCharacterFieldList = Arrays.stream(entityClass.getDeclaredFields())
+					.filter(fx -> !fx.isAnnotationPresent(ZTransient.class))
+					.filter(fx -> fx.getType().equals(String.class) || fx.getType().equals(Character.class))
+					.collect(Collectors.toList());
+
+			final List<String> mm = stringOrCharacterFieldList.stream().map(fx -> ZFieldConverter.toMethodName(fx.getName()))
+					.collect(Collectors.toList());
+
+			final List<String> methodNameL = mm.stream().map(m -> MethodRegex.GROUP_findByXXXEndingWith.replaceFirst("\\.\\+", m))
+					.collect(Collectors.toList());
+
+			final String xxx =
+					"\r\n\t"
+							+ "findByXXXEndingWith 方法"
+							+ "[" + method.getName() + "]"
+							+ "\r\n\t"
+							+ "不支持声明中" + fl + "的类型[" + f.getType().getCanonicalName() + "]"
+							+ "\r\n\t"
+							+ "支持类型为[" + String.class.getSimpleName() + "/" + Character.class.getSimpleName() + "]"
+							+ ","
+							+ "请修改方法声明:"
+							+ "\r\n\t"
+							+ "修改为findByXX中的XX为"
+							+ entityClass.getSimpleName() + "中的"
+							+ "[" + String.class.getSimpleName() + "/" + Character.class.getSimpleName() + "]类型的Field:"
+							+ "\r\n\t"
+							+ mm
+							+ "\r\n\t"
+							+ "如:" + methodNameL
+							;
+			throw new IllegalArgumentException(xxx);
+		}
+
+		final Parameter p0 = method.getParameters()[0];
+		if (!p0.getType().equals(String.class) && !p0.getType().equals(Character.class)) {
+			final String xxx =
+					"\r\n\t"
+							+ "findByXXXEndingWith 方法"
+							+ "\r\n\t"
+							+ "[" + method.getName() + "]参数类型必须为["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName()
+							+ "],当前参数声明为(" + p0.getType().getSimpleName() + " " + p0.getName() + ")"
+							+ "\r\n\t"
+							+ "请检查代码:修改参数["+p0.getName()+"]类型为[" + String.class.getSimpleName() + "/"
+							+ Character.class.getSimpleName() + "]"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(xxx);
+		}
+
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
@@ -1175,12 +1240,14 @@ public class ZRepositoryMain {
 		final Parameter p0 = method.getParameters()[0];
 		// FIXME 2024年6月8日 下午9:49:26 zhangzhen : 所有方法都加入类似判断
 		if (!p0.getType().equals(String.class) && !p0.getType().equals(Character.class)) {
-			final String xxx = "findByXXLike/findByXXNotLike 方法 [" + method.getName()
-			+ "] 参数类型必须为["
-			+ String.class.getSimpleName()
-			+ "/" + Character.class.getSimpleName()
-			+ "],当前为" + p0.getType()
-			;
+			final String xxx = "findByXXLike/findByXXNotLike 方法"
+					+ "\r\n\t"
+					+ " [" + method.getName()
+					+ "] 参数类型必须为["
+					+ String.class.getSimpleName()
+					+ "/" + Character.class.getSimpleName()
+					+ "],当前为" + p0.getType()
+					;
 			throw new IllegalArgumentException(xxx);
 		}
 
