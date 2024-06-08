@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.vo.actuator.SqlInvocationLogsConfigurationProperties;
+import com.vo.actuator.SqlInvocationLogsEntity;
+import com.vo.actuator.SqlInvocationLogsService;
 import com.vo.anno.ZEntity;
 import com.vo.anno.ZTransient;
 import com.vo.conn.Mode;
@@ -41,6 +44,7 @@ import com.vo.conn.ZConnection;
 import com.vo.conn.ZDatasourcePropertiesLoader;
 import com.vo.core.Page;
 import com.vo.core.Sort;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.transaction.ZTransactionAspect;
 
@@ -1050,10 +1054,19 @@ public class SU {
 	}
 
 	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
+		final Date invokeTime = new Date();
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getConnection();
 
+		final long start = System.currentTimeMillis();
+
+		// FIXME 2024年6月8日 下午7:55:59 zhangzhen : sleep测试，记得删除掉
+		try {
+			Thread.sleep((int)(100 + (Math.random() * 400)));
+		} catch (final InterruptedException e2) {
+			e2.printStackTrace();
+		}
 		try {
 			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
@@ -1086,6 +1099,9 @@ public class SU {
 				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
 				rList.add(t);
 			}
+
+			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, start, s2, cls.getAnnotation(ZEntity.class).tableName());
+
 			return rList;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
@@ -1101,6 +1117,26 @@ public class SU {
 		}
 
 		return Collections.emptyList();
+	}
+
+	// FIXME 2024年6月8日 下午9:15:32 zhangzhen : 各个方法都加入
+	private static void saveSQLInvokeTime(final String zrSubClassName, final String callerMethodName,
+			final Date invokeTime, final long start, final String s2, final String tableName) {
+		final SqlInvocationLogsConfigurationProperties cp = ZContext.getBean(SqlInvocationLogsConfigurationProperties.class);
+		if (cp.getEnable()) {
+			final SqlInvocationLogsEntity entity = new SqlInvocationLogsEntity();
+			entity.setTimeConsuming((int) (System.currentTimeMillis() - start));
+			entity.setZrSubClassName(zrSubClassName);
+			entity.setMethodName(callerMethodName);
+			entity.setInvokeTime(invokeTime);
+			entity.setSql(s2);
+			entity.setTableName(tableName);
+
+			final String beanName = SqlInvocationLogsService.class.getCanonicalName() + "@" + "service";
+			// FIXME 2024年6月8日 下午8:14:06 zhangzhen : 这行改为异步的
+			final SqlInvocationLogsService service = (SqlInvocationLogsService) ZContext.getBean(beanName);
+			service.add(entity);
+		}
 	}
 
 	private static <T> T findById0(final DBEnum dbEnum, final Mode mode, final Object id,final Class cls, final String sql, final ZConnection zc) {
@@ -1152,10 +1188,13 @@ public class SU {
 
 	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final Date invokeTime = new Date();
 		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
 		try {
-			return findById0(zc.getDbEnum(), mode, id, cls, sql, zc);
+			final T t = findById0(zc.getDbEnum(), mode, id, cls, sql, zc);
+			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql, cls.getAnnotation(ZEntity.class).tableName());
+			return t;
 		} finally {
 			returnZConnectionAndCommit(dataSourceName, zc);
 		}
