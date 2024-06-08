@@ -59,6 +59,8 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
+	private static final int findByXXOrderByXXDescLimit_Basic_PSIZE = 2;
+
 	public static final String DELIMITER = ",";
 
 	private static final String TYPE_NAME = "TYPE_NAME";
@@ -519,6 +521,27 @@ public class ZRepositoryMain {
 			}
 		} else if (MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
 			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
+			if (filedNameMethodNameOrder.size() != ps.length) {
+
+				final List<String> jfnX = filedNameMethodNameOrder.stream().map(nn -> ZFieldConverter.toJavaField(ZFieldConverter.toDbField(nn))).collect(Collectors.toList());
+
+				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
+
+				final String x1 =
+						"\r\n\t"
+								+ "方法参数个数声明错误:"
+								+ "\r\n\t"
+								+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
+								+ "\r\n\t"
+								+ "方法中声明的参数个数为[" +filedNameMethodNameOrder.size() + "]个,名称为" + jfnX
+								+ "\r\n\t"
+								+ "实际方法参数为[" + ps.length + "]个,名称为" + pnl
+								+ "\r\n\t"
+								+ "请检查代码"
+								;
+				throw new IllegalArgumentException(x1);
+			}
+
 			for (int i = 0; i < ps.length; i++) {
 				final Parameter p = ps[i];
 				final String dbColumnName = ZFieldConverter.toDbField(p.getName());
@@ -711,7 +734,7 @@ public class ZRepositoryMain {
 
 			final String body2 = EMTPY;
 			final String entityT = typeArray[0];
-			final String methodS = getSuMethod(method, entityT, myZRClass.getCanonicalName());
+			final String methodS = getSuMethod(method, entityT, myZRClass, forName(entityT));
 
 			final String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
 			zm.setBody(x);
@@ -719,11 +742,20 @@ public class ZRepositoryMain {
 		return zmSet;
 	}
 
-	private static String getSuMethod(final Method method, final String entityTName, final String zrSubClassName) {
+	private static Class<?> forName(final String entityT)  {
+		try {
+			return Class.forName(entityT);
+		} catch (final ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private static String getSuMethod(final Method method, final String entityTName, final Class myZRClass, final Class entityClass) {
 
 		final String modeString = modeString(method);
 
-		final String className1 = "\"" + zrSubClassName + "\"";
+		final String className1 = "\"" + myZRClass.getCanonicalName() + "\"";
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		switch (method.getName()) {
@@ -779,17 +811,15 @@ public class ZRepositoryMain {
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXDescLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
-					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)) {
-				return gROUP_findByXXOrderByXXDescLimit(className1, method);
-			}
-
-			if (methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)
+					// 下面是OrderByXXAsc的了
+					||methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
 					|| methodname.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
-				return gROUP_findByXXOrderByXXLimit(className1, method, methodname);
+				return findByXXOrderByXXDescLimit(entityClass, className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
@@ -854,7 +884,7 @@ public class ZRepositoryMain {
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXNotLike)
 					|| methodname.matches(MethodRegex.GROUP_findByXXLike)) {
-				return gROUP_findByXXLike(className1,method);
+				return findByXXLike(className1,method);
 			}
 
 			if (methodname.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)
@@ -945,25 +975,114 @@ public class ZRepositoryMain {
 				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXOrderByXXLimit(final String className1, final Method method, final String key) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+	private static String findByXXOrderByXXDescLimit(final Class<?> entityClass, final String className1, final Method method) {
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
+		final D d = findFieldName(entityClass, method.getName());
+
+		if (((method.getParameters().length - 1)) != (d.getFiledNameMethodNameOrder().size())) {
+			final StringJoiner fnj = new StringJoiner(",");
+			for(int k =0;k<(d.getFiledNameMethodNameOrder().size()-1);k++) {
+				final String fieldName = d.getFiledNameMethodNameOrder().get(k);
+				final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+				final Field f = getDeclaredField(entityClass, javaFieldName);
+
+				fnj.add(f.getType().getSimpleName() + " " + javaFieldName);
+			}
+
+			final String m1 =
+					"\r\n\t"
+							+ "findByXXOrderByXXLimit/findByXXOrderByXXDescLimit 声明式方法"
+							+ "\r\n\t"
+							+  method.getName()
+							+ "\r\n\t"
+							+ "必须有且只有["+((d.getFiledNameMethodNameOrder().size() + findByXXOrderByXXDescLimit_Basic_PSIZE) - 1)+"]个参数,"
+							+ "形式为"
+							+ "\r\n\t"
+							+ method.getName() + "("+fnj+",Integer limit,Integer offset)"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个,请检查代码"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
+		// 前面的除了OrderByXX和limit和offset之外的参数
+		for (int k = 0; k < (d.getFiledNameMethodNameOrder().size() - 1); k++) {
+			final String fieldName = d.getFiledNameMethodNameOrder().get(k);
+			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+			final Field f = getDeclaredField(entityClass, javaFieldName);
+			if (!f.getType().equals(method.getParameters()[k].getType())) {
+
+				final StringJoiner fnj = new StringJoiner(",");
+				for(int kx =0;kx<(method.getParameters().length);kx++) {
+					final String fieldNamex = method.getParameters()[kx].getName();
+					fnj.add(method.getParameters()[kx].getType().getSimpleName() + " " + fieldNamex);
+				}
+
+				final String m1 =
+						"\r\n\t"
+								+ "findByXXOrderByXXLimit/findByXXOrderByXXDescLimit 声明式方法参数类型错误:"
+								+ "\r\n\t"
+								+ method.getName() + "(" + fnj + ")"
+								+ "\r\n\t"
+								+ "按当前方法声明,第["+(k+1)+"]个参数类型必须为[" + f.getType().getSimpleName() + "]"
+								+ ",当前为[" + method.getParameters()[k].getType().getSimpleName() + "]"
+								+ "\r\n\t"
+								+ "请检查代码:替换掉方法声明中的["+fieldName+"],"
+								+ "或者修改参数列表中的["
+								+ method.getParameters()[k].getType().getSimpleName() + " " + method.getParameters()[k].getName()+ "]类型为"
+								+ "[" + f.getType().getSimpleName() + "]"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m1);
+			}
+		}
+
+		// 最后面必须是固定的 (Integer limit,Inetger offset)参数
+		if (!method.getParameters()[method.getParameters().length - 2].getType().equals(Integer.class)
+				|| !method.getParameters()[method.getParameters().length - 1].getType().equals(Integer.class)) {
+			final String m1 =
+					"\r\n\t"
+							+ "findByXXOrderByXXLimit/findByXXOrderByXXDescLimit 声明式方法参数类型错误:"
+							+ "\r\n\t"
+							+ method.getName()
+							+ "\r\n\t"
+							+ "最后面两个参数必须固定为(Integer limit,Integer offset)的形式,"
+							+ "\r\n\t"
+							+ "类型必须为[" + Integer.class.getSimpleName() + "],名称推荐统一为limit和offset"
+							+ ",当前为(" +
+							method.getParameters()[method.getParameters().length - 2].getType().getSimpleName()
+							+ " " + method.getParameters()[method.getParameters().length - 2].getName()
+							+ ","
+							+ method.getParameters()[method.getParameters().length - 1].getType().getSimpleName()
+							+ " "
+							+ method.getParameters()[method.getParameters().length - 1].getName()
+							+ ")"
+							+ "\r\n\t"
+							+ "请检查代码:修正类型为[" + Integer.class.getSimpleName() + "]"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
 		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
-
+		final Class<?> returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-
 		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXOrderByXXDescLimit(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-
-		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
-		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	private static Field getDeclaredField(final Class<?> cls, final String fieldName) {
+		try {
+			final Field f = cls.getDeclaredField(fieldName);
+			return f;
+		} catch (NoSuchFieldException | SecurityException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	private static String gROUP_CountingByXXX(final String className1, final Method method, final String key) {
@@ -1047,8 +1166,28 @@ public class ZRepositoryMain {
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXLike(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+	private static String findByXXLike(final String className1, final Method method) {
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		// 所有根据method.getParameters()来生成sql的方法(@see ANALYSIS_BY_METHOD_PARAMETERS )
+		// 都在前面判断过声明的字段数必须和getParameters.length一致了.在此只判断类型就行了
+
+		// findByXXLike/findByXXNotLike 只有一个参数
+		final Parameter p0 = method.getParameters()[0];
+		// FIXME 2024年6月8日 下午9:49:26 zhangzhen : 所有方法都加入类似判断
+		if (!p0.getType().equals(String.class) && !p0.getType().equals(Character.class)) {
+			final String xxx = "findByXXLike/findByXXNotLike 方法 [" + method.getName()
+			+ "] 参数类型必须为["
+			+ String.class.getSimpleName()
+			+ "/" + Character.class.getSimpleName()
+			+ "],当前为" + p0.getType()
+			;
+			throw new IllegalArgumentException(xxx);
+		}
+
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
 		final String modeString = modeString(method);
 
 		final Class returnType = getClassType(method);
@@ -1535,13 +1674,13 @@ public class ZRepositoryMain {
 		}
 	}
 
-	private static D findFieldName(final Class<?> typeClass, final String methodName) {
+	private static D findFieldName(final Class<?> entityClass, final String methodName) {
 
 		final D d = new D();
 		d.setMethodName(methodName);
 
 		String m = methodName;
-		final Field[] fs = typeClass.getDeclaredFields();
+		final Field[] fs = entityClass.getDeclaredFields();
 
 		// 现在问题:ZEntity 有字段 time 和 timestamp ，在此会处理 findBystamp，因为time在前。
 		// 但显然不能要求用户自定义字段的顺序必须怎样，所以在此重排字段顺序
@@ -1568,7 +1707,7 @@ public class ZRepositoryMain {
 
 		final ArrayList<String> filedNameOriginalOrder = Lists.newArrayList();
 		final List<String> fn = d.getFiledName();
-		final Field[] fa = typeClass.getDeclaredFields();
+		final Field[] fa = entityClass.getDeclaredFields();
 		for (final Field element : fa) {
 			final Optional<String> o = fn.stream().filter(f -> f.equals(element.getName())).findFirst();
 			if(!o.isPresent()) {
