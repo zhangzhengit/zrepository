@@ -61,6 +61,8 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
+	private static final int FIND_BY_XX_BETWEEN_PARAMETERS_SIZE = 2;
+
 	private static final int findByXXOrderByXXDescLimit_Basic_PSIZE = 2;
 
 	public static final String DELIMITER = ",";
@@ -840,10 +842,14 @@ public class ZRepositoryMain {
 				return findByXXGreaterThanEquals(myZRClass, entityClass, className1, method);
 			}
 
-			if (methodname.matches(MethodRegex.findByXXNotBetween) || methodname.matches(MethodRegex.findByXXBetween)) {
-				return gROUP_findByXXBetween(className1, method);
+			if (methodname.matches(MethodRegex.findByXXNotBetween)) {
+				return findByXXNotBetween(entityClass, className1, method);
+			}
+			if (methodname.matches(MethodRegex.findByXXBetween)) {
+				return findByXXBetween(entityClass, className1, method);
 			}
 
+			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
 				return gROUP_findByxx_in(className1, method);
 			}
@@ -1285,23 +1291,79 @@ public class ZRepositoryMain {
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXNotBetween(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final Class returnType = getClassType(method);
+	private static String findByXXNotBetween(final Class<?> entityClass, final String className1, final Method method) {
+		checkFindByXXBetween(entityClass, method, MethodRegex.findByXXNotBetween);
+		return findByXXBetween0(className1, method);
+	}
 
+	private static String findByXXBetween(final Class<?> entityClass, final String className1, final Method method) {
+		checkFindByXXBetween(entityClass, method, MethodRegex.findByXXBetween);
+		return findByXXBetween0(className1, method);
+	}
+
+	private static String findByXXBetween0(final String className1, final Method method) {
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final Class<?> returnType = getClassType(method);
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
 				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
-	private static String gROUP_findByXXBetween(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final Class returnType = getClassType(method);
 
-		final String modeString = modeString(method);
-		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	private static void checkFindByXXBetween(final Class<?> entityClass, final Method method, final String methodRegex) {
+
+		final D d = findFieldName(entityClass, method.getName());
+		// 先校验method.parameters 个数
+		if (method.getParameters().length != FIND_BY_XX_BETWEEN_PARAMETERS_SIZE) {
+			final Field f2 = getDeclaredField(entityClass, ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(0))));
+			final String fnj = f2.getType().getSimpleName() + " " + f2.getName()+ "1" + "," + f2.getType().getSimpleName() + " " + f2.getName() + "2";
+
+			final String m1 =
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须有且只有["+(FIND_BY_XX_BETWEEN_PARAMETERS_SIZE)+"]个参数,"
+							+ "形式为"
+							+ "\r\n\t"
+							+ method.getName() + "(" + fnj + ")"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个,请检查代码:"
+							+ "去掉多余的参数"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
+		// 校验参数类型和名称
+		final Field f2 = getDeclaredField(entityClass,
+				ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(0))));
+		if (!method.getParameters()[0].getType().equals(f2.getType())
+				|| !method.getParameters()[1].getType().equals(f2.getType())) {
+
+			final String fnj = f2.getType().getSimpleName() + " " + f2.getName()+ "1" + "," + f2.getType().getSimpleName() + " " + f2.getName() + "2";
+
+			final String m1 =
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ method.getName() + "(" +  method.getParameters()[0].getType().getSimpleName() + " " +
+							method.getParameters()[0].getName() + "," + method.getParameters()[1].getType().getSimpleName() + " "
+							+ method.getParameters()[1].getName() + ")"
+							+ "\r\n\t"
+							+ "两个参数类型必须都为[" + f2.getType().getSimpleName() + "]"
+							+ ",如:(" + fnj + ")"
+							+ "\r\n\t"
+							+ "当前参数类型声明为(" + method.getParameters()[0].getType().getSimpleName() + " " +
+							method.getParameters()[0].getName() + "," + method.getParameters()[1].getType().getSimpleName() + " "
+							+ method.getParameters()[1].getName() + ")"
+							+ "\r\n\t"
+							+ "请检查代码:把参数声明修改为(" + fnj + ")的形式.只需要修改参数类型,不需要修改参数名称"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
 	}
 
 	private static String gROUP_findByxx_in(final String className1, final Method method) {
@@ -1420,7 +1482,7 @@ public class ZRepositoryMain {
 
 	private static final WeakHashMap<String, Object> C = new WeakHashMap<>();
 
-	private static Class getClassType(final Method method) {
+	private static Class<?> getClassType(final Method method) {
 
 		final Type returnType = method.getGenericReturnType();
 		// 如果有泛型参数，如List<MyEntity>
