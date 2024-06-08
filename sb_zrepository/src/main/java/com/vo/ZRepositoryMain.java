@@ -61,6 +61,8 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ZRepositoryMain {
 
+	private static final int FIND_BY_XX_NOT_NULL_PARAMETER_SIZE = 0;
+
 	private static final int FIND_BY_XX_BETWEEN_PARAMETERS_SIZE = 2;
 
 	private static final int findByXXOrderByXXDescLimit_Basic_PSIZE = 2;
@@ -862,18 +864,24 @@ public class ZRepositoryMain {
 				return findByXXIn(className1, method);
 			}
 
-			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
-			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)
-					|| methodname.matches(MethodRegex.countingByXXXAndXXAndXX)
-					|| methodname.matches(MethodRegex.countingByXXXAndXX)
-					|| methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
-				return countingByXXX(entityClass, className1, method);
+			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)) {
+				return countingByXXX(entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXXAndXX);
+			}
+			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXX)) {
+				return countingByXXX(entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXX);
+			}
+			if (methodname.matches(MethodRegex.countingByXXXAndXX)) {
+				return countingByXXX(entityClass, className1, method, MethodRegex.countingByXXXAndXX);
+			}
+			if (methodname.matches(MethodRegex.GROUP_CountingByXXX)) {
+				return countingByXXX(entityClass, className1, method, MethodRegex.GROUP_CountingByXXX);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByxxNotNull)) {
-				return GROUP_findByXXNotNull(className1, method);
+				return findByXXNotNull(className1, method);
 			}
 
+			// FIXME 2024年6月9日 上午12:43:51 zhangzhen : 下面的继续校验参数个数类型名称
 			if (methodname.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX)) {
 				return GROUP_findByXXIsNullAndXXIsNullAndXXAndXX(className1, method);
 			}
@@ -1186,14 +1194,31 @@ public class ZRepositoryMain {
 		return null;
 	}
 
-	private static String countingByXXX(final Class entityClass, final String className1, final Method method) {
+	private static String countingByXXX(final Class<?> entityClass, final String className1, final Method method,
+			final String methodRegex) {
 
-		// FIXME 2024年5月17日 上午2:11:27 zhangzhen: debug 代码，记得删除
-		if("countingByContent".equals(method.getName())) {
-			final int x =1;
+		checkCountingByXXX(entityClass, method, methodRegex);
+
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
 		}
+		final String modeString = modeString(method);
 
-		final String methodRegex = MethodRegex.countingByXXX;
+		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
+
+		// FIXME 2024年5月18日 下午3:32:25 zhangzhen: byte[] 类型引起的问题 : 很多方法都有此问题，都要好好再测试byte[] 类型
+		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
+		// 而不是a.length=1并且这唯一的值是一个byte[]
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+		final String suMethodName =
+				ac == 0 ? "countingByXX" : "countingByXXAndXX";
+		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType,sql," + joiner.toString() + ");";
+	}
+
+	private static void checkCountingByXXX(final Class<?> entityClass, final Method method, final String methodRegex) {
 		final D d = findFieldName(entityClass, method.getName());
 		// 先校验method.parameters 个数
 		if (method.getParameters().length != d.getFiledNameMethodNameOrder().size()) {
@@ -1253,24 +1278,6 @@ public class ZRepositoryMain {
 				throw new IllegalArgumentException(m1);
 			}
 		}
-
-		final StringJoiner joiner = new StringJoiner(DELIMITER);
-		for (final Parameter parameter : method.getParameters()) {
-			joiner.add(parameter.getName());
-		}
-		final String modeString = modeString(method);
-
-		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
-
-		// FIXME 2024年5月18日 下午3:32:25 zhangzhen: byte[] 类型引起的问题 : 很多方法都有此问题，都要好好再测试byte[] 类型
-		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
-		// 而不是a.length=1并且这唯一的值是一个byte[]
-
-		final String methodName1 = "\"" + method.getName() + "\"";
-		final String suMethodName =
-				ac == 0 ? "countingByXX" : "countingByXXAndXX";
-		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType,sql," + joiner.toString() + ");";
 	}
 
 	private static String gROUP_findByXXOrYY(final String className1, final Method method) {
@@ -1319,10 +1326,30 @@ public class ZRepositoryMain {
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String GROUP_findByXXNotNull(final String className1, final Method method) {
+	private static String findByXXNotNull(final String className1, final Method method) {
+
+		// findByXXNotNull 无需参数，且必须无参数
+		if (method.getParameters().length != FIND_BY_XX_NOT_NULL_PARAMETER_SIZE) {
+
+			final String m1 =
+					"\r\n\t"
+							+ MethodRegex.GROUP_findByxxNotNull + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + method.getName() + "]"
+							+ "\r\n\t"
+							+ "参数个数必须为["+FIND_BY_XX_NOT_NULL_PARAMETER_SIZE+"]"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个"
+							+ "\r\n\t"
+							+ "请检查代码:去掉所有的的参数"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
+		final Class<?> returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
