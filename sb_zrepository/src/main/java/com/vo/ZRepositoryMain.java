@@ -5,6 +5,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -823,11 +825,11 @@ public class ZRepositoryMain {
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
-				return findByXXXEndingWith(entityClass, className1, method);
+				return findByXXXEndingWith(myZRClass, entityClass, className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
-				return findByXXXStartingWith(entityClass, className1, method);
+				return findByXXXStartingWith(myZRClass, entityClass, className1, method);
 			}
 
 			if (	methodname.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
@@ -835,7 +837,7 @@ public class ZRepositoryMain {
 					|| methodname.matches(MethodRegex.GROUP_findByXXLessThanEquals)
 					|| methodname.matches(MethodRegex.GROUP_findByXXLessThan)
 					) {
-				return gROUP_findByXXGreaterThanEquals(className1, method);
+				return findByXXGreaterThanEquals(myZRClass, entityClass, className1, method);
 			}
 
 			if (methodname.matches(MethodRegex.findByXXNotBetween) || methodname.matches(MethodRegex.findByXXBetween)) {
@@ -943,9 +945,10 @@ public class ZRepositoryMain {
 		+ joiner.toString() + ");";
 	}
 
-	private static String findByXXXEndingWith(final Class entityClass, final String className1, final Method method) {
+	private static String findByXXXEndingWith(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
 
-		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(entityClass, method, MethodRegex.GROUP_findByXXXEndingWith);
+		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
+				method, MethodRegex.GROUP_findByXXXEndingWith, Sets.newHashSet(String.class,Character.class));
 
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
@@ -955,13 +958,16 @@ public class ZRepositoryMain {
 		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static StringJoiner checkFindByXXEndingWithAndStartingWith(final Class entityClass, final Method method, final String methodRegex) {
+	private static StringJoiner checkFindByXXEndingWithAndStartingWith(final Class zrSubClass, final Class entityClass,
+			final Method method, final String methodRegex, final Set<Class> supportedClassSet) {
 		final D d = findFieldName(entityClass, method.getName());
 		final List<String> fl = d.getFiledNameMethodNameOrder();
 		final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fl.get(0)));
 		final Field f = getDeclaredField(entityClass, javaFieldName);
 
-		if (!f.getType().equals(String.class) && !f.getType().equals(Character.class)) {
+		checkParameterNameAndFiledNameMethodNameOrderEquals(zrSubClass, method, fl);
+
+		if (!supportedClassSet.contains(f.getType())) {
 
 			final List<Field> stringOrCharacterFieldList = Arrays.stream(entityClass.getDeclaredFields())
 					.filter(fx -> !fx.isAnnotationPresent(ZTransient.class))
@@ -974,6 +980,8 @@ public class ZRepositoryMain {
 			final List<String> methodNameL = mm.stream().map(m -> methodRegex.replaceFirst("\\.\\+", m))
 					.collect(Collectors.toList());
 
+			final String supportedClassName = supportedClassSet.stream().map(Class::getSimpleName).collect(Collectors.joining("/"));
+
 			final String xxx =
 					"\r\n\t"
 							+ methodRegex + "声明式方法"
@@ -981,8 +989,7 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							+ "不支持声明中" + fl + "的类型[" + f.getType().getCanonicalName() + "]"
 							+ "\r\n\t"
-							+ "支持类型为[" + String.class.getSimpleName() + "/" + Character.class.getSimpleName() + "]"
-							+ ","
+							+ "支持类型为[" + supportedClassName + "],"
 							+ "请修改方法声明:"
 							+ "\r\n\t"
 							+ "修改为findByXX中的XX为["
@@ -998,24 +1005,27 @@ public class ZRepositoryMain {
 		}
 
 		final Parameter p0 = method.getParameters()[0];
-		if (!p0.getType().equals(String.class) && !p0.getType().equals(Character.class)) {
+
+		if (!supportedClassSet.contains(p0.getType())) {
+			final String supportedClassName = supportedClassSet.stream().map(Class::getSimpleName).collect(Collectors.joining("/"));
+
 			final String xxx =
 					"\r\n\t"
 							+ methodRegex + "声明式方法"
 							+ "\r\n\t"
-							+ "[" + method.getName() + "]参数类型必须为["
-							+ String.class.getSimpleName()
-							+ "/" + Character.class.getSimpleName()
-							+ "],当前参数声明为(" + p0.getType().getSimpleName() + " " + p0.getName() + ")"
+							+ "[" + method.getName() + "]参数类型必须为"
 							+ "\r\n\t"
-							+ "请检查代码:修改参数["+p0.getName()+"]类型为[" + String.class.getSimpleName() + "/"
-							+ Character.class.getSimpleName() + "]"
+							+ "[" + supportedClassName + "]"
+							+ ",当前参数声明为(" + p0.getType().getSimpleName() + " " + p0.getName() + ")"
+							+ "\r\n\t"
+							+ "请检查代码:修改参数["+p0.getName()+"]类型为"
+							+ "[" + supportedClassName + "]"
 							+ "\r\n\t"
 							;
 			throw new IllegalArgumentException(xxx);
 		}
 		// FIXME 2024年6月8日 下午11:57:49 zhangzhen : 不继续校验了，比如findByStringEndingWith(String x)/(Character x)都可以
-		// 就这么算一个feature吧。不算bug
+		// 就这么算一个feature吧。不算bug,只要参数是支持的类型其中之一就行，没必要那么严格,实际上还可能造成不方便使用
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
@@ -1024,9 +1034,10 @@ public class ZRepositoryMain {
 		return joiner;
 	}
 
-	private static String findByXXXStartingWith(final Class entityClass, final String className1, final Method method) {
+	private static String findByXXXStartingWith(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
 
-		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(entityClass, method, MethodRegex.GROUP_findByXXXStartingWith);
+		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
+				method, MethodRegex.GROUP_findByXXXStartingWith, Sets.newHashSet(String.class,Character.class));
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
@@ -1036,8 +1047,11 @@ public class ZRepositoryMain {
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String gROUP_findByXXGreaterThanEquals(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+	private static String findByXXGreaterThanEquals(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
+
+		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
+				method, MethodRegex.GROUP_findByXXGreaterThan, Sets.newLinkedHashSet(Lists.newArrayList(Byte.class, Short.class, Integer.class,
+						Long.class, Float.class, Double.class, BigDecimal.class, BigInteger.class)));
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
@@ -1986,5 +2000,41 @@ public class ZRepositoryMain {
 		return fl;
 
 	}
+
+	private static void checkParameterNameAndFiledNameMethodNameOrderEquals(final Class zrSubclass,
+			final Method method, final List<String> filedNameMethodNameOrderList) {
+
+		final Parameter[] parameters = method.getParameters();
+
+		if (parameters.length != filedNameMethodNameOrderList.size()) {
+			throw new IllegalArgumentException("parameters.length(" + parameters.length
+					+ ")必须和filedNameMethodNameOrderList.size(" + filedNameMethodNameOrderList.size() + ")一致");
+		}
+
+		for(int i=0;i<parameters.length;i++) {
+			final Parameter p = parameters[i];
+			final String fn = filedNameMethodNameOrderList.get(i);
+			if(!p.getName().equals(ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fn)))) {
+				throw new IllegalArgumentException(
+						"\r\n\t"
+								+ "[" + zrSubclass.getSimpleName() + "." + method.getName() + "]"
+								+ "参数声明错误:"
+								+ "\r\n\t"
+								+ "参数名称[" + p.getName()
+								+ "]必须和方法声明中的["
+								+ fn + "]转为驼峰式命名的["
+								+ ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fn)) + "]一致"
+								+ "\r\n\t"
+								+ "请检查代码:把参数声明改为(" + p.getType().getSimpleName() +  " " + ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fn)) + ")"
+								+ "\r\n\t"
+						)
+				;
+			}
+		}
+
+
+
+	}
 }
+
 
