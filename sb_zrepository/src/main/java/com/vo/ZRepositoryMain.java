@@ -47,6 +47,9 @@ import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
+import com.vo.exception.ParameterCountDeclarationException;
+import com.vo.exception.ParameterNameDeclarationException;
+import com.vo.exception.ParameterTypeDeclarationException;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ClassUtil;
@@ -531,8 +534,6 @@ public class ZRepositoryMain {
 			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
 			if (filedNameMethodNameOrder.size() != ps.length) {
 
-				final List<String> jfnX = filedNameMethodNameOrder.stream().map(nn -> ZFieldConverter.toJavaField(ZFieldConverter.toDbField(nn))).collect(Collectors.toList());
-
 				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
 
 				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
@@ -541,12 +542,8 @@ public class ZRepositoryMain {
 					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
 				}).collect(Collectors.joining(DELIMITER));
 
-
 				final String x1 =
-						"\r\n\t"
-								+ "方法参数个数声明错误:"
-								+ "\r\n\t"
-								+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
+						"[" + zrClass.getSimpleName() + "." + methodName + "]"
 								+ "\r\n\t"
 								+ "方法中声明的参数个数必须有且只有[" +filedNameMethodNameOrder.size() + "]个,声明如:(" + collect + ")"
 								+ "\r\n\t"
@@ -555,7 +552,7 @@ public class ZRepositoryMain {
 								+ "请检查代码:去掉多余的参数"
 								+ "\r\n\t"
 								;
-				throw new IllegalArgumentException(x1);
+				throw new ParameterCountDeclarationException(x1);
 			}
 
 			for (int i = 0; i < ps.length; i++) {
@@ -567,17 +564,16 @@ public class ZRepositoryMain {
 
 					final String jfn2 = String.valueOf(javaFiledName.charAt(0)).toLowerCase() + javaFiledName.substring(1);
 					final String m =
-							"\r\n\t"
-									+ "方法参数名称声明错误:"
-									+ "\r\n\t"
-									+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
+							"[" + zrClass.getSimpleName() + "." + methodName + "]"
 									+ "\r\n\t"
 									+ "请检查代码:参数名称[" + p.getName() + "]"
 									+ "修改为方法名称中对应的Field的名称[" + jfn2 + "]一致."
 									+ "\r\n\t"
+									+ "把参数[" + p.getName() + "]名称修改为[" + jfn2 + "]"
+									+ "\r\n\t"
 									;
 
-					throw new IllegalArgumentException(m);
+					throw new ParameterNameDeclarationException(m);
 				}
 
 				sqlA = sqlA.replaceFirst("@", dbColumnName);
@@ -1303,13 +1299,29 @@ public class ZRepositoryMain {
 	private static void checkParameterTypeAndName(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex) {
 		final D d = findFieldName(entityClass, method.getName());
 		// 先校验method.parameters 个数
+		checkParameterLength(myZRClass, entityClass, method, methodRegex, d);
+
+		// 校验参数类型和名称
+		final Parameter[] ps = method.getParameters();
+		for (int i = 0; i < ps.length; i++) {
+			final Parameter p = ps[i];
+			final String fieldName = d.getFiledNameMethodNameOrder().get(i);
+			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+			final Field f = getDeclaredField(entityClass, javaFieldName);
+			if (!f.getType().equals(p.getType())) {
+				throwParameterTypeDeclarationException(myZRClass, entityClass, method, methodRegex, d, ps, i, f);
+			}
+		}
+	}
+
+	private static void checkParameterLength(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
+			final String methodRegex, final D d) {
 		if (method.getParameters().length != d.getFiledNameMethodNameOrder().size()) {
 			final Field f2 = getDeclaredField(entityClass, ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(0))));
 			final String fnj = f2.getType().getSimpleName() + " " + f2.getName()+ "1" + "," + f2.getType().getSimpleName() + " " + f2.getName() + "2";
 
 			final String m1 =
-					"\r\n\t"
-							+ methodRegex + " 声明式方法"
+					methodRegex + " 声明式方法"
 							+ "\r\n\t"
 							+ "[" + myZRClass.getSimpleName() +"." + method.getName() + "]"
 							+ "\r\n\t"
@@ -1322,44 +1334,36 @@ public class ZRepositoryMain {
 							+ "去掉多余的参数"
 							+ "\r\n\t"
 							;
-			throw new IllegalArgumentException(m1);
+			throw new ParameterCountDeclarationException(m1);
 		}
+	}
 
-		// 校验参数类型和名称
-		final Parameter[] ps = method.getParameters();
-		for (int i = 0; i < ps.length; i++) {
-			final Parameter p = ps[i];
-			final String fieldName = d.getFiledNameMethodNameOrder().get(i);
-			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
-			final Field f = getDeclaredField(entityClass, javaFieldName);
-			if (!f.getType().equals(p.getType())) {
+	private static void throwParameterTypeDeclarationException(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
+			final String methodRegex, final D d, final Parameter[] ps, final int i, final Field f) {
+		final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
+			final Field declaredField = getDeclaredField(entityClass,
+					ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+			return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+		}).collect(Collectors.joining(DELIMITER));
 
-				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
-					final Field declaredField = getDeclaredField(entityClass,
-							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
-					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
-				}).collect(Collectors.joining(DELIMITER));
+		final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
+				.collect(Collectors.joining(","));
 
-				final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
-						.collect(Collectors.joining(","));
-
-				final String m1 =
-						"\r\n\t"
-								+ methodRegex + " 声明式方法参数类型声明错误"
-								+ "\r\n\t"
-								+ "[" + myZRClass.getSimpleName() +"." + method.getName() + "]"
-								+ "\r\n\t"
-								+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
-								+ ",如:(" + collect + ")"
-								+ "\r\n\t"
-								+ "当前参数类型声明为(" + fnj + ")"
-								+ "\r\n\t"
-								+ "请检查代码:把参数声明修改为(" + collect + ")的形式.只需要修改参数类型,不需要修改参数名称"
-								+ "\r\n\t"
-								;
-				throw new IllegalArgumentException(m1);
-			}
-		}
+		final String m1 =
+				"\r\n\t"
+						+ methodRegex + " 声明式方法参数类型声明错误"
+						+ "\r\n\t"
+						+ "[" + myZRClass.getSimpleName() +"." + method.getName() + "]"
+						+ "\r\n\t"
+						+ "第["+(i+1)+"]参数类型必须声明为[" + f.getType().getSimpleName() + "]"
+						+ ",如:(" + collect + ")"
+						+ "\r\n\t"
+						+ "当前参数类型声明为(" + fnj + ")"
+						+ "\r\n\t"
+						+ "请检查代码:把参数声明修改为(" + collect + ")的形式.只需要修改参数类型,不需要修改参数名称"
+						+ "\r\n\t"
+						;
+		throw new ParameterTypeDeclarationException(m1);
 	}
 
 	private static String findByXXOrYY(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1791,7 +1795,8 @@ public class ZRepositoryMain {
 		return method.getReturnType();
 	}
 
-	private static String findByXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+	private static String findByXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
 
 		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
 
