@@ -47,6 +47,7 @@ import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
+import com.vo.exception.MethodNameDeclarationException;
 import com.vo.exception.ParameterCountDeclarationException;
 import com.vo.exception.ParameterNameDeclarationException;
 import com.vo.exception.ParameterTypeDeclarationException;
@@ -461,29 +462,30 @@ public class ZRepositoryMain {
 			final List<String> noZTFNL = fl.stream().map(Field::getName).collect(Collectors.toList());
 
 			// FIXME 2024年6月7日 下午8:18:09 zhangzhen : 要不要先再详细点，具体到模糊匹配Field看哪个更接近（因为可能笔误写错了）
+			final List<String> biwu = biwu(entityClass, methodName,  methodSQL.getMethodName());
 			final String m =
-					"\r\n\t"
-							+ "方法声明错误:"
-							+ "\r\n\t"
-							+ "[" + zrClass.getSimpleName() + "." + methodName + "]"
+					"[" + zrClass.getSimpleName() + "." + methodName + "]"
 							+ "\r\n\t"
 							+ "请确认方法名由SQL关键字和@" + ZEntity.class.getSimpleName()
 							+ "两部分组成:"
 							+ "\r\n\t"
 							+ "SQL关键字包含:" + sqlKeyword
 							+ "\r\n\t"
-							+ "@" + entityClass.getSimpleName() + "中Field有:"
+							+ entityClass.getSimpleName() + "中Field有:"
 							+ noZTFNL
 							+ "\r\n\t"
-							+ "当前方法模板为[" + methodSQL.getMethodName() + "]"
-							+ ",请检查方法名称[" + methodName + "]"
+							+ "当前方法模板为:[" + methodSQL.getMethodName() + "]"
+							+ ",请检查方法名称:[" + methodName + "]"
 							//							+ ",是否@" + ZEntity.class.getSimpleName() + "中的Field名称写错了?"
+							+ (biwu.isEmpty() ? EMTPY : ("\r\n\t" + "是否手误写错了?想写的是:" + biwu + "?"))
+
 							+ "\r\n\t"
 							+ "方法名称命名规则见 " + MethodRegex.class.getSimpleName()
 							+ " 中以 GROUP_ 开头的常量。"
 							+ "\r\n\t"
 							;
-			throw new IllegalArgumentException(m);
+
+			throw new MethodNameDeclarationException(m);
 		}
 
 		final List<String> fieldNameArray = d.getFiledName();
@@ -545,7 +547,9 @@ public class ZRepositoryMain {
 				final String x1 =
 						"[" + zrClass.getSimpleName() + "." + methodName + "]"
 								+ "\r\n\t"
-								+ "方法中声明的参数个数必须有且只有[" +filedNameMethodNameOrder.size() + "]个,声明如:(" + collect + ")"
+								+ "必须有且只有[" +filedNameMethodNameOrder.size() + "]个参数"
+								+ "\r\n\t"
+								+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
 								+ "\r\n\t"
 								+ "实际方法参数为[" + ps.length + "]个,名称为" + pnl
 								+ "\r\n\t"
@@ -2379,8 +2383,60 @@ public class ZRepositoryMain {
 			}
 		}
 
+	}
 
+	/**
+	 * 	校验声明错误的methodName，比如：存在一个Field:name
+	 * 	声明方法：findByNaem(String name)
+	 *
+	 * 	上面方法名称写成了Naem拼写错了，本方法尽力匹配出可能的名称，
+	 * 	如本例中的正确名称为findByName(String name)，本方法就干这个
+	 *
+	 * @param entityClass
+	 * @param methodName
+	 * @param methodRegex
+	 * @return
+	 */
+	private static List<String> biwu(final Class<?> entityClass,final String methodName, final String methodRegex) {
+		final Field[] fs = entityClass.getDeclaredFields();
+		final List<Field> fl = Arrays.stream(fs).filter(f -> !f.isAnnotationPresent(ZTransient.class))
+				.collect(Collectors.toList());
 
+		final D d = findFieldName(entityClass, methodName);
+		final String sk = d.getSqlKeyword();
+
+		final AtomicReference<String> sk2 = new AtomicReference<>();
+		sk2.set(sk);
+		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
+
+		for (final String x : sqlKeyword) {
+			sk2.set(sk2.get().replace(x, EMTPY));
+		}
+
+		switch (methodRegex) {
+		case MethodRegex.findByXX:
+			final Map<Field, Integer> sMap = fl.stream().collect(Collectors.toMap(f -> f, f -> S.apply(f.getName(), sk2.get())));
+			final Set<Entry<Field, Integer>> entrySet = sMap.entrySet();
+			final ArrayList<Entry<Field, Integer>> l = Lists.newArrayList(entrySet);
+
+			final Optional<Entry<Field, Integer>> min = l.stream().min(Comparator.comparing(Entry::getValue));
+
+			final List<Entry<Field, Integer>> ml = l.stream().filter(e -> e.getValue().equals(min.get().getValue()))
+					.collect(Collectors.toList());
+
+			final List<String> possibleML = ml.stream().map(
+					e -> MethodRegex.findByXX.replaceAll("\\.\\+", ZFieldConverter.toMethodName(e.getKey().getName())))
+					.collect(Collectors.toList());
+
+			return possibleML;
+
+			// FIXME 2024年6月10日 下午9:26:46 zhangzhen : TODO case 其他的继续写
+
+		default:
+			break;
+		}
+
+		return Collections.emptyList();
 	}
 }
 
