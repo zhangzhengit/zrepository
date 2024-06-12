@@ -25,8 +25,39 @@ import lombok.Getter;
  */
 public class ZRWrapper<T> {
 
+
+	private static final String AND = MethodRegex.AND;
+	private static final String OR = MethodRegex.OR;
+
 	@Getter
-	List<String> where = Lists.newArrayList();
+	private final List<String> where = Lists.newArrayList();
+
+
+	/**
+	 * 等值,构造条件如: name = ?
+	 * 调用本方法的方式为：
+	 * 		wrapper.eq(MyEntity::getName(),myEntity.getName());
+	 * 或者
+	 * 		wrapper.eq(MyEntity::getName(),"张三李四");
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue(function, value, SQLOperatorEnum.EQ);
+	}
+
+	private ZRWrapper<T> addValue(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
+		final Field f = ReflectionUtil.getField(function);
+		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
+			this.where.add(f.getName() + sqlOperatorEnum.getContent() + hValue(value));
+		} else {
+			this.where.add(AND + " " + f.getName() + sqlOperatorEnum.getContent() + hValue(value));
+		}
+
+		return this;
+	}
 
 	public ZRWrapper<T> eq(final List<WrapperPair<T>> pairList) {
 		if (pairList.size() > 0) {
@@ -40,20 +71,7 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> eq(final WrapperPair<T> pair) {
-		this.eq(pair.getFunction(), pair.getValue());
-		return this;
-	}
-
-	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Object value) {
-
-		final Field f = ReflectionUtil.getField(function);
-		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(f.getName() + "=" + hValue(value));
-		} else {
-			this.where.add("AND" + " " + f.getName() + "=" + hValue(value));
-		}
-
-		return this;
+		return this.eq(pair.getFunction(), pair.getValue());
 	}
 
 	// FIXME 2024年6月12日 下午9:10:22 zhangzhen : sqlite 中时间日期类型存的是long值
@@ -79,6 +97,21 @@ public class ZRWrapper<T> {
 		return value;
 	}
 
+	/**
+	 * 不等值,构造条件如: name != ?
+	 * 调用本方法的方式为：
+	 * 		wrapper.ne(MyEntity::getName(),myEntity.getName());
+	 * 或者
+	 * 		wrapper.ne(MyEntity::getName(),"张三李四");
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue(function, value, SQLOperatorEnum.NE);
+	}
+
 	public ZRWrapper<T> ne(final List<WrapperPair<T>> pairList) {
 		if (pairList.size() > 0) {
 			this.where.add("(");
@@ -91,23 +124,23 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> ne(final WrapperPair<T> pair) {
-		this.ne(pair.getFunction(), pair.getValue());
-		return this;
+		return this.ne(pair.getFunction(), pair.getValue());
 	}
 
-
-	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Object value) {
-
-		final Field f = ReflectionUtil.getField(function);
-		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(f.getName() + "!=" + hValue(value));
-		} else {
-			this.where.add("AND" + " " + f.getName() + "!=" + hValue(value));
-		}
-
-		return this;
+	/**
+	 * 小于,构造条件如: id < ?
+	 * 调用本方法的方式为：
+	 * 		wrapper.lt(MyEntity::getId(),myEntity.getId());
+	 * 或者
+	 * 		wrapper.lt(MyEntity::getId(),200);
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue(function, value, SQLOperatorEnum.LT);
 	}
-
 
 	public ZRWrapper<T> lt(final List<WrapperPair<T>> pairList) {
 		if (pairList.size() > 0) {
@@ -121,21 +154,22 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> lt(final WrapperPair<T> pair) {
-		this.lt(pair.getFunction(), pair.getValue());
-		return this;
+		return this.lt(pair.getFunction(), pair.getValue());
 	}
 
-
-	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Object value) {
-
-		final Field f = ReflectionUtil.getField(function);
-		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(f.getName() + "<" + hValue(value));
-		} else {
-			this.where.add("AND" + " " + f.getName() + "<" + hValue(value));
-		}
-
-		return this;
+	/**
+	 * 小于等于,构造条件如: id <= ?
+	 * 调用本方法的方式为：
+	 * 		wrapper.lte(MyEntity::getId(),myEntity.getId());
+	 * 或者
+	 * 		wrapper.lte(MyEntity::getId(),200);
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue(function, value, SQLOperatorEnum.LTE);
 	}
 
 	public ZRWrapper<T> lte(final List<WrapperPair<T>> pairList) {
@@ -150,30 +184,75 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> lte(final WrapperPair<T> pair) {
-		this.lte(pair.getFunction(), pair.getValue());
-		return this;
+		return this.lte(pair.getFunction(), pair.getValue());
 	}
 
+	/**
+	 * 大于,构造条件如: id > ?
+	 * 调用本方法的方式为：
+	 * 		wrapper.gt(MyEntity::getId(),myEntity.getId());
+	 * 或者
+	 * 		wrapper.gt(MyEntity::getId(),200);
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue(function, value, SQLOperatorEnum.GT);
+	}
 
-	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Object value) {
-
-		final Field f = ReflectionUtil.getField(function);
-		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(f.getName() + "<=" + hValue(value));
-		} else {
-			this.where.add("AND" + " " + f.getName() + "<=" + hValue(value));
+	public ZRWrapper<T> gt(final List<WrapperPair<T>> pairList) {
+		if (pairList.size() > 0) {
+			this.where.add("(");
+			for (final WrapperPair<T> element : pairList) {
+				this.gt(element);
+			}
+			this.where.add(")");
 		}
-
 		return this;
 	}
 
+	public ZRWrapper<T> gt(final WrapperPair<T> pair) {
+		return this.gt(pair.getFunction(), pair.getValue());
+	}
+
+	/**
+	 * 大于等于,构造条件如: id >= ?
+	 * 调用本方法的方式为：
+	 * 		wrapper.lte(MyEntity::getId(),myEntity.getId());
+	 * 或者
+	 * 		wrapper.lte(MyEntity::getId(),200);
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final List<WrapperPair<T>> pairList) {
+		if (pairList.size() > 0) {
+			this.where.add("(");
+			for (final WrapperPair<T> element : pairList) {
+				this.gte(element);
+			}
+			this.where.add(")");
+		}
+		return this;
+	}
+
+	public ZRWrapper<T> gte(final WrapperPair<T> pair) {
+		return this.gte(pair.getFunction(), pair.getValue());
+	}
 
 	// and
 	public ZRWrapper<T> and(final ZRWrapper<T> wrapper) {
 
 		this.where.add(0, "(");
 		this.where.add(")");
-		this.where.add("AND");
+		this.where.add(AND);
 
 		final String x = wrapper.toString();
 		this.where.add(x);
@@ -185,7 +264,7 @@ public class ZRWrapper<T> {
 
 		this.where.add(0, "(");
 		this.where.add(")");
-		this.where.add("OR");
+		this.where.add(OR);
 
 		final String x = wrapper.toString();
 		this.where.add(x);

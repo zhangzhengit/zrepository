@@ -30,6 +30,8 @@ public class MethodRegex {
 	public static final String LIMIT = "LIMIT";
 	public static final String COLUMN = "COLUMN";
 	public static final String COLUMNS = "COLUMNS";
+	public static final String OR = "OR";
+	public static final String AND = "AND";
 	public static final String ZID = "ZID";
 	public static final String COLUMN_VALUES = "COLUMN_VALUES";
 
