@@ -50,7 +50,7 @@ public class ZRWrapper<T> {
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
 			this.where.add(f.getName() + "=" + hValue(value));
 		} else {
-			this.where.add("and" + " " + f.getName() + "=" + hValue(value));
+			this.where.add("AND" + " " + f.getName() + "=" + hValue(value));
 		}
 
 		return this;
@@ -102,7 +102,7 @@ public class ZRWrapper<T> {
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
 			this.where.add(f.getName() + "!=" + hValue(value));
 		} else {
-			this.where.add("and" + " " + f.getName() + "!=" + hValue(value));
+			this.where.add("AND" + " " + f.getName() + "!=" + hValue(value));
 		}
 
 		return this;
@@ -132,7 +132,36 @@ public class ZRWrapper<T> {
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
 			this.where.add(f.getName() + "<" + hValue(value));
 		} else {
-			this.where.add("and" + " " + f.getName() + "<" + hValue(value));
+			this.where.add("AND" + " " + f.getName() + "<" + hValue(value));
+		}
+
+		return this;
+	}
+
+	public ZRWrapper<T> lte(final List<WrapperPair<T>> pairList) {
+		if (pairList.size() > 0) {
+			this.where.add("(");
+			for (final WrapperPair<T> element : pairList) {
+				this.lte(element);
+			}
+			this.where.add(")");
+		}
+		return this;
+	}
+
+	public ZRWrapper<T> lte(final WrapperPair<T> pair) {
+		this.lte(pair.getFunction(), pair.getValue());
+		return this;
+	}
+
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Object value) {
+
+		final Field f = ReflectionUtil.getField(function);
+		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
+			this.where.add(f.getName() + "<=" + hValue(value));
+		} else {
+			this.where.add("AND" + " " + f.getName() + "<=" + hValue(value));
 		}
 
 		return this;
@@ -142,24 +171,23 @@ public class ZRWrapper<T> {
 	// and
 	public ZRWrapper<T> and(final ZRWrapper<T> wrapper) {
 
-		final List<String> w = wrapper.getWhere();
-		if (!w.isEmpty()) {
-			this.where.add("and");
-			for (final String w1 : w) {
-				this.where.add(w1);
-			}
-		}
+		this.where.add(0, "(");
+		this.where.add(")");
+		this.where.add("AND");
+
+		final String x = wrapper.toString();
+		this.where.add(x);
 
 		return this;
 	}
 
 	public ZRWrapper<T> or(final ZRWrapper<T> wrapper) {
 
-		final String x = wrapper.toString();
-
 		this.where.add(0, "(");
 		this.where.add(")");
-		this.where.add("or");
+		this.where.add("OR");
+
+		final String x = wrapper.toString();
 		this.where.add(x);
 
 		return this;
@@ -167,10 +195,7 @@ public class ZRWrapper<T> {
 
 	@Override
 	public String toString() {
-		// return super.toString();
-
 		final String x = this.done();
-
 		return "(" + x + ")";
 	}
 
