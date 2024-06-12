@@ -81,16 +81,9 @@ public class ZRWrapper<T> {
 
 	public ZRWrapper<T> ne(final List<WrapperPair<T>> pairList) {
 		if (pairList.size() > 0) {
-			if (this.where.size() > 1) {
-				this.where.add("and");
-			}
 			this.where.add("(");
-			for (int i = 0; i < pairList.size(); i++) {
-
-				this.ne(pairList.get(i));
-				if (i < (pairList.size() - 1)) {
-					this.where.add("and");
-				}
+			for (final WrapperPair<T> element : pairList) {
+				this.ne(element);
 			}
 			this.where.add(")");
 		}
@@ -102,15 +95,15 @@ public class ZRWrapper<T> {
 		return this;
 	}
 
+
 	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Object value) {
 
 		final Field f = ReflectionUtil.getField(function);
-		// if (this.where.isEmpty() || ((this.where.size() == 1) &&
-		// "(".equals(this.where.get(0).trim()))) {
-		this.where.add(f.getName() + "!=" + hValue(value));
-		// } else {
-		// this.where.add("and" + " " + f.getName() + "!=" + value);
-		// }
+		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
+			this.where.add(f.getName() + "!=" + hValue(value));
+		} else {
+			this.where.add("and" + " " + f.getName() + "!=" + hValue(value));
+		}
 
 		return this;
 	}
