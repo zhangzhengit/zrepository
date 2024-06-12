@@ -5,6 +5,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Hex;
@@ -26,6 +27,7 @@ import lombok.Getter;
 public class ZRWrapper<T> {
 
 
+	private static final String SPACE = " ";
 	private static final String AND = MethodRegex.AND;
 	private static final String OR = MethodRegex.OR;
 
@@ -45,15 +47,18 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue(function, value, SQLOperatorEnum.EQ);
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
-	private ZRWrapper<T> addValue(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
+	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
 		final Field f = ReflectionUtil.getField(function);
+
+		final String fValue = Objects.isNull(value) ? "" : SPACE + hValue(sqlOperatorEnum.hValue(value));
+
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(f.getName() + sqlOperatorEnum.getContent() + hValue(value));
+			this.where.add(f.getName() + SPACE + sqlOperatorEnum.getContent() + fValue);
 		} else {
-			this.where.add(AND + " " + f.getName() + sqlOperatorEnum.getContent() + hValue(value));
+			this.where.add(AND + SPACE + f.getName() + SPACE + sqlOperatorEnum.getContent() + fValue);
 		}
 
 		return this;
@@ -109,7 +114,7 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue(function, value, SQLOperatorEnum.NE);
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
 	public ZRWrapper<T> ne(final List<WrapperPair<T>> pairList) {
@@ -139,7 +144,7 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue(function, value, SQLOperatorEnum.LT);
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
 	public ZRWrapper<T> lt(final List<WrapperPair<T>> pairList) {
@@ -169,7 +174,7 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue(function, value, SQLOperatorEnum.LTE);
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
 	public ZRWrapper<T> lte(final List<WrapperPair<T>> pairList) {
@@ -199,7 +204,7 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue(function, value, SQLOperatorEnum.GT);
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
 	public ZRWrapper<T> gt(final List<WrapperPair<T>> pairList) {
@@ -229,7 +234,7 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue(function, value, SQLOperatorEnum.GTE);
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
 
 	public ZRWrapper<T> gte(final List<WrapperPair<T>> pairList) {
@@ -242,6 +247,48 @@ public class ZRWrapper<T> {
 		}
 		return this;
 	}
+
+	public ZRWrapper<T> like(final WrapperPair<T> pair) {
+		return this.like(pair.getFunction(), pair.getValue());
+	}
+
+	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LIKE);
+	}
+
+	public ZRWrapper<T> notLike(final WrapperPair<T> pair) {
+		return this.like(pair.getFunction(), pair.getValue());
+	}
+
+	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NOT_LIKE);
+	}
+
+	// FIXME 2024年6月12日 下午11:19:05 zhangzhen : isNUll和notNull继续测
+	public ZRWrapper<T> isNull(final WrapperPair<T> pair) {
+		return this.isNull(pair.getFunction());
+	}
+
+	public ZRWrapper<T> isNull(final SerializableFunction<T, Object> function) {
+		return this.addValue0(function, null, SQLOperatorEnum.IS_NULL);
+	}
+
+	public ZRWrapper<T> notNull(final WrapperPair<T> pair) {
+		return this.isNull(pair.getFunction());
+	}
+
+	public ZRWrapper<T> notNull(final SerializableFunction<T, Object> function) {
+		return this.addValue0(function, null, SQLOperatorEnum.NOT_NULL);
+	}
+
+	public ZRWrapper<T> endingWith(final WrapperPair<T> pair) {
+		return this.endingWith(pair.getFunction(), pair.getValue());
+	}
+
+	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue0(function, value, SQLOperatorEnum.ENDING_WITH);
+	}
+	// FIXME 2024年6月12日 下午11:34:01 zhangzhen : 继续支持StartingWith 等，继续做今天留下来的FIXME
 
 	public ZRWrapper<T> gte(final WrapperPair<T> pair) {
 		return this.gte(pair.getFunction(), pair.getValue());
@@ -282,7 +329,7 @@ public class ZRWrapper<T> {
 	 * 完成，组装SQL了
 	 */
 	public String done() {
-		final String w = this.where.isEmpty() ? "" : "(" + this.where.stream().collect(Collectors.joining(" ")) + ")";
+		final String w = this.where.isEmpty() ? "" : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
 
 		System.out.println("done");
 		System.out.println("where = " + this.where);

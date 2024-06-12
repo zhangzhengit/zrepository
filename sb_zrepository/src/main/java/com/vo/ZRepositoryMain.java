@@ -1162,6 +1162,7 @@ public class ZRepositoryMain {
 
 	private static String findByXXGreaterThanEquals(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
 
+		// FIXME 2024年6月12日 下午11:05:28 zhangzhen : 支持的类型要继续考虑好，如：本类，findByXXGTE ，String/Date等在db中也是支持的，但在此没支持
 		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
 				method, MethodRegex.GROUP_findByXXGreaterThan, Sets.newLinkedHashSet(Lists.newArrayList(Byte.class, Short.class, Integer.class,
 						Long.class, Float.class, Double.class, BigDecimal.class, BigInteger.class)));
