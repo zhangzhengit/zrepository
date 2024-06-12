@@ -969,6 +969,65 @@ public class SU {
 		return zc;
 	}
 
+	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Class<T> cls,final Class<T> returnType, final String sql, final Object wrapper) {
+
+		final String dataSourceName = getDataSourceNameFromClassType(cls);
+
+		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getConnection();
+
+		try {
+			connection.setAutoCommit(false);
+		} catch (final SQLException e1) {
+			e1.printStackTrace();
+		}
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+
+			final ZRWrapper w = (ZRWrapper) wrapper;
+			final String select = gSelectFromReturnType(cls);
+			final String x = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select) + " "
+					+ MethodRegex.WHERE + " " + w.done();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}]", x);
+			}
+
+			ps = connection.prepareStatement(x);
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final ArrayList<T> r = Lists.newArrayList();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
+				r.add(t);
+			}
+			returnZConnectionAndCommit(dataSourceName, zc);
+			return r;
+
+		} catch (SQLException
+				| SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			returnZConnectionAndCommit(dataSourceName, zc);
+			close(rs, ps);
+		}
+
+
+		return Collections.emptyList();
+	}
+
 	public static <T> List<T> findAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);

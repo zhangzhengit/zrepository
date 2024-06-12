@@ -162,4 +162,13 @@ public interface ZRepository<T, ID> {
 	 */
 	boolean deleteAll();
 
+	/**
+	 * 手动构造条件来查询
+	 *
+	 * @param wrapper
+	 * @return
+	 */
+	// FIXME 2024年6月12日 下午9:15:57 zhangzhen : 刚@Test了 xx.eq 和 xx.eq(or) OK 了 (仅mysql和pgsql，还不包含float和byte[]类型)
+	List<T> find(ZRWrapper<T> wrapper);
+
 }

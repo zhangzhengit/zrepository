@@ -62,6 +62,7 @@ public class MethodRegex {
 	public static final String GROUP_DeleteByIdIn = "deleteByIdIn";
 	public static final String GROUP_SAVEALL = "saveAll";
 	public static final String GROUP_SAVE = "save";
+	public static final String GROUP_FIND = "find";
 
 	public static final String GROUP_UPDATE = "update";
 	public static final String GROUP_FINDALL = "findAll";
@@ -186,6 +187,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_EXISTBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_DELETEBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_SAVEALL = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FIND = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_SAVE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_UPDATE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
@@ -279,6 +281,8 @@ public class MethodRegex {
 		REGEX_MAP_SAVEALL.put(saveAll, "INSERT INTO TABLE_NAME (" + COLUMNS + ") VALUES (" + COLUMN_VALUES + ")");
 		// save
 		REGEX_MAP_SAVE.put(save, "INSERT INTO TABLE_NAME (" + COLUMNS + ") VALUES (" + COLUMN_VALUES + ");");
+		// find
+		REGEX_MAP_FIND.put(GROUP_FIND, SELECT + " * " + FROM + " TABLE_NAME");
 
 		// update
 		REGEX_MAP_UPDATE.put(GROUP_UPDATE, "UPDATE TABLE_NAME SET " + COLUMN + " " + WHERE + " id = ?; ");
@@ -376,6 +380,7 @@ public class MethodRegex {
 		R_M.put(GROUP_FINDALL, REGEX_MAP_FINDALL);
 		R_M.put(GROUP_SAVEALL, REGEX_MAP_SAVEALL);
 		R_M.put(GROUP_SAVE, REGEX_MAP_SAVE);
+		R_M.put(GROUP_FIND, REGEX_MAP_FIND);
 		R_M.put(GROUP_UPDATE, REGEX_MAP_UPDATE);
 		R_M.put(GROUP_DeleteById, REGEX_MAP_DELETEBYID);
 		R_M.put(existByIdIn, REGEX_MAP_EXISTBYIDIN);

@@ -816,6 +816,9 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getCanonicalName() + ".count(" + className1 + "," + methodName1
 					+ ","  + modeString + ",classType,sql);";
 
+		case "find":
+			return find(modeString, className1, methodName1, method);
+
 		default:
 
 			// default  ZR的子类声明的方法
@@ -1005,6 +1008,18 @@ public class ZRepositoryMain {
 		return EMTPY;
 	}
 
+	private static String find(final String modeString, final String className1, final String methodName1, final Method method) {
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
+		final Class<?> returnType = getClassType(method);
+
+		return "return " + SU.class.getCanonicalName() + ".find(" + className1 + "," + methodName1
+				+ ","  + modeString + ",classType,"+returnType.getCanonicalName()+",sql," + joiner.toString()  + ");";
+	}
+
 	private static String findByXXIsNull(final Class<?> myZRClass, final Method method, final String modeString,
 			final String className1, final String methodName1, final String methodRegex) {
 
@@ -1041,13 +1056,6 @@ public class ZRepositoryMain {
 			return Mode.class.getCanonicalName() + "." + Mode.READ.name();
 		}
 		return Mode.class.getCanonicalName() + "." + Mode.WRITE.name();
-	}
-
-	private static String gROUP_pageByXX_orderByXX(final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
-		final String modeString = modeString(method);
-		return "return " + SU.class.getCanonicalName() + ".pageByXXOrderByXX(" + modeString + ",classType,sql,"
-		+ joiner.toString() + ");";
 	}
 
 	private static String findByXXXEndingWith(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
