@@ -108,6 +108,37 @@ public class ZRWrapper<T> {
 		return this;
 	}
 
+
+	public ZRWrapper<T> lt(final List<WrapperPair<T>> pairList) {
+		if (pairList.size() > 0) {
+			this.where.add("(");
+			for (final WrapperPair<T> element : pairList) {
+				this.lt(element);
+			}
+			this.where.add(")");
+		}
+		return this;
+	}
+
+	public ZRWrapper<T> lt(final WrapperPair<T> pair) {
+		this.lt(pair.getFunction(), pair.getValue());
+		return this;
+	}
+
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Object value) {
+
+		final Field f = ReflectionUtil.getField(function);
+		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
+			this.where.add(f.getName() + "<" + hValue(value));
+		} else {
+			this.where.add("and" + " " + f.getName() + "<" + hValue(value));
+		}
+
+		return this;
+	}
+
+
 	// and
 	public ZRWrapper<T> and(final ZRWrapper<T> wrapper) {
 
