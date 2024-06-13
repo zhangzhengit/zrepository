@@ -27,29 +27,29 @@ public enum SQLOperatorEnum {
 
 	EQ("=", "等于") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
 				return value;
 			}
 
-			return addAll(value);
+			return addAll(value, dbEnum);
 		}
 	},
 
 	NE("!=", "不等于") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
 				return value;
 			}
 
-			return addAll(value);
+			return addAll(value, dbEnum);
 		}
 	},
 
 	LT("<", "小于") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 
 			if (value == null) {
 				return value;
@@ -58,13 +58,13 @@ public enum SQLOperatorEnum {
 			if (!ZRMethodU.gte(value.getClass())) {
 				throw new UnsupportedOperationException("LT操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
-			return addAll(value);
+			return addAll(value, dbEnum);
 		}
 	},
 
 	LTE("<=", "小于等于") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
 				return value;
 			}
@@ -72,13 +72,13 @@ public enum SQLOperatorEnum {
 			if (!ZRMethodU.gte(value.getClass())) {
 				throw new UnsupportedOperationException("LTE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
-			return addAll(value);
+			return addAll(value, dbEnum);
 		}
 	},
 
 	GT(">", "大于") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
 				return value;
 			}
@@ -86,13 +86,13 @@ public enum SQLOperatorEnum {
 			if (!ZRMethodU.gte(value.getClass())) {
 				throw new UnsupportedOperationException("GT操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
-			return addAll(value);
+			return addAll(value, dbEnum);
 		}
 	},
 
 	GTE(">=", "大于等于") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
 				return value;
 			}
@@ -100,48 +100,48 @@ public enum SQLOperatorEnum {
 			if (!ZRMethodU.gte(value.getClass())) {
 				throw new UnsupportedOperationException("GTE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
-			return addAll(value);
+			return addAll(value, dbEnum);
 		}
 	},
 
 	LIKE("LIKE", "模糊查询:是") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			// FIXME 2024年6月12日 下午10:52:30 zhangzhen : 这个也要判断类型，
 			//			 并且： 还是要提供一个日期时间类型的注解，用在@ZEntity的字段上，在此取此注解的格式来格式化日期时间
 			// 否则容易查询此问题： timestamp 类型 在此会生成 %2024-06-12 22:51:12.0% ，而db中值是  2024-06-12 22:51:12
 			// 导致like查不出
 
 			if (value == null) {
-				return addAll("%" + value + "%");
+				return addAll("%" + value + "%", dbEnum);
 			}
 
 			if (!ZRMethodU.like(value.getClass())) {
 				throw new UnsupportedOperationException("LIKE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
 
-			return addAll("%" + value + "%");
+			return addAll("%" + value + "%", dbEnum);
 		}
 	},
 
 	NOT_LIKE("NOT LIKE", "模糊查询:非") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
-				return addAll("%" + value + "%");
+				return addAll("%" + value + "%", dbEnum);
 			}
 
 			if (!ZRMethodU.like(value.getClass())) {
 				throw new UnsupportedOperationException("NOT_LIKE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
 
-			return addAll("%" + value + "%");
+			return addAll("%" + value + "%", dbEnum);
 		}
 	},
 
 	IS_NULL("IS NULL", "判断某个column为null") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			// IS_NULL这个和NOT_NULL return "",等同于组装where条件的时候忽略掉此值
 			return "";
 		}
@@ -149,64 +149,64 @@ public enum SQLOperatorEnum {
 
 	NOT_NULL("IS NOT NULL", "判断某个column为not null") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			return "";
 		}
 	},
 
 	ENDING_WITH("LIKE", "模糊查询:匹配后缀") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
-				return addAll("%" + value + "%");
+				return addAll("%" + value + "%", dbEnum);
 			}
 
 			if (!ZRMethodU.startingWith(value.getClass())) {
 				throw new UnsupportedOperationException("ENDING_WITH操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
-			return addAll("%" + value);
+			return addAll("%" + value, dbEnum);
 		}
 	},
 
 	STARTING_WITH("LIKE", "模糊查询:匹配前缀") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			if (value == null) {
-				return addAll("%" + value + "%");
+				return addAll("%" + value + "%", dbEnum);
 			}
 
 			if (!ZRMethodU.startingWith(value.getClass())) {
 				throw new UnsupportedOperationException("STARTING_WITH操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
 			}
-			return addAll(value + "%");
+			return addAll(value + "%", dbEnum);
 		}
 	},
 
 	IN("IN", "IN查询") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			return inAndNotIn(value);
 		}
 	},
 
 	NOT_IN("NOT IN", "NOT IN查询") {
 		@Override
-		public Object hValue(final Object value) {
+		public Object hValue(final Object value, final DBEnum dbEnum) {
 			return inAndNotIn(value);
 		}
 	},
 
 	BETWEEN("BETWEEN", "范围查询:在某个范围内") {
 		@Override
-		public Object hValue(final Object value) {
-			return betweenAndNotBetween(value);
+		public Object hValue(final Object value, final DBEnum dbEnum) {
+			return betweenAndNotBetween(value, dbEnum);
 		}
 	},
 
 	NOT_BETWEEN("NOT BETWEEN", "范围查询:不在某个范围内") {
 		@Override
-		public Object hValue(final Object value) {
-			return betweenAndNotBetween(value);
+		public Object hValue(final Object value, final DBEnum dbEnum) {
+			return betweenAndNotBetween(value, dbEnum);
 		}
 	},
 
@@ -220,20 +220,23 @@ public enum SQLOperatorEnum {
 	 * 根据操作符返回处理后的值，如：对于like符号,返回新值[%value%]
 	 *
 	 * @param value
+	 * @param dbEnum TODO
 	 * @return
 	 */
-	public abstract Object hValue(Object value);
+	public abstract Object hValue(Object value, DBEnum dbEnum);
 
-	private static Object addAll(final Object value) {
-		final Object v2 = addString(value);
-		final Object v3 = addDate_Time_Timestamp(v2);
+	private static Object addAll(final Object value, final DBEnum dbEnum) {
+		final Object v2 = addString(value, dbEnum);
+		final Object v3 = addDate_Time_Timestamp(v2, dbEnum);
 		return v3;
 	}
 
-	private static Object addDate_Time_Timestamp(final Object value) {
+	private static Object addDate_Time_Timestamp(final Object value, final DBEnum dbEnum) {
 		checkArray(value);
 		if ((value instanceof Date) || (value instanceof java.sql.Date) || (value instanceof Time)
 				|| (value instanceof Timestamp)) {
+
+			// FIXME 2024年6月14日 上午1:01:32 zhangzhen : TODO 考虑sqlite时 时间日期类型转换 dbEnum
 			return "'" + value + "'";
 		}
 		return value;
@@ -254,7 +257,7 @@ public enum SQLOperatorEnum {
 		return value;
 	}
 
-	private static Object addString(final Object value) {
+	private static Object addString(final Object value, final DBEnum dbEnum) {
 		checkArray(value);
 		if ((value instanceof Character) || (value instanceof String)) {
 			return "'" + value + "'";
@@ -289,7 +292,7 @@ public enum SQLOperatorEnum {
 		return joiner.toString();
 	}
 
-	private static Object betweenAndNotBetween(final Object value) {
+	private static Object betweenAndNotBetween(final Object value, final DBEnum dbEnum) {
 		if (value == null) {
 			return "null" + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
 		}
@@ -300,12 +303,12 @@ public enum SQLOperatorEnum {
 		}
 
 		if (a.length == 1) {
-			final Object v1 = addAll(a[0]);
+			final Object v1 = addAll(a[0], dbEnum);
 			return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
 		}
 
-		final Object v1 = addAll(a[0]);
-		final Object v2 = addAll(a[1]);
+		final Object v1 = addAll(a[0], dbEnum);
+		final Object v2 = addAll(a[1], dbEnum);
 		return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + v2;
 	}
 }

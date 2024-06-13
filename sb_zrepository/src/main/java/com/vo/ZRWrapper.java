@@ -5,9 +5,16 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.vo.anno.ZEntity;
+import com.vo.conn.Mode;
+import com.vo.conn.ZCPool;
+
+import lombok.Getter;
 
 /**
  * 造查询条件,使用方法引用来构造查询条件.
@@ -103,11 +110,29 @@ import com.google.common.collect.Lists;
 		eq.between(BlobEntity::getId, 200, 5000);
 		final List<BlobEntity> find = this.blobRepository.find(eq);
 
+	构造方式，使用wrap方法来构造：
+		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
+
  * @author zhangzhen
  * @date 2024年6月12日 下午7:32:13
  *
  */
 public class ZRWrapper<T> {
+
+	@Getter
+	private final Class<?> entityClass;
+
+	public static <T> ZRWrapper<T> wrap(final Class<T> entityClass) {
+		if (entityClass == null) {
+			throw new NullPointerException("entityClass不能为空");
+		}
+		final ZRWrapper<T> w = new ZRWrapper<>(entityClass);
+		return w;
+	}
+
+	private ZRWrapper(final Class<T> entityClass) {
+		this.entityClass = entityClass;
+	}
 
 	private static final String TRUE = " 1 = 1 ";
 	public static final String SPACE = " ";
@@ -173,6 +198,10 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final java.util.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final java.sql.Time value) {
 		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
@@ -782,15 +811,38 @@ public class ZRWrapper<T> {
 	}
 
 	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
+
 		final Field f = ReflectionUtil.getField(function);
 
 		final String columnName = ZFieldConverter.toDbField(f.getName());
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
+			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value, this.getDBEnum())));
 		} else {
-			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
+			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value, this.getDBEnum())));
 		}
 
 		return this;
 	}
+
+	private DBEnum getDBEnum() {
+		final DBEnum v = C.get(this.entityClass);
+		if (v != null) {
+			return v;
+		}
+
+		final DBEnum v2 = this.getDBEnum0();
+		C.put(this.entityClass, v2);
+		return v2;
+	}
+
+	private DBEnum getDBEnum0() {
+		System.out.println("getDBEnum0");
+		final String dataSourceName = this.entityClass.getAnnotation(ZEntity.class).dataSourceName();
+		final ZCPool cp = ZCPool.getInstance(dataSourceName);
+		final DBEnum dbEnum = cp.getDbEnum(Mode.WRITE);
+		return dbEnum;
+	}
+
+	private final static Map<Class<?>, DBEnum> C = new WeakHashMap<>();
+
 }

@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.vo.DBEnum;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
 
@@ -116,6 +117,18 @@ public class ZCPool {
 	}
 
 	Object incrementLock = new Object();
+
+	public DBEnum getDbEnum(final Mode mode) {
+		if (mode == Mode.WRITE) {
+			return this.writeVector.get(0).getDbEnum();
+		}
+
+		if (mode == Mode.READ) {
+			return this.readVector.get(0).getDbEnum();
+		}
+
+		return null;
+	}
 
 	/**
 	 * 轮询获取连接对象，暂定为轮询获取，不管当前连接是否忙碌，轮询获取
