@@ -27,7 +27,7 @@ public class Sort<T> {
 
 	private final List<String> x = Lists.newArrayList();
 
-	public static <T> Sort<T> empty() {
+	public static <T> Sort<T> create() {
 		return new Sort<>();
 	}
 
