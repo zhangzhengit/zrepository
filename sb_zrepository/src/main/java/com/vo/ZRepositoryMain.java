@@ -1058,10 +1058,10 @@ public class ZRepositoryMain {
 		return Mode.class.getCanonicalName() + "." + Mode.WRITE.name();
 	}
 
-	private static String findByXXXEndingWith(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
+	private static String findByXXXEndingWith(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
 
 		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
-				method, MethodRegex.GROUP_findByXXXEndingWith, Sets.newHashSet(String.class,Character.class));
+				method, MethodRegex.GROUP_findByXXXEndingWith, ZRMethodU.STARTING_WITH);
 
 		final String modeString = modeString(method);
 		final Class returnType = getClassType(method);
@@ -1072,7 +1072,7 @@ public class ZRepositoryMain {
 	}
 
 	private static StringJoiner checkFindByXXEndingWithAndStartingWith(final Class<?> zrSubClass, final Class<?> entityClass,
-			final Method method, final String methodRegex, final Set<Class> supportedClassSet) {
+			final Method method, final String methodRegex, final Set<Class<?>> supportedClassSet) {
 		final D d = findFieldName(entityClass, method.getName());
 		final List<String> fl = d.getFiledNameMethodNameOrder();
 		final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fl.get(0)));
@@ -1150,7 +1150,7 @@ public class ZRepositoryMain {
 	private static String findByXXXStartingWith(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
 
 		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
-				method, MethodRegex.GROUP_findByXXXStartingWith, Sets.newHashSet(String.class,Character.class));
+				method, MethodRegex.GROUP_findByXXXStartingWith, ZRMethodU.STARTING_WITH);
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);
@@ -1160,12 +1160,11 @@ public class ZRepositoryMain {
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static String findByXXGreaterThanEquals(final Class myZRClass, final Class entityClass, final String className1, final Method method) {
+	private static String findByXXGreaterThanEquals(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
 
 		// FIXME 2024年6月12日 下午11:05:28 zhangzhen : 支持的类型要继续考虑好，如：本类，findByXXGTE ，String/Date等在db中也是支持的，但在此没支持
 		final StringJoiner joiner = checkFindByXXEndingWithAndStartingWith(myZRClass, entityClass,
-				method, MethodRegex.GROUP_findByXXGreaterThan, Sets.newLinkedHashSet(Lists.newArrayList(Byte.class, Short.class, Integer.class,
-						Long.class, Float.class, Double.class, BigDecimal.class, BigInteger.class)));
+				method, MethodRegex.GROUP_findByXXGreaterThan, ZRMethodU.GTE);
 
 		final Class returnType = getClassType(method);
 		final String modeString = modeString(method);

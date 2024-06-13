@@ -28,6 +28,10 @@ public enum SQLOperatorEnum {
 	EQ("=", "等于") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return value;
+			}
+
 			return addAll(value);
 		}
 	},
@@ -35,6 +39,10 @@ public enum SQLOperatorEnum {
 	NE("!=", "不等于") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return value;
+			}
+
 			return addAll(value);
 		}
 	},
@@ -42,6 +50,14 @@ public enum SQLOperatorEnum {
 	LT("<", "小于") {
 		@Override
 		public Object hValue(final Object value) {
+
+			if (value == null) {
+				return value;
+			}
+
+			if (!ZRMethodU.gte(value.getClass())) {
+				throw new UnsupportedOperationException("LT操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 			return addAll(value);
 		}
 	},
@@ -49,6 +65,13 @@ public enum SQLOperatorEnum {
 	LTE("<=", "小于等于") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return value;
+			}
+
+			if (!ZRMethodU.gte(value.getClass())) {
+				throw new UnsupportedOperationException("LTE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 			return addAll(value);
 		}
 	},
@@ -56,6 +79,13 @@ public enum SQLOperatorEnum {
 	GT(">", "大于") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return value;
+			}
+
+			if (!ZRMethodU.gte(value.getClass())) {
+				throw new UnsupportedOperationException("GT操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 			return addAll(value);
 		}
 	},
@@ -63,6 +93,13 @@ public enum SQLOperatorEnum {
 	GTE(">=", "大于等于") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return value;
+			}
+
+			if (!ZRMethodU.gte(value.getClass())) {
+				throw new UnsupportedOperationException("GTE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 			return addAll(value);
 		}
 	},
@@ -74,8 +111,14 @@ public enum SQLOperatorEnum {
 			//			 并且： 还是要提供一个日期时间类型的注解，用在@ZEntity的字段上，在此取此注解的格式来格式化日期时间
 			// 否则容易查询此问题： timestamp 类型 在此会生成 %2024-06-12 22:51:12.0% ，而db中值是  2024-06-12 22:51:12
 			// 导致like查不出
-			// FIXME 2024年6月12日 下午10:58:37 zhangzhen : 或者：和声明式方法一样，判断各个方法支持的类型，如：like 只支持String/Character等等
-			// FIXME 2024年6月12日 下午11:01:37 zhangzhen : 决定了：改为和checkFindByXXLike一样，先把各个方法支持的类型提取为一个类
+
+			if (value == null) {
+				return addAll("%" + value + "%");
+			}
+
+			if (!ZRMethodU.like(value.getClass())) {
+				throw new UnsupportedOperationException("LIKE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 
 			return addAll("%" + value + "%");
 		}
@@ -84,6 +127,14 @@ public enum SQLOperatorEnum {
 	NOT_LIKE("NOT LIKE", "模糊查询:非") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return addAll("%" + value + "%");
+			}
+
+			if (!ZRMethodU.like(value.getClass())) {
+				throw new UnsupportedOperationException("NOT_LIKE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
+
 			return addAll("%" + value + "%");
 		}
 	},
@@ -91,20 +142,28 @@ public enum SQLOperatorEnum {
 	IS_NULL("IS NULL", "判断某个column为null") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			// IS_NULL这个和NOT_NULL return "",等同于组装where条件的时候忽略掉此值
+			return "";
 		}
 	},
 
 	NOT_NULL("IS NOT NULL", "判断某个column为not null") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return "";
 		}
 	},
 
 	ENDING_WITH("LIKE", "模糊查询:匹配后缀") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return addAll("%" + value + "%");
+			}
+
+			if (!ZRMethodU.startingWith(value.getClass())) {
+				throw new UnsupportedOperationException("ENDING_WITH操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 			return addAll("%" + value);
 		}
 	},
@@ -112,6 +171,13 @@ public enum SQLOperatorEnum {
 	STARTING_WITH("LIKE", "模糊查询:匹配前缀") {
 		@Override
 		public Object hValue(final Object value) {
+			if (value == null) {
+				return addAll("%" + value + "%");
+			}
+
+			if (!ZRMethodU.startingWith(value.getClass())) {
+				throw new UnsupportedOperationException("STARTING_WITH操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+			}
 			return addAll(value + "%");
 		}
 	},
@@ -133,20 +199,14 @@ public enum SQLOperatorEnum {
 	BETWEEN("BETWEEN", "范围查询:在某个范围内") {
 		@Override
 		public Object hValue(final Object value) {
-			final Object[] a = (Object[]) value;
-			final Object v1 = addAll(a[0]);
-			final Object v2 = addAll(a[1]);
-			return v1 + ZRWrapper.SPACE + MethodRegex.AND  + ZRWrapper.SPACE+ v2;
+			return betweenAndNotBetween(value);
 		}
 	},
 
 	NOT_BETWEEN("NOT BETWEEN", "范围查询:不在某个范围内") {
 		@Override
 		public Object hValue(final Object value) {
-			final Object[] a = (Object[]) value;
-			final Object v1 = addAll(a[0]);
-			final Object v2 = addAll(a[1]);
-			return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + v2;
+			return betweenAndNotBetween(value);
 		}
 	},
 
@@ -186,8 +246,8 @@ public enum SQLOperatorEnum {
 			final String encodeHexString = Hex.encodeHexString((byte[]) value);
 			// final int x = 10;
 			// return "'" + encodeHexString + "'";
-			// FIXME 2024年6月12日 下午9:08:10 zhangzhen : 还有点问题，暂不支持
-			throw new UnsupportedOperationException("array类型暂不支持");
+			// FIXME 2024年6月12日 下午9:08:10 zhangzhen : 还有点问题，不支持
+			throw new UnsupportedOperationException("array类型不支持");
 			// FIXME 2024年6月12日 下午9:09:07 zhangzhen : float 等值查询也有问题，干脆在DBType中不支持float算了?
 		}
 
@@ -204,6 +264,10 @@ public enum SQLOperatorEnum {
 	}
 
 	private static Object inAndNotIn(final Object value) {
+		if (value == null) {
+			return "(" + value + ")";
+		}
+
 		if (!(value instanceof Iterable)) {
 			final String m = "参数必须是" + Iterable.class.getSimpleName() + "类型,当前类型为[" + value.getClass().getCanonicalName()
 					+ "]";
@@ -212,10 +276,36 @@ public enum SQLOperatorEnum {
 
 		final Iterable<?> i = (Iterable<?>) value;
 		final StringJoiner joiner = new StringJoiner(",", "(", ")");
+		boolean h = false;
 		for (final Object v : i) {
+			h = true;
 			joiner.add(String.valueOf(v));
 		}
 
+		if (!h) {
+			return "(null)";
+		}
+
 		return joiner.toString();
+	}
+
+	private static Object betweenAndNotBetween(final Object value) {
+		if (value == null) {
+			return "null" + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
+		}
+
+		final Object[] a = (Object[]) value;
+		if (a.length == 0) {
+			return "null" + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
+		}
+
+		if (a.length == 1) {
+			final Object v1 = addAll(a[0]);
+			return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
+		}
+
+		final Object v1 = addAll(a[0]);
+		final Object v2 = addAll(a[1]);
+		return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + v2;
 	}
 }

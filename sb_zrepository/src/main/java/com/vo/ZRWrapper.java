@@ -2,7 +2,6 @@ package com.vo;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -107,6 +106,7 @@ import com.google.common.collect.Lists;
  */
 public class ZRWrapper<T> {
 
+	private static final String TRUE = " 1 = 1 ";
 	public static final String SPACE = " ";
 	private static final String AND = MethodRegex.AND;
 	private static final String OR = MethodRegex.OR;
@@ -131,13 +131,11 @@ public class ZRWrapper<T> {
 	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
 		final Field f = ReflectionUtil.getField(function);
 
-		final String fValue = Objects.isNull(value) ? "" : SPACE + sqlOperatorEnum.hValue(value);
-
 		final String columnName = ZFieldConverter.toDbField(f.getName());
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + fValue);
+			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
 		} else {
-			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + fValue);
+			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
 		}
 
 		return this;
@@ -308,10 +306,6 @@ public class ZRWrapper<T> {
 		return this.gte(pair.getFunction(), pair.getValue());
 	}
 
-	public ZRWrapper<T> like(final WrapperPair<T> pair) {
-		return this.like(pair.getFunction(), pair.getValue());
-	}
-
 	/**
 	 * 模糊查询,构造条件如: name LIKE '%?%'
 	 *
@@ -324,12 +318,12 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue0(function, value, SQLOperatorEnum.LIKE);
+	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final String string) {
+		return this.addValue0(function, string, SQLOperatorEnum.LIKE);
 	}
 
-	public ZRWrapper<T> notLike(final WrapperPair<T> pair) {
-		return this.like(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final Character character) {
+		return this.addValue0(function, character, SQLOperatorEnum.LIKE);
 	}
 
 	/**
@@ -341,11 +335,15 @@ public class ZRWrapper<T> {
 	 * 		wrapper.notLike(MyEntity::getName(),"张三李四");
 	 *
 	 * @param function
-	 * @param value
+	 * @param string
 	 * @return
 	 */
-	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue0(function, value, SQLOperatorEnum.NOT_LIKE);
+	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final String string) {
+		return this.addValue0(function, string, SQLOperatorEnum.NOT_LIKE);
+	}
+
+	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final Character character) {
+		return this.addValue0(function, character, SQLOperatorEnum.NOT_LIKE);
 	}
 
 	// FIXME 2024年6月12日 下午11:19:05 zhangzhen : isNUll和notNull继续测
@@ -370,7 +368,7 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> notNull(final WrapperPair<T> pair) {
-		return this.isNull(pair.getFunction());
+		return this.notNull(pair.getFunction());
 	}
 
 	/**
@@ -389,10 +387,6 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, null, SQLOperatorEnum.NOT_NULL);
 	}
 
-	public ZRWrapper<T> endingWith(final WrapperPair<T> pair) {
-		return this.endingWith(pair.getFunction(), pair.getValue());
-	}
-
 	/**
 	 * 后缀匹配查询,构造条件如: name LIKE '?%'
 	 *
@@ -402,15 +396,16 @@ public class ZRWrapper<T> {
 	 * 		wrapper.endingWith(MyEntity::getName(),"张三李四");
 	 *
 	 * @param function
-	 * @param value
+	 * @param string
 	 * @return
 	 */
-	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue0(function, value, SQLOperatorEnum.ENDING_WITH);
+	// FIXME 2024年6月13日 下午11:21:34 zhangzhen : lt ge 等等所有方法都加入重载方法
+	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final String string) {
+		return this.addValue0(function, string, SQLOperatorEnum.ENDING_WITH);
 	}
 
-	public ZRWrapper<T> startingWith(final WrapperPair<T> pair) {
-		return this.startingWith(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final Character character) {
+		return this.addValue0(function, character, SQLOperatorEnum.ENDING_WITH);
 	}
 
 	/**
@@ -422,13 +417,16 @@ public class ZRWrapper<T> {
 	 * 		wrapper.startingWith(MyEntity::getName(),"张三李四");
 	 *
 	 * @param function
-	 * @param value
+	 * @param string
 	 * @return
 	 */
-	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final Object value) {
-		return this.addValue0(function, value, SQLOperatorEnum.STARTING_WITH);
+	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final String string) {
+		return this.addValue0(function, string, SQLOperatorEnum.STARTING_WITH);
 	}
 
+	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final Character character) {
+		return this.addValue0(function, character, SQLOperatorEnum.STARTING_WITH);
+	}
 
 	/**
 	 * IN查询,构造条件如: name IN (?,?,?)
@@ -599,7 +597,7 @@ public class ZRWrapper<T> {
 	public String done() {
 		final String w =
 				this.where.isEmpty()
-				? "" : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
+				? TRUE : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
 		return w;
 	}
 
