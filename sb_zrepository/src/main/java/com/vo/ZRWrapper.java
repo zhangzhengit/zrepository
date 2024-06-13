@@ -120,7 +120,7 @@ import lombok.Getter;
 public class ZRWrapper<T> {
 
 	@Getter
-	private final Class<?> entityClass;
+	private final Class<T> entityClass;
 
 	public static <T> ZRWrapper<T> wrap(final Class<T> entityClass) {
 		if (entityClass == null) {
