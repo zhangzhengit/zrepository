@@ -92,13 +92,19 @@ public enum SQLOperatorEnum {
 		}
 	},
 
-	ENDING_WITH("LIKE", "模糊查询:是") {
+	ENDING_WITH("LIKE", "模糊查询:匹配后缀") {
 		@Override
 		public Object hValue(final Object value) {
 			return value + "%";
 		}
 	},
 
+	STARTING_WITH("LIKE", "模糊查询:匹配前缀") {
+		@Override
+		public Object hValue(final Object value) {
+			return "%" + value;
+		}
+	},
 
 	// FIXME 2024年6月12日 下午11:30:09 zhangzhen : 继续支持操作，MethodRegex中的都实现出来
 	;

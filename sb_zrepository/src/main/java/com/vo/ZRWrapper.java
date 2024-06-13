@@ -248,6 +248,11 @@ public class ZRWrapper<T> {
 		return this;
 	}
 
+
+	public ZRWrapper<T> gte(final WrapperPair<T> pair) {
+		return this.gte(pair.getFunction(), pair.getValue());
+	}
+
 	public ZRWrapper<T> like(final WrapperPair<T> pair) {
 		return this.like(pair.getFunction(), pair.getValue());
 	}
@@ -290,8 +295,12 @@ public class ZRWrapper<T> {
 	}
 	// FIXME 2024年6月12日 下午11:34:01 zhangzhen : 继续支持StartingWith 等，继续做今天留下来的FIXME
 
-	public ZRWrapper<T> gte(final WrapperPair<T> pair) {
-		return this.gte(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> startingWith(final WrapperPair<T> pair) {
+		return this.endingWith(pair.getFunction(), pair.getValue());
+	}
+
+	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final Object value) {
+		return this.addValue0(function, value, SQLOperatorEnum.STARTING_WITH);
 	}
 
 	// and
