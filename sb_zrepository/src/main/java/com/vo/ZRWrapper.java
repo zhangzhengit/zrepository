@@ -1,6 +1,9 @@
 package com.vo;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,36 +127,57 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Object value) {
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Byte value) {
 		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
-	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
-		final Field f = ReflectionUtil.getField(function);
-
-		final String columnName = ZFieldConverter.toDbField(f.getName());
-		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
-		} else {
-			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
-		}
-
-		return this;
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Short value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
-	public ZRWrapper<T> eq(final List<WrapperPair<T>> pairList) {
-		if (pairList.size() > 0) {
-			this.where.add("(");
-			for (final WrapperPair<T> element : pairList) {
-				this.eq(element);
-			}
-			this.where.add(")");
-		}
-		return this;
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Integer value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
-	public ZRWrapper<T> eq(final WrapperPair<T> pair) {
-		return this.eq(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Long value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	// FIXME 2024年6月13日 下午11:27:34 zhangzhen : Float 类型还待定，还在考虑要不要在 @see DBType 中取消掉支持Float类型
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Float value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Double value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final BigDecimal value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Boolean value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final java.util.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
 	/**
@@ -167,23 +191,56 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Object value) {
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Byte value) {
 		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
-	public ZRWrapper<T> ne(final List<WrapperPair<T>> pairList) {
-		if (pairList.size() > 0) {
-			this.where.add("(");
-			for (final WrapperPair<T> element : pairList) {
-				this.ne(element);
-			}
-			this.where.add(")");
-		}
-		return this;
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Short value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
-	public ZRWrapper<T> ne(final WrapperPair<T> pair) {
-		return this.ne(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Integer value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Long value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Float value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Double value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final BigDecimal value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Boolean value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
 	/**
@@ -197,53 +254,117 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Object value) {
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Byte value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
-	public ZRWrapper<T> lt(final List<WrapperPair<T>> pairList) {
-		if (pairList.size() > 0) {
-			this.where.add("(");
-			for (final WrapperPair<T> element : pairList) {
-				this.lt(element);
-			}
-			this.where.add(")");
-		}
-		return this;
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Short value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
-	public ZRWrapper<T> lt(final WrapperPair<T> pair) {
-		return this.lt(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Integer value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Long value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Float value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Double value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final BigDecimal value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Boolean value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
 	/**
-	 * 小于等于,构造条件如: id <= ?
-	 * 调用本方法的方式为：
-	 * 		wrapper.lte(MyEntity::getId(),myEntity.getId());
-	 * 或者
-	 * 		wrapper.lte(MyEntity::getId(),200);
+	 * 小于等于,构造条件如: id <= ? 调用本方法的方式为：
+	 * wrapper.lte(MyEntity::getId(),myEntity.getId()); 或者
+	 * wrapper.lte(MyEntity::getId(),200);
 	 *
 	 * @param function
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Object value) {
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Byte value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
-	public ZRWrapper<T> lte(final List<WrapperPair<T>> pairList) {
-		if (pairList.size() > 0) {
-			this.where.add("(");
-			for (final WrapperPair<T> element : pairList) {
-				this.lte(element);
-			}
-			this.where.add(")");
-		}
-		return this;
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Short value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
-	public ZRWrapper<T> lte(final WrapperPair<T> pair) {
-		return this.lte(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Integer value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Long value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Float value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Double value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final BigDecimal value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Boolean value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
 	/**
@@ -257,23 +378,56 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Object value) {
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Byte value) {
 		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
-	public ZRWrapper<T> gt(final List<WrapperPair<T>> pairList) {
-		if (pairList.size() > 0) {
-			this.where.add("(");
-			for (final WrapperPair<T> element : pairList) {
-				this.gt(element);
-			}
-			this.where.add(")");
-		}
-		return this;
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Short value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
-	public ZRWrapper<T> gt(final WrapperPair<T> pair) {
-		return this.gt(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Integer value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Long value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Float value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Double value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final BigDecimal value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Boolean value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
 	/**
@@ -287,24 +441,58 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Object value) {
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Byte value) {
 		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
 
-	public ZRWrapper<T> gte(final List<WrapperPair<T>> pairList) {
-		if (pairList.size() > 0) {
-			this.where.add("(");
-			for (final WrapperPair<T> element : pairList) {
-				this.gte(element);
-			}
-			this.where.add(")");
-		}
-		return this;
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Short value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
 
-	public ZRWrapper<T> gte(final WrapperPair<T> pair) {
-		return this.gte(pair.getFunction(), pair.getValue());
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Integer value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Long value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Float value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Double value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final BigDecimal value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Boolean value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
 
 	/**
 	 * 模糊查询,构造条件如: name LIKE '%?%'
@@ -346,11 +534,6 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, character, SQLOperatorEnum.NOT_LIKE);
 	}
 
-	// FIXME 2024年6月12日 下午11:19:05 zhangzhen : isNUll和notNull继续测
-	public ZRWrapper<T> isNull(final WrapperPair<T> pair) {
-		return this.isNull(pair.getFunction());
-	}
-
 	/**
 	 * 判断column is null,构造条件如: name IS NUll
 	 *
@@ -365,10 +548,6 @@ public class ZRWrapper<T> {
 	 */
 	public ZRWrapper<T> isNull(final SerializableFunction<T, Object> function) {
 		return this.addValue0(function, null, SQLOperatorEnum.IS_NULL);
-	}
-
-	public ZRWrapper<T> notNull(final WrapperPair<T> pair) {
-		return this.notNull(pair.getFunction());
 	}
 
 	/**
@@ -473,6 +652,7 @@ public class ZRWrapper<T> {
 	 * @param value2
 	 * @return
 	 */
+	// FIXME 2024年6月13日 下午11:45:02 zhangzhen : between/ 等，下面的继续添加重载方法
 	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Object value1, final Object value2) {
 		return this.addValue0(function, new Object[] { value1, value2 }, SQLOperatorEnum.BETWEEN);
 	}
@@ -588,7 +768,7 @@ public class ZRWrapper<T> {
 	@Override
 	public String toString() {
 		final String x = this.done();
-		return "(" + x + ")";
+		return x;
 	}
 
 	/**
@@ -601,4 +781,16 @@ public class ZRWrapper<T> {
 		return w;
 	}
 
+	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
+		final Field f = ReflectionUtil.getField(function);
+
+		final String columnName = ZFieldConverter.toDbField(f.getName());
+		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
+			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
+		} else {
+			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value)));
+		}
+
+		return this;
+	}
 }
