@@ -20,7 +20,7 @@ import lombok.Getter;
  * 造查询条件,使用方法引用来构造查询条件.
  * 同一个本类对象调用除了and和or以外的方法，默认是AND关系，如：
  *
- * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ * 		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
  *		eq.startingWith(BlobEntity::getName, "zhangsan");
  *		eq.isNull(BlobEntity::getChar1);
  *		eq.lt(BlobEntity::getCreateTime,new Date());
@@ -31,12 +31,12 @@ import lombok.Getter;
  *
  * 如需OR关系，需要再多构造一个OR的本类对象：
  *
- * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ * 		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
  *		eq.startingWith(BlobEntity::getName, "zhangsan");
  *		eq.isNull(BlobEntity::getChar1);
  *		eq.lt(BlobEntity::getCreateTime,new Date());
  *
- *  	final ZRWrapper<BlobEntity> or = new ZRWrapper<>();
+ *  	final ZRWrapper<BlobEntity> or = ZRWrapper.wrap(BlobEntity.class);
  *  	or.eq(BlobEntity::getShort1, s2.getShort1());
  *		or.eq(BlobEntity::getLong1, s2.getLong1());
  *  	eq.or(or);
@@ -50,20 +50,20 @@ import lombok.Getter;
  * 单查询条件（单个本类构造的查询条件）：
  *
  * 查询：name = zhangsan
- * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ * 		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
  *		eq.eq(BlobEntity::getName, "zhangsan");
  *
  *		生成WHERE：WHERE name = '?'
  *
  * 查询：name = zhangsan 并且 id <= 200
- *		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
  *		eq.eq(BlobEntity::getName, "zhangsan");
  *		eq.lte(BlobEntity::getId,200);
  *
  *		生成WHERE：WHERE name = '?' AND id <= ?
  *
  * 查询：name 以张三开头 并且  char1 为空 并且 createTime 小于某个时间点
- * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ * 		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
  *		eq.startingWith(BlobEntity::getName, "zhangsan");
  *		eq.isNull(BlobEntity::getChar1);
  *		eq.lt(BlobEntity::getCreateTime,new Date());
@@ -74,12 +74,12 @@ import lombok.Getter;
  *
  * 查询： 条件1：name 不为空 并且 id 在某个范围内 并且 time 小于某个时间点
  * 	 或者 条件2：byte1 在为空 并且 long1 不等于 3
- *		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
 		eq.notNull(BlobEntity::getName);
 		eq.between(BlobEntity::getId, 200, 5000);
 		eq.lt(BlobEntity::getTime, new Date());
 
-		final ZRWrapper<BlobEntity> or = new ZRWrapper<>();
+		final ZRWrapper<BlobEntity> or = ZRWrapper.wrap(BlobEntity.class);
 		or.isNull(BlobEntity::getByte1);
 		or.ne(BlobEntity::getLong1, 3);
 
@@ -105,7 +105,7 @@ import lombok.Getter;
 
   	构造 BlobRepository.find需要用到的本类对象，则T为BlobEntity,构造方式为：
 
-  		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+  		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
 		eq.notNull(BlobEntity::getName);
 		eq.between(BlobEntity::getId, 200, 5000);
 		final List<BlobEntity> find = this.blobRepository.find(eq);
@@ -708,11 +708,11 @@ public class ZRWrapper<T> {
 	/**
 	 * 由本条件，组合另一个条件，两个条件之间的关系为 AND.
 	 * 如：
-		  	final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+		  	final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class)<>();
 			eq.startingWith(BlobEntity::getName,s1.getName());
 			eq.eq(BlobEntity::getId,s1.getId());
 
-			final ZRWrapper<BlobEntity> and = new ZRWrapper<>();
+			final ZRWrapper<BlobEntity> and = ZRWrapper.wrap(BlobEntity.class)<>();
 			and.like(BlobEntity::getChar1,s2.getChar1());
 			and.gte(BlobEntity::getD1,s2.getD1());
 
@@ -722,7 +722,7 @@ public class ZRWrapper<T> {
 
 		两个之间之间AND，等同于两个条件的操作全放在一个条件里，如上代码
 		等同于：
-			final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+			final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class)<>();
 			eq.startingWith(BlobEntity::getName,s1.getName());
 			eq.eq(BlobEntity::getId,s1.getId());
 			eq.like(BlobEntity::getChar1,s2.getChar1());
@@ -753,12 +753,12 @@ public class ZRWrapper<T> {
 	 * 由本条件，组合另一个条件，两个条件之间的关系为 OR.
 	 * 如：
 
-		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class)<>();
 		eq.eq(BlobEntity::getInteger1, s1.getInteger1());
 		eq.like(BlobEntity::getName, s1.getName());
 		eq.between(BlobEntity::getShort1, s1.getShort1(), s2.getShort1());
 
-		final ZRWrapper<BlobEntity> or = new ZRWrapper<>();
+		final ZRWrapper<BlobEntity> or = ZRWrapper.wrap(BlobEntity.class)<>();
 		or.notNull(BlobEntity::getTime);
 		or.lte(BlobEntity::getId,Integer.MAX_VALUE);
 
