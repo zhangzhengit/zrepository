@@ -1,39 +1,117 @@
 package com.vo;
 
 import java.lang.reflect.Field;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.binary.Hex;
-
 import com.google.common.collect.Lists;
 
-import cn.hutool.core.util.HexUtil;
-import lombok.Getter;
-
 /**
- * 构造查询条件
+ * 造查询条件,使用方法引用来构造查询条件.
+ * 同一个本类对象调用除了and和or以外的方法，默认是AND关系，如：
  *
- * @param <T>
+ * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		eq.startingWith(BlobEntity::getName, "zhangsan");
+ *		eq.isNull(BlobEntity::getChar1);
+ *		eq.lt(BlobEntity::getCreateTime,new Date());
  *
+ * 生成条件为：
+ * 		WHERE name like '?%' AND char1 IS NULL AND create_time < ?
+ * eq.后面加再多条件，也同为AND关系，可以不用and方法组合本就是AND关系的多个条件.
+ *
+ * 如需OR关系，需要再多构造一个OR的本类对象：
+ *
+ * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		eq.startingWith(BlobEntity::getName, "zhangsan");
+ *		eq.isNull(BlobEntity::getChar1);
+ *		eq.lt(BlobEntity::getCreateTime,new Date());
+ *
+ *  	final ZRWrapper<BlobEntity> or = new ZRWrapper<>();
+ *  	or.eq(BlobEntity::getShort1, s2.getShort1());
+ *		or.eq(BlobEntity::getLong1, s2.getLong1());
+ *  	eq.or(or);
+ *
+ * 生成条件为：
+ * 		WHERE (name like '?%' AND char1 IS NULL AND create_time < ?)
+ * 			OR (short1 = ? AND long1 = ?)
+ *
+ * 举例：
+ *
+ * 单查询条件（单个本类构造的查询条件）：
+ *
+ * 查询：name = zhangsan
+ * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		eq.eq(BlobEntity::getName, "zhangsan");
+ *
+ *		生成WHERE：WHERE name = '?'
+ *
+ * 查询：name = zhangsan 并且 id <= 200
+ *		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		eq.eq(BlobEntity::getName, "zhangsan");
+ *		eq.lte(BlobEntity::getId,200);
+ *
+ *		生成WHERE：WHERE name = '?' AND id <= ?
+ *
+ * 查询：name 以张三开头 并且  char1 为空 并且 createTime 小于某个时间点
+ * 		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+ *		eq.startingWith(BlobEntity::getName, "zhangsan");
+ *		eq.isNull(BlobEntity::getChar1);
+ *		eq.lt(BlobEntity::getCreateTime,new Date());
+ *
+ *		生成WHERE：WHERE name like '?%' AND char IS NULL AND create_time < ?
+ *
+ * 多查询条件（对个本类对象组合出的查询条件）：
+ *
+ * 查询： 条件1：name 不为空 并且 id 在某个范围内 并且 time 小于某个时间点
+ * 	 或者 条件2：byte1 在为空 并且 long1 不等于 3
+ *		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+		eq.notNull(BlobEntity::getName);
+		eq.between(BlobEntity::getId, 200, 5000);
+		eq.lt(BlobEntity::getTime, new Date());
+
+		final ZRWrapper<BlobEntity> or = new ZRWrapper<>();
+		or.isNull(BlobEntity::getByte1);
+		or.ne(BlobEntity::getLong1, 3);
+
+		eq.or(or);
+
+		生成WHERE：
+
+			WHERE
+			((
+				NAME IS NOT NULL
+					AND id BETWEEN ? AND ?
+					AND time < '?'
+					)
+				OR ((
+						byte1 IS NULL
+					AND long1 != ?
+			)))
+
+ *
+ * @param <T>	T 为需要用到的自定义ZRepository中的第一个泛型类型，如：
+  	自定义ZRepository：
+  		public interface BlobRepository extends ZRepository<BlobEntity, Integer> {}
+
+  	构造 BlobRepository.find需要用到的本类对象，则T为BlobEntity,构造方式为：
+
+  		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+		eq.notNull(BlobEntity::getName);
+		eq.between(BlobEntity::getId, 200, 5000);
+		final List<BlobEntity> find = this.blobRepository.find(eq);
+
  * @author zhangzhen
  * @date 2024年6月12日 下午7:32:13
  *
  */
 public class ZRWrapper<T> {
 
-
-	private static final String SPACE = " ";
+	public static final String SPACE = " ";
 	private static final String AND = MethodRegex.AND;
 	private static final String OR = MethodRegex.OR;
 
-	@Getter
 	private final List<String> where = Lists.newArrayList();
-
 
 	/**
 	 * 等值,构造条件如: name = ?
@@ -53,12 +131,13 @@ public class ZRWrapper<T> {
 	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
 		final Field f = ReflectionUtil.getField(function);
 
-		final String fValue = Objects.isNull(value) ? "" : SPACE + hValue(sqlOperatorEnum.hValue(value));
+		final String fValue = Objects.isNull(value) ? "" : SPACE + sqlOperatorEnum.hValue(value);
 
+		final String columnName = ZFieldConverter.toDbField(f.getName());
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(f.getName() + SPACE + sqlOperatorEnum.getContent() + fValue);
+			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + fValue);
 		} else {
-			this.where.add(AND + SPACE + f.getName() + SPACE + sqlOperatorEnum.getContent() + fValue);
+			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + fValue);
 		}
 
 		return this;
@@ -77,29 +156,6 @@ public class ZRWrapper<T> {
 
 	public ZRWrapper<T> eq(final WrapperPair<T> pair) {
 		return this.eq(pair.getFunction(), pair.getValue());
-	}
-
-	// FIXME 2024年6月12日 下午9:10:22 zhangzhen : sqlite 中时间日期类型存的是long值
-	private static Object hValue(final Object value) {
-		if ((value instanceof Character) || (value instanceof String)) {
-			return "'" + value + "'";
-		}
-		if ((value instanceof Date) || (value instanceof java.sql.Date) || (value instanceof Time)
-				|| (value instanceof Timestamp)) {
-			return "'" + value + "'";
-		}
-
-		if (value.getClass().isArray()) {
-			final String encodeHexStr = HexUtil.encodeHexStr((byte[]) value);
-			final String encodeHexString = Hex.encodeHexString((byte[]) value);
-			// final int x = 10;
-			// return "'" + encodeHexString + "'";
-			// FIXME 2024年6月12日 下午9:08:10 zhangzhen : 还有点问题，暂不支持
-			throw new UnsupportedOperationException("array类型暂不支持");
-			// FIXME 2024年6月12日 下午9:09:07 zhangzhen : float 等值查询也有问题，干脆在DBType中不支持float算了?
-		}
-
-		return value;
 	}
 
 	/**
@@ -248,7 +304,6 @@ public class ZRWrapper<T> {
 		return this;
 	}
 
-
 	public ZRWrapper<T> gte(final WrapperPair<T> pair) {
 		return this.gte(pair.getFunction(), pair.getValue());
 	}
@@ -257,6 +312,18 @@ public class ZRWrapper<T> {
 		return this.like(pair.getFunction(), pair.getValue());
 	}
 
+	/**
+	 * 模糊查询,构造条件如: name LIKE '%?%'
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.like(MyEntity::getName(),myEntity.getName());
+	 * 或者
+	 * 		wrapper.like(MyEntity::getName(),"张三李四");
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
 	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final Object value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LIKE);
 	}
@@ -265,6 +332,18 @@ public class ZRWrapper<T> {
 		return this.like(pair.getFunction(), pair.getValue());
 	}
 
+	/**
+	 * NOT 模糊查询,构造条件如: name NOT LIKE '%?%'
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.notLike(MyEntity::getName(),myEntity.getName());
+	 * 或者
+	 * 		wrapper.notLike(MyEntity::getName(),"张三李四");
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
 	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final Object value) {
 		return this.addValue0(function, value, SQLOperatorEnum.NOT_LIKE);
 	}
@@ -274,6 +353,18 @@ public class ZRWrapper<T> {
 		return this.isNull(pair.getFunction());
 	}
 
+	/**
+	 * 判断column is null,构造条件如: name IS NUll
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.isNull(MyEntity::getName());
+	 * 或者
+	 * 		wrapper.isNull(MyEntity::getName());
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
 	public ZRWrapper<T> isNull(final SerializableFunction<T, Object> function) {
 		return this.addValue0(function, null, SQLOperatorEnum.IS_NULL);
 	}
@@ -282,6 +373,18 @@ public class ZRWrapper<T> {
 		return this.isNull(pair.getFunction());
 	}
 
+	/**
+	 * 判断column IS NOT NULL,构造条件如: name IS NOT NUll
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.notNull(MyEntity::getName());
+	 * 或者
+	 * 		wrapper.notNull(MyEntity::getName());
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
 	public ZRWrapper<T> notNull(final SerializableFunction<T, Object> function) {
 		return this.addValue0(function, null, SQLOperatorEnum.NOT_NULL);
 	}
@@ -290,20 +393,143 @@ public class ZRWrapper<T> {
 		return this.endingWith(pair.getFunction(), pair.getValue());
 	}
 
+	/**
+	 * 后缀匹配查询,构造条件如: name LIKE '?%'
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.endingWith(MyEntity::getName(),myEntity.getName());
+	 * 或者
+	 * 		wrapper.endingWith(MyEntity::getName(),"张三李四");
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
 	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final Object value) {
 		return this.addValue0(function, value, SQLOperatorEnum.ENDING_WITH);
 	}
-	// FIXME 2024年6月12日 下午11:34:01 zhangzhen : 继续支持StartingWith 等，继续做今天留下来的FIXME
 
 	public ZRWrapper<T> startingWith(final WrapperPair<T> pair) {
-		return this.endingWith(pair.getFunction(), pair.getValue());
+		return this.startingWith(pair.getFunction(), pair.getValue());
 	}
 
+	/**
+	 * 前缀匹配查询,构造条件如: name LIKE '%?'
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.startingWith(MyEntity::getName(),myEntity.getName());
+	 * 或者
+	 * 		wrapper.startingWith(MyEntity::getName(),"张三李四");
+	 *
+	 * @param function
+	 * @param value
+	 * @return
+	 */
 	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final Object value) {
 		return this.addValue0(function, value, SQLOperatorEnum.STARTING_WITH);
 	}
 
-	// and
+
+	/**
+	 * IN查询,构造条件如: name IN (?,?,?)
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.in(MyEntity::getId,Lists.newArrayList(e1.getId(),e2.getId(),e3.getId()));
+	 * 或者
+	 * 		wrapper.in(MyEntity::getId,Lists.newArrayList(1,2,3));
+	 *
+	 * @param function
+	 * @param iterable	传值多个条件值，类型为Iterable
+	 * @return
+	 */
+	public ZRWrapper<T> in(final SerializableFunction<T, Object> function, final Iterable<?> iterable) {
+		return this.addValue0(function, iterable, SQLOperatorEnum.IN);
+	}
+
+	/**
+	 * NOT IN查询,构造条件如: name NOT IN (?,?,?)
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.notIn(MyEntity::getId,Lists.newArrayList(e1.getId(),e2.getId(),e3.getId()));
+	 * 或者
+	 * 		wrapper.notIn(MyEntity::getId,Lists.newArrayList(1,2,3));
+	 *
+	 * @param function
+	 * @param iterable	传值多个条件值，类型为Iterable
+	 * @return
+	 */
+	public ZRWrapper<T> notIn(final SerializableFunction<T, Object> function, final Iterable<?> iterable) {
+		return this.addValue0(function, iterable, SQLOperatorEnum.NOT_IN);
+	}
+
+	/**
+	 * BETWEEN 范围查询,构造条件如: name BETWEEN ? AND ?
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.between(MyEntity::getId,e1.getId(),e2.getId());
+	 * 或者
+	 * 		wrapper.between(MyEntity::getId,1,2);
+	 *
+	 * @param function
+	 * @param value1
+	 * @param value2
+	 * @return
+	 */
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Object value1, final Object value2) {
+		return this.addValue0(function, new Object[] { value1, value2 }, SQLOperatorEnum.BETWEEN);
+	}
+
+	/**
+	 * NOT BETWEEN 范围查询,构造条件如: name NOT BETWEEN ? AND ?
+	 *
+	 * 调用本方法的方式为：
+	 * 		wrapper.notBetween(MyEntity::getId,e1.getId(),e2.getId());
+	 * 或者
+	 * 		wrapper.notBetween(MyEntity::getId,1,2);
+	 *
+	 * @param function
+	 * @param value1
+	 * @param value2
+	 * @return
+	 */
+	public ZRWrapper<T> notBetween(final SerializableFunction<T, Object> function, final Object value1, final Object value2) {
+		return this.addValue0(function, new Object[] { value1, value2 }, SQLOperatorEnum.NOT_BETWEEN);
+	}
+
+	// FIXME 2024年6月13日 下午8:55:56 zhangzhen : 继续支持
+
+	/**
+	 * 由本条件，组合另一个条件，两个条件之间的关系为 AND.
+	 * 如：
+		  	final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+			eq.startingWith(BlobEntity::getName,s1.getName());
+			eq.eq(BlobEntity::getId,s1.getId());
+
+			final ZRWrapper<BlobEntity> and = new ZRWrapper<>();
+			and.like(BlobEntity::getChar1,s2.getChar1());
+			and.gte(BlobEntity::getD1,s2.getD1());
+
+			eq.and(and);
+
+			final List<BlobEntity> find = myRepository.find(eq);
+
+		两个之间之间AND，等同于两个条件的操作全放在一个条件里，如上代码
+		等同于：
+			final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+			eq.startingWith(BlobEntity::getName,s1.getName());
+			eq.eq(BlobEntity::getId,s1.getId());
+			eq.like(BlobEntity::getChar1,s2.getChar1());
+			eq.gte(BlobEntity::getD1,s2.getD1());
+
+			final List<BlobEntity> find = myRepository.find(eq);
+
+		这两段代码生成的SQL相同：
+			WHERE name LIKE '?%' AND id = ? AND char1 LIKE '%?%' AND d1 >= ?
+
+	 *
+	 * @param wrapper	要组合的条件
+	 * @return
+	 */
 	public ZRWrapper<T> and(final ZRWrapper<T> wrapper) {
 
 		this.where.add(0, "(");
@@ -316,6 +542,39 @@ public class ZRWrapper<T> {
 		return this;
 	}
 
+	/**
+	 * 由本条件，组合另一个条件，两个条件之间的关系为 OR.
+	 * 如：
+
+		final ZRWrapper<BlobEntity> eq = new ZRWrapper<>();
+		eq.eq(BlobEntity::getInteger1, s1.getInteger1());
+		eq.like(BlobEntity::getName, s1.getName());
+		eq.between(BlobEntity::getShort1, s1.getShort1(), s2.getShort1());
+
+		final ZRWrapper<BlobEntity> or = new ZRWrapper<>();
+		or.notNull(BlobEntity::getTime);
+		or.lte(BlobEntity::getId,Integer.MAX_VALUE);
+
+		eq.or(or);
+
+		final List<BlobEntity> find = this.rrrrrrr.find(eq);
+
+		这段代码生成的SQL条件为：
+			WHERE
+			((
+					integer1 = ?
+					AND NAME LIKE '%?%'
+					AND short1 BETWEEN ? AND ?
+					)
+				OR ((
+						time IS NOT NULL
+					AND id <= 2147483647
+			)))
+
+	 *
+	 * @param wrapper	要组合的条件
+	 * @return
+	 */
 	public ZRWrapper<T> or(final ZRWrapper<T> wrapper) {
 
 		this.where.add(0, "(");
@@ -335,15 +594,12 @@ public class ZRWrapper<T> {
 	}
 
 	/**
-	 * 完成，组装SQL了
+	 * 按当前的条件，组合出WHERE条件
 	 */
 	public String done() {
-		final String w = this.where.isEmpty() ? "" : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
-
-		System.out.println("done");
-		System.out.println("where = " + this.where);
-		System.out.println("w = " + w);
-
+		final String w =
+				this.where.isEmpty()
+				? "" : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
 		return w;
 	}
 

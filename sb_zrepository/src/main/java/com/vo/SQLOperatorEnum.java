@@ -1,5 +1,15 @@
 package com.vo;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.StringJoiner;
+
+import org.apache.commons.codec.binary.Hex;
+
+import com.vo.exception.ZRWrapperTypeException;
+
+import cn.hutool.core.util.HexUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -18,42 +28,42 @@ public enum SQLOperatorEnum {
 	EQ("=", "等于") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return addAll(value);
 		}
 	},
 
 	NE("!=", "不等于") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return addAll(value);
 		}
 	},
 
 	LT("<", "小于") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return addAll(value);
 		}
 	},
 
 	LTE("<=", "小于等于") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return addAll(value);
 		}
 	},
 
 	GT(">", "大于") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return addAll(value);
 		}
 	},
 
 	GTE(">=", "大于等于") {
 		@Override
 		public Object hValue(final Object value) {
-			return value;
+			return addAll(value);
 		}
 	},
 
@@ -67,14 +77,14 @@ public enum SQLOperatorEnum {
 			// FIXME 2024年6月12日 下午10:58:37 zhangzhen : 或者：和声明式方法一样，判断各个方法支持的类型，如：like 只支持String/Character等等
 			// FIXME 2024年6月12日 下午11:01:37 zhangzhen : 决定了：改为和checkFindByXXLike一样，先把各个方法支持的类型提取为一个类
 
-			return "%" + value + "%";
+			return addAll("%" + value + "%");
 		}
 	},
 
 	NOT_LIKE("NOT LIKE", "模糊查询:非") {
 		@Override
 		public Object hValue(final Object value) {
-			return "%" + value + "%";
+			return addAll("%" + value + "%");
 		}
 	},
 
@@ -85,7 +95,7 @@ public enum SQLOperatorEnum {
 		}
 	},
 
-	NOT_NULL("NOT NULL", "判断某个column为not null") {
+	NOT_NULL("IS NOT NULL", "判断某个column为not null") {
 		@Override
 		public Object hValue(final Object value) {
 			return value;
@@ -95,14 +105,48 @@ public enum SQLOperatorEnum {
 	ENDING_WITH("LIKE", "模糊查询:匹配后缀") {
 		@Override
 		public Object hValue(final Object value) {
-			return value + "%";
+			return addAll("%" + value);
 		}
 	},
 
 	STARTING_WITH("LIKE", "模糊查询:匹配前缀") {
 		@Override
 		public Object hValue(final Object value) {
-			return "%" + value;
+			return addAll(value + "%");
+		}
+	},
+
+	IN("IN", "IN查询") {
+		@Override
+		public Object hValue(final Object value) {
+			return inAndNotIn(value);
+		}
+	},
+
+	NOT_IN("NOT IN", "NOT IN查询") {
+		@Override
+		public Object hValue(final Object value) {
+			return inAndNotIn(value);
+		}
+	},
+
+	BETWEEN("BETWEEN", "范围查询:在某个范围内") {
+		@Override
+		public Object hValue(final Object value) {
+			final Object[] a = (Object[]) value;
+			final Object v1 = addAll(a[0]);
+			final Object v2 = addAll(a[1]);
+			return v1 + ZRWrapper.SPACE + MethodRegex.AND  + ZRWrapper.SPACE+ v2;
+		}
+	},
+
+	NOT_BETWEEN("NOT BETWEEN", "范围查询:不在某个范围内") {
+		@Override
+		public Object hValue(final Object value) {
+			final Object[] a = (Object[]) value;
+			final Object v1 = addAll(a[0]);
+			final Object v2 = addAll(a[1]);
+			return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + v2;
 		}
 	},
 
@@ -120,4 +164,58 @@ public enum SQLOperatorEnum {
 	 */
 	public abstract Object hValue(Object value);
 
+	private static Object addAll(final Object value) {
+		final Object v2 = addString(value);
+		final Object v3 = addDate_Time_Timestamp(v2);
+		return v3;
+	}
+
+	private static Object addDate_Time_Timestamp(final Object value) {
+		checkArray(value);
+		if ((value instanceof Date) || (value instanceof java.sql.Date) || (value instanceof Time)
+				|| (value instanceof Timestamp)) {
+			return "'" + value + "'";
+		}
+		return value;
+	}
+
+	private static Object checkArray(final Object value) {
+
+		if (value.getClass().isArray()) {
+			final String encodeHexStr = HexUtil.encodeHexStr((byte[]) value);
+			final String encodeHexString = Hex.encodeHexString((byte[]) value);
+			// final int x = 10;
+			// return "'" + encodeHexString + "'";
+			// FIXME 2024年6月12日 下午9:08:10 zhangzhen : 还有点问题，暂不支持
+			throw new UnsupportedOperationException("array类型暂不支持");
+			// FIXME 2024年6月12日 下午9:09:07 zhangzhen : float 等值查询也有问题，干脆在DBType中不支持float算了?
+		}
+
+		return value;
+	}
+
+	private static Object addString(final Object value) {
+		checkArray(value);
+		if ((value instanceof Character) || (value instanceof String)) {
+			return "'" + value + "'";
+		}
+
+		return value;
+	}
+
+	private static Object inAndNotIn(final Object value) {
+		if (!(value instanceof Iterable)) {
+			final String m = "参数必须是" + Iterable.class.getSimpleName() + "类型,当前类型为[" + value.getClass().getCanonicalName()
+					+ "]";
+			throw new ZRWrapperTypeException(m);
+		}
+
+		final Iterable<?> i = (Iterable<?>) value;
+		final StringJoiner joiner = new StringJoiner(",", "(", ")");
+		for (final Object v : i) {
+			joiner.add(String.valueOf(v));
+		}
+
+		return joiner.toString();
+	}
 }
