@@ -1919,7 +1919,7 @@ public class ZRepositoryMain {
 			// FIXME 2024年5月27日 下午8:49:49 zhangzhen: 继续测试命名
 			final String name = f.getName();
 
-			if (ZFieldConverter.daxie.contains(name.charAt(0))) {
+			if (ZFieldConverter.UPPERCASE_LETTER.contains(name.charAt(0))) {
 				final String m = "@" + ZEntity.class.getSimpleName()
 						+ "类[" + typeClass.getSimpleName() + "] 中的Field ["
 						+ name

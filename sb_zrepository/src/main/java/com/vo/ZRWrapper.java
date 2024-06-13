@@ -119,6 +119,17 @@ import lombok.Getter;
  */
 public class ZRWrapper<T> {
 
+
+	private static final String ALWAYS_TRUE = " 1 = 1 ";
+	public static final String SPACE = " ";
+	private static final String AND = MethodRegex.AND;
+	private static final String OR = MethodRegex.OR;
+
+	/**
+	 * 存放由各个方法传值而来构造的WHERE条件
+	 */
+	private final List<String> where = Lists.newArrayList();
+
 	@Getter
 	private final Class<T> entityClass;
 
@@ -126,6 +137,7 @@ public class ZRWrapper<T> {
 		if (entityClass == null) {
 			throw new NullPointerException("entityClass不能为空");
 		}
+
 		final ZRWrapper<T> w = new ZRWrapper<>(entityClass);
 		return w;
 	}
@@ -133,14 +145,6 @@ public class ZRWrapper<T> {
 	private ZRWrapper(final Class<T> entityClass) {
 		this.entityClass = entityClass;
 	}
-
-	private static final String TRUE = " 1 = 1 ";
-	public static final String SPACE = " ";
-	private static final String AND = MethodRegex.AND;
-	private static final String OR = MethodRegex.OR;
-
-	private final List<String> where = Lists.newArrayList();
-
 	/**
 	 * 等值,构造条件如: name = ?
 	 * 调用本方法的方式为：
@@ -806,7 +810,7 @@ public class ZRWrapper<T> {
 	public String done() {
 		final String w =
 				this.where.isEmpty()
-				? TRUE : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
+				? ALWAYS_TRUE : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
 		return w;
 	}
 

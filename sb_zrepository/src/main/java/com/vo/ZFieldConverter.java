@@ -1,7 +1,6 @@
 package com.vo;
 
-import java.util.HashSet;
-
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import cn.hutool.core.util.StrUtil;
@@ -14,13 +13,21 @@ import cn.hutool.core.util.StrUtil;
  *
  */
 public class ZFieldConverter {
-
 	// FIXME 2024年5月27日 下午8:50:47 zhangzhen: 这个要好好测，万一出了问题，容易导致认为是后续代码的问题
+
+	public static final String UNDERSCORE = "_";
+	public static final Character UNDERSCORE_CHARACTER = '_';
+
+	public final static ImmutableSet<Character> UPPERCASE_LETTER = ImmutableSet.copyOf(
+			Sets.newHashSet('A', 'B', 'C', 'D', 'E', 'F',
+					'G', 'H', 'I', 'J', 'K', 'L', 'M',
+					'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+					'U', 'V', 'W', 'X', 'Y', 'Z'));
 
 	/**
 	 * Class中的Field.name 转为声明式方法中的一部分
 	 * 如：参数传来 createTime，本方法返回CreateTime
-	 * 
+	 *
 	 * @param javaFieldName
 	 * @return
 	 */
@@ -37,9 +44,9 @@ public class ZFieldConverter {
 		String n = dbFieldName;
 		for (int i = 0; i < charArray.length; i++) {
 			final char c = charArray[i];
-			if (c == '_') {
+			if (c == UNDERSCORE_CHARACTER) {
 				final char nextC = charArray[i + 1];
-				n = n.replace("_" + nextC, String.valueOf(nextC).toUpperCase());
+				n = n.replace(UNDERSCORE + nextC, String.valueOf(nextC).toUpperCase());
 
 			}
 		}
@@ -61,11 +68,11 @@ public class ZFieldConverter {
 		final StringBuilder n = new StringBuilder(x);
 		for (int i = 0; i < charArray.length; i++) {
 			final char c = charArray[i];
-			if (daxie.contains(c)) {
+			if (UPPERCASE_LETTER.contains(c)) {
 				if (i == 0) {
 					n.replace(i + count, i + count + 1, String.valueOf(c).toLowerCase());
 				} else {
-					n.replace(i + count, i + count + 1, "_" + String.valueOf(c).toLowerCase());
+					n.replace(i + count, i + count + 1, UNDERSCORE + String.valueOf(c).toLowerCase());
 				}
 				count++;
 			}
@@ -73,8 +80,5 @@ public class ZFieldConverter {
 
 		return n.toString();
 	}
-
-	static HashSet<Character> daxie = Sets.newHashSet('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-			'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
 
 }
