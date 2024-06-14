@@ -159,13 +159,18 @@ public interface ZRepository<T, ID> {
 	boolean deleteAll();
 
 	/**
-	 * 手动构造条件来查询
-	 *
+	 * 手动构造条件来查询，动态查询，有参数值的方法都自动忽略掉传值null的where条件.
+	 * 如：
+			w.in(BlobEntity::getName, null);
+			w.eq(BlobEntity::getId, 200);
+
+		会直接忽略掉name条件：where id = 200
+
+		需要判断某个字段为NULL/不为NULL，使用isNull/notNull方法.
+
 	 * @param wrapper
 	 * @return
 	 */
-	// FIXME 2024年6月14日 下午10:21:39 zhangzhen : TODO ： ZRWrapper 中方法都改为
-	// 动态sql查询(忽略null，除了isNull方法)
 	List<T> find(ZRWrapper<T> wrapper);
 
 }

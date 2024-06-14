@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -18,7 +19,27 @@ import com.vo.conn.ZCPool;
 import lombok.Getter;
 
 /**
- * 造查询条件,使用方法引用来构造查询条件.
+ * 查询条件,使用方法引用来动态构造查询条件.
+ * 方法自动忽略null值,如：
+ * 	w.eq(BlobEntity::getName, null);
+ * 生成：
+ * 	where 1=1
+ *
+ * 	w.eq(BlobEntity::getName, "zhangsan");
+ * 生成：
+ * 	where name = 'zhangsan'
+ *
+ * 如需指定查询字段值为null/不为null的，
+ * 用 isNull/notNull方法，如：
+ * 	w.isNull(BlobEntity::getName);
+ * 生成：
+ * 	where name IS NULL
+ *
+ * 	w.notNull(BlobEntity::getName);
+ * 生成：
+ * 	where name IS NOT NULL
+ *
+ *
  * 同一个本类对象调用除了and和or以外的方法，默认是AND关系，如：
  *
  * 		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
@@ -28,7 +49,7 @@ import lombok.Getter;
  *
  * 生成条件为：
  * 		WHERE name like '?%' AND char1 IS NULL AND create_time < ?
- * eq.后面加再多条件，也同为AND关系，可以不用and方法组合本就是AND关系的多个条件.
+ * eq.后面加再多条件，也同为AND关系，可以不用and方法组合，同一个对象本就是AND关系的多个条件.
  *
  * 如需OR关系，需要再多构造一个OR的本类对象：
  *
@@ -120,11 +141,12 @@ import lombok.Getter;
  */
 public class ZRWrapper<T> {
 
-
 	private static final String ALWAYS_TRUE = " 1 = 1 ";
 	public static final String SPACE = " ";
 	private static final String AND = MethodRegex.AND;
 	private static final String OR = MethodRegex.OR;
+
+	public static final String NULL = "NULL";
 
 	/**
 	 * 存放由各个方法传值而来构造的WHERE条件
@@ -676,10 +698,18 @@ public class ZRWrapper<T> {
 	 * 		wrapper.in(MyEntity::getId,Lists.newArrayList(1,2,3));
 	 *
 	 * @param function
-	 * @param iterable	传值多个条件值，类型为Iterable
+	 * @param iterable	传值多个条件值，类型为Iterable,传值为null或者空的Iterable对象,则直接忽略对应的条件字段
 	 * @return
 	 */
 	public ZRWrapper<T> in(final SerializableFunction<T, Object> function, final Iterable<?> iterable) {
+		if (iterable == null) {
+			return this.addValue0(function, null, SQLOperatorEnum.IN);
+		}
+		final Iterator<?> it = iterable.iterator();
+		if (!it.hasNext()) {
+			return this.addValue0(function, null, SQLOperatorEnum.IN);
+		}
+
 		return this.addValue0(function, iterable, SQLOperatorEnum.IN);
 	}
 
@@ -692,10 +722,18 @@ public class ZRWrapper<T> {
 	 * 		wrapper.notIn(MyEntity::getId,Lists.newArrayList(1,2,3));
 	 *
 	 * @param function
-	 * @param iterable	传值多个条件值，类型为Iterable
+	 * @param iterable	传值多个条件值，类型为Iterable,传值为null或者空的Iterable对象,则直接忽略对应的条件字段
 	 * @return
 	 */
 	public ZRWrapper<T> notIn(final SerializableFunction<T, Object> function, final Iterable<?> iterable) {
+		if (iterable == null) {
+			return this.addValue0(function, null, SQLOperatorEnum.NOT_IN);
+		}
+		final Iterator<?> it = iterable.iterator();
+		if (!it.hasNext()) {
+			return this.addValue0(function, null, SQLOperatorEnum.NOT_IN);
+		}
+
 		return this.addValue0(function, iterable, SQLOperatorEnum.NOT_IN);
 	}
 
@@ -707,14 +745,42 @@ public class ZRWrapper<T> {
 	 * 或者
 	 * 		wrapper.between(MyEntity::getId,1,2);
 	 *
+	 * 两个参数都为null，则直接忽略对应的字段条件：
+	 * 		wrapper.between(MyEntity::getId,null,null);
+	 * 		wrapper.eq(MyEntity::getName,"zhangsan");
+	 *
+	 * 会直接忽略掉id条件，生成where：
+	 * 		where name = 'zhangsan'
+	 *
+	 * 前面参数为null：
+	 * 		wrapper.between(MyEntity::getId,null,200);
+	 * 		wrapper.eq(MyEntity::getName,"zhangsan");
+	 *
+	 * 生成：
+	 * 		where id BETWEEN NULL AND 200 AND name = 'zhangsan'
+	 *
+	 * 后面参数为null：
+	 * 		wrapper.between(MyEntity::getId,200,null);
+	 * 		wrapper.eq(MyEntity::getName,"zhangsan");
+	 *
+	 * 生成：
+	 * 		where id BETWEEN 200 AND NULL AND name = 'zhangsan'
+	 *
+	 *
 	 * @param function
 	 * @param value1
 	 * @param value2
 	 * @return
 	 */
 	// FIXME 2024年6月13日 下午11:45:02 zhangzhen : between/ 等，下面的继续添加重载方法
-	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Object value1, final Object value2) {
-		return this.addValue0(function, new Object[] { value1, value2 }, SQLOperatorEnum.BETWEEN);
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Object value1,
+			final Object value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
 	}
 
 	/**
@@ -725,16 +791,40 @@ public class ZRWrapper<T> {
 	 * 或者
 	 * 		wrapper.notBetween(MyEntity::getId,1,2);
 	 *
+	 * 两个参数都为null，则直接忽略对应的字段条件：
+	 * 		wrapper.notBetween(MyEntity::getId,null,null);
+	 * 		wrapper.eq(MyEntity::getName,"zhangsan");
+	 *
+	 * 会直接忽略掉id条件，生成where：
+	 * 		where name = 'zhangsan'
+	 *
+	 * 前面参数为null：
+	 * 		wrapper.notBetween(MyEntity::getId,null,200);
+	 * 		wrapper.eq(MyEntity::getName,"zhangsan");
+	 *
+	 * 生成：
+	 * 		where id NOT BETWEEN NULL AND 200 AND name = 'zhangsan'
+	 *
+	 * 后面参数为null：
+	 * 		wrapper.notBetween(MyEntity::getId,200,null);
+	 * 		wrapper.eq(MyEntity::getName,"zhangsan");
+	 *
+	 * 生成：
+	 * 		where id NOT BETWEEN 200 AND NULL AND name = 'zhangsan'
+	 *
 	 * @param function
 	 * @param value1
 	 * @param value2
 	 * @return
 	 */
-	public ZRWrapper<T> notBetween(final SerializableFunction<T, Object> function, final Object value1, final Object value2) {
+	public ZRWrapper<T> notBetween(final SerializableFunction<T, Object> function, final Object value1,
+			final Object value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
 		return this.addValue0(function, new Object[] { value1, value2 }, SQLOperatorEnum.NOT_BETWEEN);
 	}
-
-	// FIXME 2024年6月13日 下午8:55:56 zhangzhen : 继续支持
 
 	/**
 	 * 由本条件，组合另一个条件，两个条件之间的关系为 AND.
@@ -841,7 +931,12 @@ public class ZRWrapper<T> {
 		return w;
 	}
 
-	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value, final SQLOperatorEnum sqlOperatorEnum) {
+	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value,
+			final SQLOperatorEnum sqlOperatorEnum) {
+
+		if ((value == null) && ((sqlOperatorEnum != SQLOperatorEnum.IS_NULL) && (sqlOperatorEnum != SQLOperatorEnum.NOT_NULL))) {
+			return this;
+		}
 
 		final Field f = ReflectionUtil.getField(function);
 
@@ -867,7 +962,6 @@ public class ZRWrapper<T> {
 	}
 
 	private DBEnum getDBEnum0() {
-		System.out.println("getDBEnum0");
 		final String dataSourceName = this.entityClass.getAnnotation(ZEntity.class).dataSourceName();
 		final ZCPool cp = ZCPool.getInstance(dataSourceName);
 		final DBEnum dbEnum = cp.getDbEnum(Mode.WRITE);

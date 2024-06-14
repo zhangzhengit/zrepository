@@ -210,10 +210,7 @@ public enum SQLOperatorEnum {
 		public Object hValue(final Field field, final Object value, final DBEnum dbEnum) {
 			return betweenAndNotBetween(field, value, dbEnum);
 		}
-	},
-
-	// FIXME 2024年6月12日 下午11:30:09 zhangzhen : 继续支持操作，MethodRegex中的都实现出来
-	;
+	},;
 
 	private String content;
 	private String remark;
@@ -336,21 +333,21 @@ public enum SQLOperatorEnum {
 
 	private static Object betweenAndNotBetween(final Field field, final Object value, final DBEnum dbEnum) {
 		if (value == null) {
-			return "null" + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
+			return ZRWrapper.NULL + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + ZRWrapper.NULL;
 		}
 
 		final Object[] a = (Object[]) value;
 		if (a.length == 0) {
-			return "null" + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
+			return ZRWrapper.NULL + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + ZRWrapper.NULL;
 		}
 
 		if (a.length == 1) {
 			final Object v1 = addAll(field, a[0], dbEnum);
-			return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + "null";
+			return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + ZRWrapper.NULL;
 		}
 
-		final Object v1 = addAll(field, a[0], dbEnum);
-		final Object v2 = addAll(field, a[1], dbEnum);
+		final Object v1 = a[0] == null ? ZRWrapper.NULL : addAll (field, a[0], dbEnum);
+		final Object v2 = a[1] == null ? ZRWrapper.NULL : addAll (field, a[1], dbEnum);
 		return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + v2;
 	}
 }
