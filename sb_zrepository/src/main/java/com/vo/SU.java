@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -49,7 +48,6 @@ import com.vo.core.ZLog2;
 import com.vo.transaction.ZTransactionAspect;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -1086,31 +1084,31 @@ public class SU {
 	}
 
 	// FIXME 2023年9月24日 下午3:41:35 zhanghen: 继续写，测试各种db和java的日期类型转换
-	private static <T> Object handValue(final T t, final Object columValue, final Field field) {
-		if (columValue instanceof LocalDateTime) {
-			final Date utilDate = Date.from(((LocalDateTime) columValue).atZone(ZoneId.systemDefault()).toInstant());
-
-			if(field.getType().equals(java.util.Date.class)) {
-				return utilDate;
-			}
-			if( field.getType().equals(java.sql.Date.class)) {
-				return new java.sql.Date(utilDate.getTime());
-			}
-			final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);
-			if (zdf != null) {
-				final String format = zdf.format().getFormat();
-				final SimpleDateFormat sss = new SimpleDateFormat(format);
-
-				final String format2 = sss.format(utilDate);
-
-				return DateUtil.parse(format2, format);
-			}
-
-			return utilDate;
-		}
-
-		return columValue;
-	}
+	//	private static <T> Object handValue(final T t, final Object columValue, final Field field) {
+	//		if (columValue instanceof LocalDateTime) {
+	//			final Date utilDate = Date.from(((LocalDateTime) columValue).atZone(ZoneId.systemDefault()).toInstant());
+	//
+	//			if(field.getType().equals(java.util.Date.class)) {
+	//				return utilDate;
+	//			}
+	//			if( field.getType().equals(java.sql.Date.class)) {
+	//				return new java.sql.Date(utilDate.getTime());
+	//			}
+	//			final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);
+	//			if (zdf != null) {
+	//				final String format = zdf.format().getFormat();
+	//				final SimpleDateFormat sss = new SimpleDateFormat(format);
+	//
+	//				final String format2 = sss.format(utilDate);
+	//
+	//				return DateUtil.parse(format2, format);
+	//			}
+	//
+	//			return utilDate;
+	//		}
+	//
+	//		return columValue;
+	//	}
 
 	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
 		final Date invokeTime = new Date();
@@ -1295,7 +1293,9 @@ public class SU {
 				continue;
 			}
 
-			final Object value = handValue(object, columValue, field);
+			// FIXME 2024年6月14日 下午8:54:51 zhangzhen : 下面2行恢复，debug mysql datetime类型的
+			final Object value = columValue;
+			//			final Object value = handValue(object, columValue, field);
 			if (value == null) {
 				continue;
 			}
@@ -1330,7 +1330,15 @@ public class SU {
 						final java.util.Date date = new Date((long) value);
 						field.set(object, date);
 					} else {
-						field.set(object, value);
+						// FIXME 2024年6月14日 下午8:58:41 zhangzhen : mysql datetime 对应java LocalDateTime
+						final boolean equals = value.getClass().equals(LocalDateTime.class);
+						if (equals) {
+							final Date newDate = Date
+									.from(((LocalDateTime) (value)).atZone(ZoneId.systemDefault()).toInstant());
+							field.set(object, newDate);
+						} else {
+							field.set(object, value);
+						}
 					}
 				} else if (cn.equals(java.sql.Date.class.getCanonicalName())) {
 					if ((dbEnum == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
@@ -1349,7 +1357,7 @@ public class SU {
 						final Timestamp time = new Timestamp((long) value);
 						field.set(object, time);
 					}
-				} else if (cn.equals(LocalTime.class.getCanonicalName())) {
+				}  else if (cn.equals(LocalTime.class.getCanonicalName())) {
 					if (value.getClass().equals(Time.class)) {
 						final Time t1 = (Time) value;
 						final Calendar c = Calendar.getInstance();

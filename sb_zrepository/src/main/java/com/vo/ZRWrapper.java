@@ -2,6 +2,7 @@ package com.vo;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -272,6 +273,10 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final java.sql.Time value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
 	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
 		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
@@ -327,11 +332,19 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
+	// FIXME 2024年6月14日 下午8:22:36 zhangzhen : 考虑所有方法要不要严格判断：value类型？
+	// 因为：pgsql中测试 lt(blobEntity::getTime(),new java.util.Date()) 执行sql报错：
+	// ND time < 'Fri Jun 14 20:22:25 CST 2024' 而 pgsql 中time类型格式为 20:22:25
+	// 所以：要不要在本类中就及时提示可能的问题（类型不匹配等）
 	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Date value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
 	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final java.sql.Time value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
@@ -393,6 +406,10 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final java.sql.Time value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
@@ -459,6 +476,10 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final java.sql.Time value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
 	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
 		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
@@ -519,6 +540,10 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final java.sql.Date value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Time value) {
 		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
 
@@ -820,9 +845,9 @@ public class ZRWrapper<T> {
 
 		final String columnName = ZFieldConverter.toDbField(f.getName());
 		if (this.where.isEmpty() || ((this.where.size() == 1) && "(".equals(this.where.get(0).trim()))) {
-			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value, this.getDBEnum())));
+			this.where.add(columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(f, value, this.getDBEnum())));
 		} else {
-			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(value, this.getDBEnum())));
+			this.where.add(AND + SPACE + columnName + SPACE + sqlOperatorEnum.getContent() + (SPACE + sqlOperatorEnum.hValue(f, value, this.getDBEnum())));
 		}
 
 		return this;

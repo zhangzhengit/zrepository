@@ -32,6 +32,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.vo.anno.UserRepositoryTest1;
 import com.vo.anno.ZEntity;
@@ -47,6 +49,7 @@ import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
+import com.vo.exception.DBNotSupportException;
 import com.vo.exception.MethodNameDeclarationException;
 import com.vo.exception.ParameterCountDeclarationException;
 import com.vo.exception.ParameterNameDeclarationException;
@@ -1940,15 +1943,32 @@ public class ZRepositoryMain {
 
 		final List<Field> fieldList = Lists.newArrayList(fs);
 
-		final Optional<Field> notSupport = fieldList.stream().filter(f -> !DBType.typeSupport(f.getType().getCanonicalName())).findAny();
+		final String dataSourceName = typeClass.getAnnotation(ZEntity.class).dataSourceName();
+
+		final Optional<Field> notSupport = fieldList.stream().filter(f -> !DBType.typeSupport(dataSourceName, f.getType().getCanonicalName())).findAny();
 		if (notSupport.isPresent()) {
-			final String m = "@" + ZEntity.class.getSimpleName()
-					+ "类[" + typeClass.getSimpleName() + "] 中的字段 ["
-					+ notSupport.get().getName()
-					+ "] 的类型 ["
-					+ notSupport.get().getType().getCanonicalName()
-					+ "] 不支持"
-					;
+			final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
+			final Multimap<String, String> sm = DBType.getAllSupportType(dbEnum);
+			final Multiset<String> keys = sm.keys();
+			final String sts = keys.stream()
+					.distinct()
+					. collect(Collectors.joining(",","[","]"));
+			final String m =
+					"\r\n\t"
+							+ dbEnum.name() + ":"
+							+ "@" + ZEntity.class.getSimpleName()
+							+ "类[" + typeClass.getSimpleName() + "] 中的字段 ["
+							+ notSupport.get().getName()
+							+ "] 的类型 ["
+							+ notSupport.get().getType().getCanonicalName()
+							+ "] 不支持"
+							+ "\r\n\t"
+							+ "支持类型为:"
+							+ "\r\n\t"
+							+  sts
+							+ "\r\n\t"
+							;
+
 			throw new IllegalArgumentException(m);
 		}
 
@@ -1988,26 +2008,45 @@ public class ZRepositoryMain {
 						final Optional<Field> oequalsIgnoreCase = fieldList.stream()
 								.filter(fn -> fn.getName().equalsIgnoreCase(javaFieldName)).findAny();
 						if (oequalsIgnoreCase.isPresent()) {
-							final String m = "数据表[" + tableName + "]中存在"
+							final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
+							final String m = "\r\n\t"
+									+  dbEnum.name()
+									+ ":"
+									+ "数据表[" + tableName + "]中存在"
 									+ "[" + typeClass.getSimpleName() + "]中不存在的column [" + columnName + "]"
 									+ " ,是否手误写错了?想写的是java Field [" + oequalsIgnoreCase.get().getName() +"]"
 									+ " 转换为DB的下划线命名法后的 ["+ ZFieldConverter.toDbField(oequalsIgnoreCase.get().getName()) +"] ?)"
 									;
 							throw new IllegalArgumentException(m);
 						}
-						final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
-								+ typeClass.getSimpleName() + "]不存在的字段" + columnName
-								+ " 此字段从转为java驼峰式命名为[" + javaFieldName + "]"
-								;
+						final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
+						final String m =
+								"\r\n\t"
+										+  dbEnum.name()
+										+ ":"
+										+ "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
+										+ typeClass.getSimpleName() + "]不存在的字段" + columnName
+										+ " 此字段从转为java驼峰式命名为[" + javaFieldName + "]"
+										;
 						throw new IllegalArgumentException(m);
 
 					}
 
 					final boolean match = DBType.match(dataSourceDTO.getDbEnum(), o.get().getType().getCanonicalName(), columnType);
 					if (!match) {
-						final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
-						+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
-						+ "] 与数据表[" + tableName + "] 的字段 [" + columnName + "] 类型 [" + columnType + "] 不匹配";
+						final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
+						final String m =
+								"\r\n\t"
+										+  dbEnum.name()
+										+ ":"
+										+ "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
+										+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
+										+ "] 与数据表[" + tableName + "] 的字段 [" + columnName + "] 类型 [" + columnType + "] 不匹配"
+										+ "\r\n\t"
+										+ "java类型和DB类型匹配关系请看 @see " + DBType.class.getCanonicalName()
+										+ "\r\n\t"
+
+										;
 						throw new IllegalArgumentException(m);
 					}
 				}
@@ -2020,19 +2059,24 @@ public class ZRepositoryMain {
 							.collect(Collectors.toList());
 					final HashSet<String> cns = Sets.newHashSet(cnl);
 					if (cnl.size() != cns.size()) {
+						final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
 						final List<Entry<String, Long>> collect = cnl.stream().collect(Collectors.groupingBy(e -> e, Collectors.counting())).entrySet().stream().filter(e-> e.getValue().longValue() > 1).collect(Collectors.toList());
-						final String m = "数据表[" + tableName + "]" + "中的column"
-								+ "\r\n\t\t\t"
-								+ columnNameList
-								+ "转换为java驼峰式"
-								+ "\r\n\t\t\t"
-								+ cnl
-								+ "命名后有重复的,会导致处理数据时混乱."
-								+ "\r\n\t\t\t"
-								+ "转换后的java名称和出现次数如下："
-								+ "\r\n\t\t\t"
-								+ collect
-								+ "请检查";
+						final String m =
+								"\r\n\t"
+										+  dbEnum.name()
+										+ ":"
+										+ "数据表[" + tableName + "]" + "中的column"
+										+ "\r\n\t\t\t"
+										+ columnNameList
+										+ "转换为java驼峰式"
+										+ "\r\n\t\t\t"
+										+ cnl
+										+ "命名后有重复的,会导致处理数据时混乱."
+										+ "\r\n\t\t\t"
+										+ "转换后的java名称和出现次数如下："
+										+ "\r\n\t\t\t"
+										+ collect
+										+ "请检查";
 						throw new IllegalArgumentException(m);
 					}
 
@@ -2045,7 +2089,11 @@ public class ZRepositoryMain {
 						final List<Field> noZTransientFieldList = c.stream().filter(f -> !f.isAnnotationPresent(ZTransient.class)).collect(Collectors.toList());
 
 						if (noZTransientFieldList.size() > 0) {
-							final String m = "@" + ZEntity.class
+							final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
+							final String m = "\r\n\t"
+									+  dbEnum.name()
+									+ ":"
+									+ "@" + ZEntity.class
 									.getSimpleName() + "类[" + typeClass.getSimpleName()
 									+ "]中存在数据表[" + tableName + "]中不存在的字段" + noZTransientFieldList + EMTPY
 									+ "，如需与数据表字段对应，请在数据表中加入此字段；如不需与数据表对应，请在字段上加入@" + ZTransient.class.getCanonicalName() + " 注解"
@@ -2056,8 +2104,15 @@ public class ZRepositoryMain {
 					} else if (fieldNameList.size() < columnNameList.size()) {
 
 						cnl.removeAll(fieldNameList);
-						final String m = "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
-								+ typeClass.getSimpleName() + "]不存在的字段" + cnl + EMTPY;
+
+						final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
+
+						final String m =
+								"\r\n\t"
+										+  dbEnum.name()
+										+ ":"
+										+ "数据表[" + tableName + "]中存在" + "@" + ZEntity.class.getSimpleName() + "类["
+										+ typeClass.getSimpleName() + "]不存在的字段" + cnl + EMTPY;
 
 						throw new IllegalArgumentException(m);
 					}
@@ -2291,8 +2346,7 @@ public class ZRepositoryMain {
 			throw new IllegalArgumentException("sqlite 配置不支持：" + url);
 		}
 
-
-		throw new IllegalArgumentException("JDBC 配置不支持：" + url);
+		throw new DBNotSupportException("JDBC 配置不支持：" + url);
 	}
 
 	private static void checkZRG(final String tType, final String idType, final Class zrSubClass) {

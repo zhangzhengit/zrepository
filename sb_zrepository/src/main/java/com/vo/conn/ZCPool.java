@@ -118,6 +118,12 @@ public class ZCPool {
 
 	Object incrementLock = new Object();
 
+	/**
+	 * 只获取DBEnum(从url中获取)，不获取连接，调用本方法后不需要归还连接
+	 *
+	 * @param mode
+	 * @return
+	 */
 	public DBEnum getDbEnum(final Mode mode) {
 		if (mode == Mode.WRITE) {
 			return this.writeVector.get(0).getDbEnum();
