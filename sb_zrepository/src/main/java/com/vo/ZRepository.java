@@ -14,16 +14,12 @@ import com.vo.core.Sort;
  *
  * 子接口中支持两种方法：
 
-	FIXME 2024年5月13日 下午10:55:47 zhangzhen: 考虑怎么在启动时校验，有点复杂，因为支持很多种声明式方法，需要仔细分辨，并且以后还可能
- 		支持更多形式，更要慎重。当前是否考虑先校验简单的比如 findByXX、findByXXAndXX、findByXXNot 之类的？
-
  * 1、声明式方法，参数类型、名称、顺序都必须和方法名称中保持一致，如：
  * 	List<BlobEntity> findByDateAndInteger1(Date date,Integer integer1);
 
  * 2、自定义查询，使用 @ZQuery 注解自定义SQL，如：
  * 	@ZQuery(sql = "select * from blobt where id >= ?")
 	List<BlobEntity> selectGTEId(Integer id);
-
  *
  * @param <T>  @ZEntity 标记的类
  * @param <ID> @ZEntity 标记的类里的 @ZID 字段的类型
@@ -168,7 +164,8 @@ public interface ZRepository<T, ID> {
 	 * @param wrapper
 	 * @return
 	 */
-	// FIXME 2024年6月12日 下午9:15:57 zhangzhen : 刚@Test了 xx.eq 和 xx.eq(or) OK 了 (仅mysql和pgsql，还不包含float和byte[]类型)
+	// FIXME 2024年6月14日 下午10:21:39 zhangzhen : TODO ： ZRWrapper 中方法都改为
+	// 动态sql查询(忽略null，除了isNull方法)
 	List<T> find(ZRWrapper<T> wrapper);
 
 }

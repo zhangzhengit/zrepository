@@ -564,6 +564,8 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
+	// FIXME 2024年6月14日 下午10:14:22 zhangzhen : like / not like / startingWith / endingWith
+	// 等 sql = like 的：如果传值null，sql 为 like '%null%' 是否合理？考虑怎么做
 	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final String string) {
 		return this.addValue0(function, string, SQLOperatorEnum.LIKE);
 	}
