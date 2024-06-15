@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
- * @ZCreateTime 字段 save 时的动作：如果字段值为null，则自动给一个初始值(当前时间)
+ * @ZCreateTime 字段 ZRepository.save 时的动作：如果字段值为null，则自动给一个初始值[当前时间]
  *
  * @author zhangzhen
  * @date 2024年6月16日 上午5:25:45

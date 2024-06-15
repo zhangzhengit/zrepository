@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
- * @ZUpdateTime字段 update 时的动作：直接忽略字段值，赋值为[当前时间]
+ * @ZUpdateTime字段 ZRepository.update 时的动作：直接忽略字段值，赋值为[当前时间]
  *
  * @author zhangzhen
  * @date 2024年6月16日 上午6:10:30
