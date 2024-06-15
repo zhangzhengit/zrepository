@@ -58,6 +58,7 @@ public class ZTransactionAspect {
 		ZCONNECTION_THREADLOCAL.set(zConnection);
 
 		try {
+			zConnection.getConnection().setAutoCommit(false);
 			final Object v = proceedingJoinPoint.proceed();
 			return v;
 		} catch (final Throwable e) {
