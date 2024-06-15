@@ -753,15 +753,16 @@ public class SU {
 		return sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES, v.toString());
 	}
 
-	public static <T> T save(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> entityClass,
-			final Class entityTName, final T t, final String sql) {
+	public static <T> T save(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Class<T> entityClass,
+			final Class<?> entityTName, final T t, final String sql) {
 
+		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
+		sh.forEach(h -> ((ZSaveHandler)h).handle(t));
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
-
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-
 		try {
 
 			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection);
@@ -810,13 +811,6 @@ public class SU {
 			fieldCount++;
 			final String dbFieldname = ZFieldConverter.toDbField(field.getName());
 			arg.add(dbFieldname);
-		}
-
-		// 不管ZConnection来自哪里[ZCSourceEnum]，都给@ZVersion字段一个初始值
-		final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
-		if (zvf.isPresent()) {
-			final Field vf = zvf.get();
-			setZVersionValue(t, vf, ZVERSION_INITIAL_VALUE);
 		}
 
 		final StringJoiner joiner = new StringJoiner(",");
