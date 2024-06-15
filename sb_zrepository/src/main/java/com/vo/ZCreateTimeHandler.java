@@ -3,14 +3,19 @@ package com.vo;
 import java.lang.reflect.Field;
 import java.util.Date;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
 /**
- * @ZVersion save 时的动作：如果带 @ZCreateTime 的字段值为null，则自动给一个初始值(当前世界)
+ * @ZVersion save 时的动作：如果带 @ZCreateTime 的字段值为null，则自动给一个初始值(当前时间)
  *
  * @author zhangzhen
  * @date 2024年6月16日 上午5:25:45
  *
  */
 public class ZCreateTimeHandler extends ZSaveHandler {
+
+	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Date.class));
 
 	@Override
 	public void handle(final Object entityObject) {

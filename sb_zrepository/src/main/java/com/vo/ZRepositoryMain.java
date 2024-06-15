@@ -2049,6 +2049,30 @@ public class ZRepositoryMain {
 										;
 						throw new IllegalArgumentException(m);
 					}
+
+					final Field field = o.get();
+					if (field.isAnnotationPresent(ZCreateTime.class)) {
+						final Optional<Class<?>> findAny2 = ZCreateTimeHandler.SUPPORTED_CLASS_SET.stream()
+								.filter(x -> x.equals(field.getType())).findAny();
+
+						if (!findAny2.isPresent()) {
+
+							final String m =
+									"\r\n\t"
+											+ "@" + ZCreateTime.class.getSimpleName() + "字段["
+											+ typeClass.getSimpleName()
+											+ "." + o.get().getName() + "] 的类型 [" + o.get().getType().getCanonicalName()
+											+ "] 不支持"
+											+ "\r\n\t"
+											+ "支持类型为: " + ZCreateTimeHandler.SUPPORTED_CLASS_SET
+											+ "\r\n\t"
+											+ "请检查代码:修改为" + ZCreateTimeHandler.SUPPORTED_CLASS_SET + "其中之一"
+											+ "\r\n\t"
+
+											;
+							throw new IllegalArgumentException(m);
+						}
+					}
 				}
 
 				final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
