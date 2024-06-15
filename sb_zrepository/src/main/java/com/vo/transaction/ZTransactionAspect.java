@@ -30,8 +30,6 @@ import com.vo.conn.ZDatasourcePropertiesLoader;
 @Component
 public class ZTransactionAspect {
 
-	private final static AtomicReference<String> tl = new AtomicReference<>();
-
 	/**
 	 * 	@ZTransaction 方法执行前把Connection放在这，具体的方法从这里拿到Connection,
 	 *  即使@ZTransaction 方法里嵌套@ZTransaction 方法，也是用的同一个Connection来执行
@@ -54,19 +52,11 @@ public class ZTransactionAspect {
 		final ZConnection zc = i.getZConnection(mode);
 
 		final Connection connection = zc.getConnection();
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		} finally {
-			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(zc);
-		}
 
 		ZCONNECTION_THREADLOCAL.set(zc);
 
 		try {
 			final Object v = proceedingJoinPoint.proceed();
-			connection.commit();
 			return v;
 		} catch (final Throwable e) {
 			try {
@@ -76,6 +66,11 @@ public class ZTransactionAspect {
 			}
 			e.printStackTrace();
 		} finally {
+			try {
+				connection.commit();
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
 			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(zc);
 		}
 

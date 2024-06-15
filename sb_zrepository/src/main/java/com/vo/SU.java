@@ -93,8 +93,8 @@ public class SU {
 		ResultSet rs=null;
 		PreparedStatement psc = null;
 		ResultSet pscRS = null;
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 		try {
 			connection.setAutoCommit(false);
 
@@ -156,7 +156,7 @@ public class SU {
 				if (fv == null) {
 					continue;
 				}
-				addPS(zc.getDbEnum(), t, ps, index, field, SUMode.SAVE);
+				addPS(zc.getZConnection().getDbEnum(), t, ps, index, field, SUMode.SAVE);
 				index++;
 			}
 
@@ -169,7 +169,7 @@ public class SU {
 			final int count = metaData.getColumnCount();
 			final List<T> rL = Lists.newArrayList();
 			while (rs.next()) {
-				final T tR = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T tR = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				rL.add(tR);
 			}
 
@@ -184,7 +184,7 @@ public class SU {
 				if (fv == null) {
 					continue;
 				}
-				addPS(zc.getDbEnum(), t, psc, indexPSC, field, SUMode.SAVE);
+				addPS(zc.getZConnection().getDbEnum(), t, psc, indexPSC, field, SUMode.SAVE);
 				indexPSC++;
 			}
 
@@ -206,7 +206,7 @@ public class SU {
 			}
 		} finally {
 			close(ps, rs, psc, pscRS);
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L,
@@ -267,9 +267,9 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
-		final Connection connection = zc.getConnection();
+		final Connection connection = zc.getZConnection().getConnection();
 		try {
 			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
@@ -293,7 +293,7 @@ public class SU {
 
 				f.setAccessible(true);
 				index++;
-				addPS(zc.getDbEnum(), t, ps, index, f, SUMode.UPDATE);
+				addPS(zc.getZConnection().getDbEnum(), t, ps, index, f, SUMode.UPDATE);
 			}
 
 			// 最后面的where id = ？ 赋值
@@ -314,7 +314,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 		// XXX 直接返回T可以吗？
 		return t;
@@ -338,8 +338,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 		try {
 			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
@@ -368,8 +368,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -377,8 +377,8 @@ public class SU {
 
 	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 		try {
 			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
@@ -417,8 +417,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -426,8 +426,8 @@ public class SU {
 
 	public static <T> boolean deleteById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 		try {
 			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
@@ -455,13 +455,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			try {
-				connection.commit();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
 			close(ps);
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -507,8 +502,8 @@ public class SU {
 			LOG.info("根据[{}]个ID批量查询是否存在-[{}]", idNotNullList.size(), sqlF);
 		}
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -537,7 +532,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		for (final Object id : idNotNullList) {
@@ -557,8 +552,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -591,8 +586,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -614,7 +609,8 @@ public class SU {
 			// FIXME 2024年5月27日 下午5:54:36 zhangzhen: 对于sqlite而专门特别处理，从批量插入改为在一个事务里执行多次insert.
 			// save0里的日志还要改，区分是从save还是saveAll方法来的
 
-			final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+			final ZC2 zc2 = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+			final ZConnection zc = zc2.getZConnection();
 			final Connection connection = zc.getConnection();
 
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
@@ -631,7 +627,8 @@ public class SU {
 					e.printStackTrace();
 				}
 			}
-			returnZConnectionAndCommit(dataSourceName, zc);
+
+			returnZConnectionIfZCPool(dataSourceName, zc2);
 			return idl;
 
 		case MYSQL:
@@ -660,8 +657,8 @@ public class SU {
 		}
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		final String sql = generateSaveAllSQL(cls, sqlParam);
 
@@ -678,7 +675,7 @@ public class SU {
 					if (f.isAnnotationPresent(ZID.class) || f.isAnnotationPresent(ZTransient.class)) {
 						continue;
 					}
-					addPS(zc.getDbEnum(), t, ps, index, f, SUMode.SAVE);
+					addPS(zc.getZConnection().getDbEnum(), t, ps, index, f, SUMode.SAVE);
 					index++;
 				}
 				ps.addBatch();
@@ -734,8 +731,8 @@ public class SU {
 			}
 
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -763,8 +760,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -774,7 +771,7 @@ public class SU {
 
 		try {
 
-			final Object[] a = save0(zc.getDbEnum(), entityClass, t, sql, connection);
+			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection);
 			final ResultSet rs = (ResultSet) a[0];
 			try {
 
@@ -787,7 +784,7 @@ public class SU {
 					// 改起来改动太多了，那就这样：@ZID字段名称必须是id，不允许为其他？表中必须有id字段并且必须是主键？
 					final String selectById = MethodRegex.SELECT + " * " + MethodRegex.FROM + " " + zEntity.tableName()
 					+ " " + MethodRegex.WHERE + " id = ?";
-					return findById0(zc.getDbEnum(), mode, id, entityTName, selectById, zc);
+					return findById0(zc.getZConnection().getDbEnum(), mode, id, entityTName, selectById, zc.getZConnection());
 				}
 			} finally {
 				close((AutoCloseable)a[0],(AutoCloseable)a[1]);
@@ -801,7 +798,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return null;
@@ -942,29 +939,24 @@ public class SU {
 		return false;
 	}
 
-	private static ZConnection getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
-		// FIXME 2023年6月18日 上午12:00:42 zhanghen: 先从 ZTAs 拿，无再从下面方法拿
+	private static ZC2 getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
 		final ZConnection zcT = ZTransactionAspect.ZCONNECTION_THREADLOCAL.get();
-		// FIXME 2024年5月31日 下午2:53:47 zhangzhen : 根据calssType .dataSourceName 来选择从哪个数据源来读取
-
-
 		if (zcT != null) {
 			try {
 				zcT.getConnection().setAutoCommit(false);
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
-			return zcT;
+			return new ZC2(zcT, ZCSourceEnum.SPRING_AOP);
 		}
 
-		// FIXME 2023年9月6日 下午2:33:36 zhanghen: 在此setAutoCommit(false)然后在归还方法里commit?
 		final ZConnection zc = ZCPool.getInstance(dataSourceName).getZConnection(mode);
 		try {
 			zc.getConnection().setAutoCommit(false);
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
-		return zc;
+		return new ZC2(zc, ZCSourceEnum.ZCPOOL);
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -972,8 +964,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -1003,10 +995,10 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
 				r.add(t);
 			}
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 			return r;
 
 		} catch (SQLException
@@ -1018,8 +1010,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 
@@ -1030,8 +1022,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -1056,10 +1048,10 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
 				r.add(t);
 			}
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 			return r;
 
 		} catch (SQLException
@@ -1071,8 +1063,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1113,8 +1105,8 @@ public class SU {
 	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
 		final Date invokeTime = new Date();
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		final long start = System.currentTimeMillis();
 
@@ -1153,7 +1145,7 @@ public class SU {
 			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idList.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), cls, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
 				rList.add(t);
 			}
 
@@ -1169,8 +1161,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1247,14 +1239,14 @@ public class SU {
 	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final Date invokeTime = new Date();
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
 		try {
-			final T t = findById0(zc.getDbEnum(), mode, id, cls, sql, zc);
+			final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, cls, sql, zc.getZConnection());
 			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql, cls.getAnnotation(ZEntity.class).tableName());
 			return t;
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
+			returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
 		}
 
 	}
@@ -1414,8 +1406,8 @@ public class SU {
 
 	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 		try {
 			connection.setAutoCommit(false);
 		} catch (final SQLException e1) {
@@ -1447,7 +1439,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1461,8 +1453,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1506,8 +1498,8 @@ public class SU {
 	public static <T> List<T> findByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object fieldValue) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1540,7 +1532,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1554,8 +1546,8 @@ public class SU {
 			}
 			e.printStackTrace();
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1593,8 +1585,8 @@ public class SU {
 			final String sql, final Object... fieldArray) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -1643,7 +1635,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1657,8 +1649,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, statement);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1666,8 +1658,8 @@ public class SU {
 
 	public static <T> List<T> findByIdLessThan(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1691,7 +1683,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1704,16 +1696,16 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
 
 	public static <T> List<T> findByXXXEndingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1737,7 +1729,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1751,9 +1743,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
-
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1764,8 +1755,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1788,7 +1779,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1802,16 +1793,16 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
 
 	public static <T> List<T> findByXXOrYY(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object... field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1840,7 +1831,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1854,8 +1845,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1865,8 +1856,8 @@ public class SU {
 			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
 			final Object... fiedlArray) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1897,7 +1888,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1910,8 +1901,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1923,8 +1914,8 @@ public class SU {
 			final Object... fieldArray) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1953,7 +1944,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1966,9 +1957,10 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
+
 		return Collections.emptyList();
 	}
 
@@ -1977,8 +1969,8 @@ public class SU {
 			final Object... fieldValue) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2007,7 +1999,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2020,8 +2012,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2031,8 +2023,8 @@ public class SU {
 			final Object fieldValue) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2061,7 +2053,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2074,8 +2066,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2085,8 +2077,8 @@ public class SU {
 			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
 			final Object fieldValue) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2116,7 +2108,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2129,16 +2121,16 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
 
 	public static <T> List<T> findByXXNotNull(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2161,7 +2153,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2175,8 +2167,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2184,8 +2176,8 @@ public class SU {
 
 	public static <T> List<T> findByXXLike(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2209,7 +2201,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2223,11 +2215,23 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
+	}
+
+	/**
+	 * ZConnection 来自于ZCPool的才提交;来自SpringAOP的就不提交，而是由AOP类在目标方法执行结束后统一commit/rollback
+	 *
+	 * @param dataSourceName
+	 * @param zc
+	 */
+	private static void returnZConnectionIfZCPool(final String dataSourceName, final ZC2 zc) {
+		if (zc.getSourceEnum() == ZCSourceEnum.ZCPOOL) {
+			returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
+		}
 	}
 
 	private static void returnZConnectionAndCommit(final String dataSourceName, final ZConnection zc) {
@@ -2236,8 +2240,8 @@ public class SU {
 
 	public static <T> List<T> findByXXIsNull(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2259,7 +2263,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2273,8 +2277,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2322,16 +2326,16 @@ public class SU {
 
 	public static <T> Long count(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		return count(mode, cls, sql,zc, dataSourceName);
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		return count(mode, cls, sql,zc.getZConnection(), dataSourceName);
 	}
 
 	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
 	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[].
 	public static <T> Long countingByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2368,8 +2372,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return 0L;
@@ -2377,8 +2381,8 @@ public class SU {
 
 	public static <T> Long countingByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2412,8 +2416,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return 0L;
@@ -2423,8 +2427,8 @@ public class SU {
 	public static <T> List<T> findByXXOrderByXXLimit(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> cls,
 			final Class<T> returnType, final String sql, final Object... field) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -2451,7 +2455,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2465,8 +2469,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2528,8 +2532,8 @@ public class SU {
 		final ZEntity ze = (ZEntity) ((Class)entityTName).getAnnotation(ZEntity.class);
 		final String dataSourceName = ze.dataSourceName();
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -2591,7 +2595,7 @@ public class SU {
 			final List<T> ra = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = (T) newT(zc.getDbEnum(), cls, rs, metaData, count);
+				final T t = (T) newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
 				ra.add(t);
 			}
 
@@ -2604,8 +2608,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2624,8 +2628,8 @@ public class SU {
 		final ZEntity ze = (ZEntity) ((Class)entityTName).getAnnotation(ZEntity.class);
 		final String dataSourceName = ze.dataSourceName();
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getConnection();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
 
 		try {
 			connection.setAutoCommit(false);
@@ -2662,8 +2666,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
 			close(prepareStatement);
+			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
 		return NO_DELETE_OR_DELETE;
@@ -2706,20 +2710,21 @@ public class SU {
 	// FIXME 2024年6月2日 下午9:57:46 zhangzhen : 测试
 	public static void createTable(final String dataSourceName, final String createTable) {
 
-		final ZConnection zc = getZCAndSetAutoCommitFALSE(Mode.WRITE, dataSourceName);
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(Mode.WRITE, dataSourceName);
 
 		try {
-			zc.getConnection().setAutoCommit(false);
+			zc.getZConnection().getConnection().setAutoCommit(false);
 
-			final PreparedStatement ps = zc.getConnection().prepareStatement(createTable);
+			final PreparedStatement ps = zc.getZConnection().getConnection().prepareStatement(createTable);
 			final int executeUpdate = ps.executeUpdate();
 			LOG.info("创建表结果-executeUpdate=[{}],sql=[{}]", executeUpdate, createTable);
 
 		} catch (final Exception e) {
 			e.printStackTrace();
 			System.exit(0);
-		}finally {
-			returnZConnectionAndCommit(dataSourceName, zc);
+		} finally {
+			// 这个不用判断是否来自springAOP，直接commit
+			returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
 		}
 
 	}
