@@ -1,12 +1,11 @@
 package com.vo;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -30,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -2050,29 +2050,8 @@ public class ZRepositoryMain {
 						throw new IllegalArgumentException(m);
 					}
 
-					final Field field = o.get();
-					if (field.isAnnotationPresent(ZCreateTime.class)) {
-						final Optional<Class<?>> findAny2 = ZCreateTimeHandler.SUPPORTED_CLASS_SET.stream()
-								.filter(x -> x.equals(field.getType())).findAny();
-
-						if (!findAny2.isPresent()) {
-
-							final String m =
-									"\r\n\t"
-											+ "@" + ZCreateTime.class.getSimpleName() + "字段["
-											+ typeClass.getSimpleName()
-											+ "." + o.get().getName() + "] 的类型 [" + o.get().getType().getCanonicalName()
-											+ "] 不支持"
-											+ "\r\n\t"
-											+ "支持类型为: " + ZCreateTimeHandler.SUPPORTED_CLASS_SET
-											+ "\r\n\t"
-											+ "请检查代码:修改为" + ZCreateTimeHandler.SUPPORTED_CLASS_SET + "其中之一"
-											+ "\r\n\t"
-
-											;
-							throw new IllegalArgumentException(m);
-						}
-					}
+					checkZCT(typeClass, o, ZCreateTime.class, ZCreateTimeHandler.SUPPORTED_CLASS_SET);
+					checkZCT(typeClass, o, ZUpdateTime.class, ZUpdateTimeHandler.SUPPORTED_CLASS_SET);
 				}
 
 				final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
@@ -2155,6 +2134,32 @@ public class ZRepositoryMain {
 			getPoolInstance(typeClass.getAnnotation(ZEntity.class).dataSourceName()).returnZConnectionAndCommit(zConnection);
 		}
 
+	}
+
+	private static void checkZCT(final Class<?> typeClass, final Optional<Field> o, final Class<? extends Annotation> checkClass, final ImmutableSet<Class<?>> supportedClassSet) {
+		final Field field = o.get();
+		if (field.isAnnotationPresent(checkClass)) {
+			final Optional<Class<?>> findAny2 = supportedClassSet.stream()
+					.filter(x -> x.equals(field.getType())).findAny();
+
+			if (!findAny2.isPresent()) {
+
+				final String m =
+						"\r\n\t"
+								+ "@" + checkClass.getSimpleName() + "字段["
+								+ typeClass.getSimpleName()
+								+ "." + o.get().getName() + "] 的类型 [" + o.get().getType().getCanonicalName()
+								+ "] 不支持"
+								+ "\r\n\t"
+								+ "支持类型为: " + supportedClassSet
+								+ "\r\n\t"
+								+ "请检查代码:修改为" + supportedClassSet + "其中之一"
+								+ "\r\n\t"
+
+								;
+				throw new IllegalArgumentException(m);
+			}
+		}
 	}
 
 

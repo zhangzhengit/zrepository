@@ -262,6 +262,9 @@ public class SU {
 			throw new IllegalArgumentException("update方法参数 t 的 " + ZID.class.getSimpleName() + " 字段不能为空！t = " + t);
 		}
 
+		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
+		sh.forEach(h -> ((ZUpdateHandler)h).handle(t));
+
 		// update blobt set COLUMN where id = ?;
 		final String gUpdateColumn = gUpdateColumn(t, fs);
 
@@ -269,7 +272,6 @@ public class SU {
 		final AtomicReference<String> sqlFAR = new AtomicReference<>(sqlF);
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
-
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		if (zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP) {
 			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
@@ -599,6 +601,7 @@ public class SU {
 		if (CollUtil.isEmpty(tList)) {
 			return Collections.emptyList();
 		}
+
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
