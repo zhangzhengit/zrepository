@@ -647,8 +647,7 @@ public class SU {
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
 			for (final T t : tList) {
 				try {
-					final Object[] a = save0(null, cls, t, sqlParam, connection,
-							zc2.getSourceEnum() == ZCSourceEnum.SPRING_AOP);
+					final Object[] a = save0(zc.getDbEnum(), cls, t, sqlParam, connection);
 					final ResultSet rs = (ResultSet) a[0];
 					if (rs.next()) {
 						final Object id = rs.getObject(1);
@@ -803,8 +802,7 @@ public class SU {
 
 		try {
 
-			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection,
-					zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP);
+			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection);
 			final ResultSet rs = (ResultSet) a[0];
 			try {
 
@@ -838,7 +836,7 @@ public class SU {
 	}
 
 	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> cls, final T t, final String sql,
-			final Connection connection, final boolean isSpringAOP) throws SQLException {
+			final Connection connection) throws SQLException {
 
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = cls.getDeclaredFields();
@@ -852,12 +850,11 @@ public class SU {
 			arg.add(dbFieldname);
 		}
 
-		if (isSpringAOP) {
-			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
-			if (zvf.isPresent()) {
-				final Field vf = zvf.get();
-				setZVersionValue(t, vf, ZVERSION_INITIAL_VALUE);
-			}
+		// 不管ZConnection来自哪里[ZCSourceEnum]，都给@ZVersion字段一个初始值
+		final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
+		if (zvf.isPresent()) {
+			final Field vf = zvf.get();
+			setZVersionValue(t, vf, ZVERSION_INITIAL_VALUE);
 		}
 
 		final StringJoiner joiner = new StringJoiner(",");

@@ -1,9 +1,6 @@
 package com.vo.transaction;
 
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -36,42 +33,39 @@ public class ZTransactionAspect {
 	 */
 	public static final ThreadLocal<ZConnection> ZCONNECTION_THREADLOCAL = new ThreadLocal<>();
 
+	/**
+	 * 回滚当前事务
+	 */
+	public static void rollback() {
+		ZCONNECTION_THREADLOCAL.get().rollback();
+	}
+
+	public static void commit() {
+		ZCONNECTION_THREADLOCAL.get().commit();
+	}
+
 	@Around(value = "pointcut()")
 	public final Object around(final ProceedingJoinPoint proceedingJoinPoint) {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZTransactionAspect.around()");
-
 		final MethodSignature ms = (MethodSignature) proceedingJoinPoint.getSignature();
 		final Method method = ms.getMethod();
-		final boolean isRead = method.isAnnotationPresent(ZRead.class);
-		final Mode mode = isRead ? Mode.READ : Mode.WRITE;
-		// FIXME 2024年5月31日 下午5:24:42 zhangzhen : 考虑好，如果依赖的数据源名称不是zdatasource.properties要怎么办？
+
+		// FIXME 2024年5月31日 下午5:24:42 zhangzhen :
+		// 考虑好，如果依赖的数据源名称不是zdatasource.properties要怎么办？
 		// 提前把Method和dataSourceName存起来，在此根据Method取出？
 		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
-		final ZCPool i = ZCPool.getInstance(defaultDatsourceName);
-		final ZConnection zc = i.getZConnection(mode);
-
-		final Connection connection = zc.getConnection();
-
-		ZCONNECTION_THREADLOCAL.set(zc);
+		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
+		final ZConnection zConnection = c.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
+		ZCONNECTION_THREADLOCAL.set(zConnection);
 
 		try {
 			final Object v = proceedingJoinPoint.proceed();
 			return v;
 		} catch (final Throwable e) {
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			ZCONNECTION_THREADLOCAL.get().rollback();
 			e.printStackTrace();
 		} finally {
-			try {
-				connection.commit();
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(zc);
+			ZCONNECTION_THREADLOCAL.get().commit();
+			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get());
 		}
 
 		return null;

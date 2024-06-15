@@ -37,6 +37,27 @@ public class ZConnection {
 	private String pwd;
 	private Connection connection;
 
+	/**
+	 * 回滚事务
+	 */
+	public synchronized void rollback() {
+		try {
+			this.connection.rollback();
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 提交当前事务
+	 */
+	public synchronized void commit() {
+		try {
+			this.connection.commit();
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static synchronized ZConnection newConnection(final ZDatasourceProperties.P p) {
 
