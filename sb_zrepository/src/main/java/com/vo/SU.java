@@ -99,7 +99,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 		try {
-			connection.setAutoCommit(false);
 
 			final Map<String, Object> fMap = getNotNullFieldMap(t);
 
@@ -289,11 +288,6 @@ public class SU {
 		}
 
 		final Connection connection = zc.getZConnection().getConnection();
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 		PreparedStatement ps  = null;
 		try {
 			ps = connection.prepareStatement(sqlFAR.get());
@@ -371,11 +365,7 @@ public class SU {
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
+
 		PreparedStatement ps =null;
 		try {
 			final String s = sql;
@@ -410,11 +400,6 @@ public class SU {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 
 		PreparedStatement ps = null;
 
@@ -459,11 +444,7 @@ public class SU {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
+
 		PreparedStatement ps = null;
 		try {
 			final String s = sql;
@@ -536,12 +517,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e2) {
-			e2.printStackTrace();
-		}
-
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -585,12 +560,6 @@ public class SU {
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -696,7 +665,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
@@ -793,12 +761,6 @@ public class SU {
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 
 		try {
 
@@ -1015,12 +977,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
-
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -1072,12 +1028,6 @@ public class SU {
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1157,18 +1107,6 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 
 		final long start = System.currentTimeMillis();
-
-		// FIXME 2024年6月8日 下午7:55:59 zhangzhen : sleep测试，记得删除掉
-		try {
-			Thread.sleep((int)(100 + (Math.random() * 400)));
-		} catch (final InterruptedException e2) {
-			e2.printStackTrace();
-		}
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -1456,11 +1394,7 @@ public class SU {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -1552,7 +1486,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 			// "select * from user where xx = ?"
 			String s = null;
 
@@ -1636,12 +1569,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
-
 		Statement statement = null;
 		ResultSet rs = null;
 		try {
@@ -1712,7 +1639,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -1758,7 +1684,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -1809,7 +1734,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
@@ -1855,7 +1779,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -1910,7 +1833,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -1968,7 +1890,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -2023,7 +1944,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -2077,7 +1997,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -2131,7 +2050,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -2183,7 +2101,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -2230,7 +2147,6 @@ public class SU {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			connection.setAutoCommit(false);
 
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
@@ -2336,11 +2252,6 @@ public class SU {
 
 		final Connection connection = zc.getConnection();
 
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -2583,12 +2494,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
-
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -2679,12 +2584,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		try {
-			connection.setAutoCommit(false);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
-		}
-
 		PreparedStatement prepareStatement = null;
 		try {
 			if (isShowSQL(dataSourceName)) {
@@ -2761,8 +2660,6 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(Mode.WRITE, dataSourceName);
 
 		try {
-			zc.getZConnection().getConnection().setAutoCommit(false);
-
 			final PreparedStatement ps = zc.getZConnection().getConnection().prepareStatement(createTable);
 			final int executeUpdate = ps.executeUpdate();
 			LOG.info("创建表结果-executeUpdate=[{}],sql=[{}]", executeUpdate, createTable);
