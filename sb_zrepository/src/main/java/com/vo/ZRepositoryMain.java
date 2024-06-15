@@ -2376,26 +2376,10 @@ public class ZRepositoryMain {
 	}
 
 	public static DBEnum getDB(final String dataSourceName) {
-
 		final ZCPool pool = ZCPool.getInstance(dataSourceName);
-		final ZConnection zc = pool.getZConnection(Mode.WRITE);
-		try {
-			zc.getConnection().setAutoCommit(false);
-			final DataSourceDTO dataSourceDTO = findCatalog(zc.getUrl());
-			return dataSourceDTO.getDbEnum();
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		} finally {
-			pool.returnZConnectionAndCommit(zc);
-		}
-
-		return null;
-
+		final DBEnum dbEnum = pool.getDbEnum(Mode.WRITE);
+		return dbEnum;
 	}
-
-	//	public static DBEnum getDB() {
-	//		return DB_ENUM;
-	//	}
 
 	private static StringJoiner getParameterNameFromMethod(final Method method) {
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
