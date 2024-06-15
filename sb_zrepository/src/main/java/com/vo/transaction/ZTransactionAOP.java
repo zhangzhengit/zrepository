@@ -10,6 +10,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 import com.vo.anno.ZRead;
+import com.vo.aop.AOPParameter;
+import com.vo.aop.ZAOP;
+import com.vo.aop.ZIAOP;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
@@ -25,13 +28,27 @@ import com.vo.conn.ZDatasourcePropertiesLoader;
  */
 @Aspect
 @Component
-public class ZTransactionAspect {
+
+@ZAOP(interceptType = ZTransaction.class)
+public class ZTransactionAOP implements ZIAOP {
+	//public class ZTransactionAspect implements ZIAOP {
 
 	/**
 	 * 	@ZTransaction 方法执行前把Connection放在这，具体的方法从这里拿到Connection,
 	 *  即使@ZTransaction 方法里嵌套@ZTransaction 方法，也是用的同一个Connection来执行
 	 */
-	public static final ThreadLocal<ZConnection> ZCONNECTION_THREADLOCAL = new ThreadLocal<>();
+	private static final ThreadLocal<ZConnection> ZCONNECTION_THREADLOCAL = new ThreadLocal<>();
+
+	/**
+	 * 获取当前 ZConnection 独对象
+	 * 仅在加入了 @ZTransaction 注解的方法里的当前线程下可以获取到，
+	 * 否则会返回null
+	 *
+	 * @return
+	 */
+	public static ZConnection getCurrentZConnection() {
+		return ZCONNECTION_THREADLOCAL.get();
+	}
 
 	/**
 	 * 回滚当前事务
@@ -40,14 +57,16 @@ public class ZTransactionAspect {
 		ZCONNECTION_THREADLOCAL.get().rollback();
 	}
 
+	/**
+	 * 提交当前事务
+	 */
 	public static void commit() {
 		ZCONNECTION_THREADLOCAL.get().commit();
 	}
 
 	@Around(value = "pointcut()")
 	public final Object around(final ProceedingJoinPoint proceedingJoinPoint) {
-		final MethodSignature ms = (MethodSignature) proceedingJoinPoint.getSignature();
-		final Method method = ms.getMethod();
+		final Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 
 		// FIXME 2024年5月31日 下午5:24:42 zhangzhen :
 		// 考虑好，如果依赖的数据源名称不是zdatasource.properties要怎么办？
@@ -74,8 +93,49 @@ public class ZTransactionAspect {
 
 	@Pointcut("@annotation(com.vo.transaction.ZTransaction)")
 	public void pointcut() {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZTransactionAspect.pointcut()");
 
+	}
+
+	@Override
+	public Object before(final AOPParameter aopParameter) {
+		return null;
+	}
+
+	/**
+	 * zframework的 AOP方法，拦截：@ZAOP(interceptType = ZTransaction.class)
+	 * 本方法逻辑和springAOP public final Object around(final ProceedingJoinPoint proceedingJoinPoint)
+	 * 方法逻辑一致，都是在[一个或一组操作DB的目标方法]执行前获取一个ZConnection，然后这一组操作都使用
+	 * 这一个ZConnection，全部执行成功则commit，有一个执行异常则rollback.
+	 *
+	 */
+	@Override
+	public Object around(final AOPParameter aopParameter) {
+
+		final Method method = aopParameter.getMethod();
+
+		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
+		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
+		final ZConnection zConnection = c
+				.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
+		ZCONNECTION_THREADLOCAL.set(zConnection);
+
+		try {
+			zConnection.getConnection().setAutoCommit(false);
+			final Object v = aopParameter.invoke();
+			return v;
+		} catch (final Throwable e) {
+			ZCONNECTION_THREADLOCAL.get().rollback();
+			e.printStackTrace();
+		} finally {
+			ZCONNECTION_THREADLOCAL.get().commit();
+			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get());
+		}
+
+		return null;
+	}
+
+	@Override
+	public Object after(final AOPParameter aopParameter) {
+		return null;
 	}
 }

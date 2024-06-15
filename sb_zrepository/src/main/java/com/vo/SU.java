@@ -46,7 +46,7 @@ import com.vo.core.Page;
 import com.vo.core.Sort;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
-import com.vo.transaction.ZTransactionAspect;
+import com.vo.transaction.ZTransactionAOP;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
@@ -950,7 +950,7 @@ public class SU {
 	}
 
 	private static ZC2 getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
-		final ZConnection zcT = ZTransactionAspect.ZCONNECTION_THREADLOCAL.get();
+		final ZConnection zcT = ZTransactionAOP.getCurrentZConnection();
 		if (zcT != null) {
 			try {
 				zcT.getConnection().setAutoCommit(false);

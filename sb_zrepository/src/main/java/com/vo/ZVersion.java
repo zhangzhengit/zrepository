@@ -46,7 +46,7 @@ import java.lang.annotation.Target;
 			throw new NullPointerException("更新失败");
 
 			// 方式2：直接使用springAOP类进行手动回滚
-			ZTransactionAspect.rollback();
+			ZTransactionAOP.rollback();
 		}
 	}
 
