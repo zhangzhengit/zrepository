@@ -74,10 +74,10 @@ public interface ZRepository<T, ID> {
 	 * 根据 @ZID 字段值来update一个对象，字段是什么就update为什么包括null， @ZID 字段不能为空，否则抛异常
 	 *
 	 * @param t
-	 * @return 返回update后的对象
+	 * @return
 	 *
 	 */
-	T update(T t);
+	boolean update(T t);
 
 	/**
 	 * insert一个对象，忽略 @ZID 字段，其他字段值什么是insert为什么，包括null

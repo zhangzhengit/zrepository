@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,8 @@ import cn.hutool.core.util.StrUtil;
 
 public class SU {
 	// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
+
+	private static final long ZVERSION_INITIAL_VALUE = 0L;
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -245,7 +248,7 @@ public class SU {
 		return fMap;
 	}
 
-	public static <T> T update(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final T t, final String sql) {
+	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final T t, final String sql) {
 		final Field[] fs = t.getClass().getDeclaredFields();
 
 		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
@@ -264,10 +267,26 @@ public class SU {
 		final String gUpdateColumn = gUpdateColumn(t, fs);
 
 		final String sqlF = sql.replace(MethodRegex.COLUMN, gUpdateColumn);
+		final AtomicReference<String> sqlFAR = new AtomicReference<>(sqlF);
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		if (zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP) {
+			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
+			if(zvf.isPresent()) {
+				final Field vf = zvf.get();
+				final Long oldVV = incrementZVersionValue(t, vf);
+				if (vf != null) {
+					final String versionColumnName = ZFieldConverter.toDbField(vf.getName());
+					final String version = versionColumnName + " = " + oldVV;
+					final String replace = sqlFAR.get().replace(MethodRegex.WHERE, MethodRegex.WHERE + Sort.SPACE + version
+							+ Sort.SPACE + MethodRegex.AND
+							);
+					sqlFAR.set(replace);
+				}
+			}
+		}
 
 		final Connection connection = zc.getZConnection().getConnection();
 		try {
@@ -277,7 +296,7 @@ public class SU {
 		}
 		PreparedStatement ps  = null;
 		try {
-			ps = connection.prepareStatement(sqlF);
+			ps = connection.prepareStatement(sqlFAR.get());
 			int zTransientCount = 0;
 			int index = 0;
 			for (int i = 0; i < (fs.length); i++) {
@@ -300,10 +319,11 @@ public class SU {
 			ps.setObject((fs.length) - zTransientCount, idValue);
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}],[{}]", sqlF, t,idValue);
+				LOG.info("[{}],[{}],[{}]", sqlFAR.get(), t,idValue);
 			}
 
 			final int executeUpdate = ps.executeUpdate();
+			return executeUpdate > 0;
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -316,10 +336,21 @@ public class SU {
 			close(ps);
 			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
-		// XXX 直接返回T可以吗？
-		return t;
+
+		return false;
 	}
 
+	private static <T> Long incrementZVersionValue(final T t, final Field vf) {
+		try {
+			final Object versionValue = vf.get(t);
+			final Long nVV = (Long) versionValue + 1L;
+			setZVersionValue(t, vf, nVV);
+			return (Long) versionValue;
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 	private static <T> Object getUpdateIdValue(final T t, final Optional<Field> zidO) {
 		final Field idField = zidO.get();
@@ -616,7 +647,8 @@ public class SU {
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
 			for (final T t : tList) {
 				try {
-					final Object[] a = save0(null, cls, t, sqlParam, connection);
+					final Object[] a = save0(null, cls, t, sqlParam, connection,
+							zc2.getSourceEnum() == ZCSourceEnum.SPRING_AOP);
 					final ResultSet rs = (ResultSet) a[0];
 					if (rs.next()) {
 						final Object id = rs.getObject(1);
@@ -771,7 +803,8 @@ public class SU {
 
 		try {
 
-			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection);
+			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection,
+					zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP);
 			final ResultSet rs = (ResultSet) a[0];
 			try {
 
@@ -804,8 +837,9 @@ public class SU {
 		return null;
 	}
 
-	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> cls, final T t, final String sql, final Connection connection)
-			throws SQLException {
+	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> cls, final T t, final String sql,
+			final Connection connection, final boolean isSpringAOP) throws SQLException {
+
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = cls.getDeclaredFields();
 		int fieldCount = 0;
@@ -816,6 +850,14 @@ public class SU {
 			fieldCount++;
 			final String dbFieldname = ZFieldConverter.toDbField(field.getName());
 			arg.add(dbFieldname);
+		}
+
+		if (isSpringAOP) {
+			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
+			if (zvf.isPresent()) {
+				final Field vf = zvf.get();
+				setZVersionValue(t, vf, ZVERSION_INITIAL_VALUE);
+			}
 		}
 
 		final StringJoiner joiner = new StringJoiner(",");
@@ -844,6 +886,15 @@ public class SU {
 		final int executeUpdate = ps.executeUpdate();
 		final ResultSet rs = ps.getGeneratedKeys();
 		return new Object[] {rs,ps};
+	}
+
+	private static <T> void setZVersionValue(final T t, final Field vf, final Long versionValue) {
+		vf.setAccessible(true);
+		try {
+			vf.set(t, versionValue);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static <T> boolean addPS(final DBEnum dbEnum, final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
