@@ -651,6 +651,7 @@ public class SU {
 
 	private static <T> List<Object> saveAllMysqlAndPGSQL(final Mode mode, final Class<T> cls, final String sqlParam,
 			final List<T> tList) {
+
 		final Field[] declaredFields = cls.getDeclaredFields();
 		final Optional<Field> zid = Lists.newArrayList(declaredFields).stream()
 				.filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
@@ -661,7 +662,8 @@ public class SU {
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getZConnection().getConnection();
+		final ZConnection zConnection = zc.getZConnection();
+		final Connection connection = zConnection.getConnection();
 
 		final String sql = generateSaveAllSQL(cls, sqlParam);
 
@@ -671,20 +673,29 @@ public class SU {
 
 			ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-			for (final T t : tList) {
+			final PreparedStatement ps2 = ps;
+			tList.parallelStream().forEach(t -> {
 				int index = 1;
 				for (final Field f : declaredFields) {
 					if (f.isAnnotationPresent(ZID.class) || f.isAnnotationPresent(ZTransient.class)) {
 						continue;
 					}
-					addPS(zc.getZConnection().getDbEnum(), t, ps, index, f, SUMode.SAVE);
+					try {
+						addPS(zConnection.getDbEnum(), t, ps2, index, f, SUMode.SAVE);
+					} catch (final SQLException e) {
+						e.printStackTrace();
+					}
 					index++;
 				}
-				ps.addBatch();
-			}
+				try {
+					ps2.addBatch();
+				} catch (final SQLException e) {
+					e.printStackTrace();
+				}
+			});
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("批量插入{}条数据 - [{}]", tList.size(),sql);
+				LOG.info("批量插入{}条数据 - [{}]", tList.size(), sql);
 			}
 
 			ps.executeBatch();
@@ -855,15 +866,11 @@ public class SU {
 
 	private static <T> boolean addPS(final DBEnum dbEnum, final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
 			throws SQLException {
-		final String dbFieldname = ZFieldConverter.toDbField(field.getName());
-		field.setAccessible(true);
 
 		try {
 
+			field.setAccessible(true);
 			final Object v2 = field.get(t);
-			// FIXME 2024年5月3日 下午9:31:08 zhangzhen:
-			// 在此要不要处理为Entity里类型不允许为基本类型，这样在这里的逻辑就简单了
-			// Field.get 的v为null就setnull就行了
 			if (v2 == null) {
 				ps.setObject(i, null);
 				return false;
@@ -873,13 +880,12 @@ public class SU {
 
 			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
 			if (fn.equals(Boolean.class.getCanonicalName())) {
-				final DBEnum db = dbEnum;
 				// XXX sqlite也暂时Boolean和tinyint 对应，和mysql一样
-				if ((db == DBEnum.MYSQL) || (db==DBEnum.SQLITE)) {
+				if ((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.SQLITE)) {
 					final boolean equals = Boolean.TRUE.equals(v2);
 					final byte vb = (byte) (equals ? 1 : 0);
 					ps.setByte(i, vb);
-				} else if (db == DBEnum.POSTGRESQL) {
+				} else if (dbEnum == DBEnum.POSTGRESQL) {
 					ps.setBoolean(i, Boolean.parseBoolean(String.valueOf(v2)));
 				}
 			} else if (fn.equals(Character.class.getCanonicalName())) {
@@ -895,14 +901,19 @@ public class SU {
 				ps.setLong(i, (Long) v2);
 			} else if (fn.equals(Float.class.getCanonicalName())) {
 				// FIXME 2024年5月17日 上午1:51:06 zhangzhen: 继续测这个mysql是否要改为setDouble
-				//				ps.setFloat(i, (Float) v2);
+				// ps.setFloat(i, (Float) v2);
 
 				// FIXME 2024年5月21日 下午10:46:17 zhangzhen:
-				// guoguang docker run 1071324756/percona-mysql-5.7 遇到了问题： setFloat查不出数据，还要用setDouble才行。
-				// guoguang docker run 1071324756/postgresql-11-with-zhparser setFloat和setDouble都行
-				// orangepi3 apt install 的 mysql-8.0.33-0ubuntu0.20.04.4 setFloat 可以查出，改为setDouble也可以
-				// panther   apt install 的 mysql-8.0.34-0ubuntu0.22.04.1 setFloat 可以查出，改为setDouble也可以
-				// pgsql 上面两个没装成功，virtualbox 里的ubuntu install的pgsql和docker run 的上面那个版本pgsql setFloat double 都可以
+				// guoguang docker run 1071324756/percona-mysql-5.7 遇到了问题：
+				// setFloat查不出数据，还要用setDouble才行。
+				// guoguang docker run 1071324756/postgresql-11-with-zhparser
+				// setFloat和setDouble都行
+				// orangepi3 apt install 的 mysql-8.0.33-0ubuntu0.20.04.4 setFloat
+				// 可以查出，改为setDouble也可以
+				// panther apt install 的 mysql-8.0.34-0ubuntu0.22.04.1 setFloat
+				// 可以查出，改为setDouble也可以
+				// pgsql 上面两个没装成功，virtualbox 里的ubuntu install的pgsql和docker run 的上面那个版本pgsql
+				// setFloat double 都可以
 
 				ps.setDouble(i, Float.parseFloat(String.valueOf(v2)));
 			} else if (fn.equals(Double.class.getCanonicalName())) {
@@ -913,21 +924,23 @@ public class SU {
 				ps.setBigDecimal(i, (BigDecimal) v2);
 			} else if (v2.getClass().isArray()) {
 				// blob类型
-				// FIXME 2024年5月5日 下午9:14:57 zhangzhen: saveAll 时，setBlob和setBinaryStream都会导致ps.excuteBatch NPE,所有在此用setObject
+				// FIXME 2024年5月5日 下午9:14:57 zhangzhen: saveAll
+				// 时，setBlob和setBinaryStream都会导致ps.excuteBatch NPE,所有在此用setObject
 				ps.setObject(i, v2);
-				//				final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) v2);
-				//				ps.setBlob(i, inputStream);
-				//				ps.setBinaryStream(i, inputStream);
-			} else if (fn.equals(java.util.Date.class.getCanonicalName()) ) {
+				// final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[])
+				// v2);
+				// ps.setBlob(i, inputStream);
+				// ps.setBinaryStream(i, inputStream);
+			} else if (fn.equals(java.util.Date.class.getCanonicalName())) {
 				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
 				// 日期时间的字段，新增注解：表示插入的格式
-				//				ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+				// ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
 				// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
 				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
 			} else if (fn.equals(java.sql.Date.class.getCanonicalName())) {
-				ps.setDate(i, (java.sql.Date)v2);
+				ps.setDate(i, (java.sql.Date) v2);
 			} else if (fn.equals(java.sql.Time.class.getCanonicalName())) {
-				ps.setTime(i, (java.sql.Time)v2);
+				ps.setTime(i, (java.sql.Time) v2);
 			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
 				ps.setTime(i, Time.valueOf((LocalTime) v2));
 			} else if (fn.equals(Timestamp.class.getCanonicalName())) {
@@ -935,7 +948,7 @@ public class SU {
 			} else {
 				// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
 				// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
-				//							throw new IllegalArgumentException("size 必须大于0！size = " + size);
+				// throw new IllegalArgumentException("size 必须大于0！size = " + size);
 			}
 
 			return true;
