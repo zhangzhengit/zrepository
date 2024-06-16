@@ -674,7 +674,7 @@ public class SU {
 			ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
 			final PreparedStatement ps2 = ps;
-			tList.parallelStream().forEach(t -> {
+			tList.forEach(t -> {
 				int index = 1;
 				for (final Field f : declaredFields) {
 					if (f.isAnnotationPresent(ZID.class) || f.isAnnotationPresent(ZTransient.class)) {
