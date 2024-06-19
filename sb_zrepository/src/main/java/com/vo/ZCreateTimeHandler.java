@@ -18,22 +18,24 @@ public class ZCreateTimeHandler extends ZSaveHandler {
 	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Date.class));
 
 	@Override
-	public void handle(final Object entityObject) {
+	public SUA handle(final SUA sua) {
 		// FIXME 2024年6月16日 上午5:28:09 zhangzhen : 校验是什么类型和是否有@ZDateFormat注解，然后在此改赋值的类型
 		final java.util.Date now = new Date();
-		final Field[] fs = entityObject.getClass().getDeclaredFields();
+		final Field[] fs = sua.getEntityClass().getDeclaredFields();
 		for (final Field f : fs) {
 			if (f.isAnnotationPresent(ZCreateTime.class)) {
 				f.setAccessible(true);
 				try {
-					final Object zvv = f.get(entityObject);
+					final Object zvv = f.get(sua.getEntityObject());
 					if (zvv == null) {
-						f.set(entityObject, now);
+						f.set(sua.getEntityObject(), now);
 					}
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+
+		return sua;
 	}
 }

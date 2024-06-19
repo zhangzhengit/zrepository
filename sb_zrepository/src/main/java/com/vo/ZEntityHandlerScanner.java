@@ -19,9 +19,13 @@ public class ZEntityHandlerScanner {
 		final Set<Object> saveHS = getZEntityHandlerSubClass(packageName, ZSaveHandler.class);
 		set(ZEHEnum.SAVE, saveHS);
 
-		// FIXME 2024年6月16日 上午5:07:55 zhangzhen : 继续写 UPDATE
 		final Set<Object> updateHS = getZEntityHandlerSubClass(packageName, ZUpdateHandler.class);
 		set(ZEHEnum.UPDATE, updateHS);
+
+		// FIXME 2024年6月16日 上午5:07:55 zhangzhen : 继续写
+
+		final Set<Object> deleteHS = getZEntityHandlerSubClass(packageName, ZDeleteHandler.class);
+		set(ZEHEnum.DELETE, deleteHS);
 
 	}
 

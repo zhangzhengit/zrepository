@@ -247,7 +247,8 @@ public class SU {
 		return fMap;
 	}
 
-	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final T t, final String sql) {
+	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Class<T> entityClass, final T t, final String sql) {
 		final Field[] fs = t.getClass().getDeclaredFields();
 
 		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
@@ -262,16 +263,18 @@ public class SU {
 			throw new IllegalArgumentException("update方法参数 t 的 " + ZID.class.getSimpleName() + " 字段不能为空！t = " + t);
 		}
 
-		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
-		sh.forEach(h -> ((ZUpdateHandler)h).handle(t));
 
 		// update blobt set COLUMN where id = ?;
 		final String gUpdateColumn = gUpdateColumn(t, fs);
 
 		final String sqlF = sql.replace(MethodRegex.COLUMN, gUpdateColumn);
+		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
+
+		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
+		sh.forEach(h -> ((ZUpdateHandler)h).handle(sua));
 		final AtomicReference<String> sqlFAR = new AtomicReference<>(sqlF);
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		if (zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP) {
 			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
@@ -442,14 +445,22 @@ public class SU {
 		return false;
 	}
 
-	public static <T> boolean deleteById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> boolean deleteById(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Object id, final Class<T> entityClass, final String sql) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
+
+		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE);
+		final SUA sua = new SUA(entityClass, null, null, sql,new Object[] { id});
+		sh.forEach(h -> ((ZDeleteHandler)h).handle(sua));
+
+		final String s = sua.getSql();
+
 		PreparedStatement ps = null;
 		try {
-			final String s = sql;
+
 			ps= connection.prepareStatement(s);
 			ps.setObject(1, id);
 
@@ -771,8 +782,6 @@ public class SU {
 			final Mode mode, final Class<T> entityClass,
 			final Class<?> entityTName, final T t, final String sql) {
 
-		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
-		sh.forEach(h -> ((ZSaveHandler)h).handle(t));
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
@@ -812,11 +821,11 @@ public class SU {
 		return null;
 	}
 
-	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> cls, final T t, final String sql,
+	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> entityClass, final T t, final String sql,
 			final Connection connection) throws SQLException {
 
 		final StringJoiner arg = new StringJoiner(",");
-		final Field[] fs = cls.getDeclaredFields();
+		final Field[] fs = entityClass.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
 			if(field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY))) {
@@ -834,8 +843,13 @@ public class SU {
 
 		final String sql2 = sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES,
 				joiner.toString());
+
+		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
+		final SUA sua = new SUA(entityClass, t, entityClass, sql2, null);
+		sh.forEach(h -> ((ZSaveHandler)h).handle(sua));
+
 		PreparedStatement ps;
-		if (isShowSQL(getDataSourceNameFromClassType(cls))) {
+		if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
 			LOG.info("[{}],[{}]", sql2, t);
 		}
 

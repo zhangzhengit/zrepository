@@ -18,19 +18,21 @@ public class ZUpdateTimeHandler extends ZUpdateHandler {
 	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Date.class));
 
 	@Override
-	public void handle(final Object entityObject) {
+	public SUA handle(final SUA sua) {
 		final java.util.Date now = new Date();
-		final Field[] fs = entityObject.getClass().getDeclaredFields();
+		final Field[] fs = sua.getEntityClass().getClass().getDeclaredFields();
 		for (final Field f : fs) {
 			if (f.isAnnotationPresent(ZUpdateTime.class)) {
 				f.setAccessible(true);
 				try {
-					f.set(entityObject, now);
+					f.set(sua.getEntityObject(), now);
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+
+		return sua;
 	}
 
 }

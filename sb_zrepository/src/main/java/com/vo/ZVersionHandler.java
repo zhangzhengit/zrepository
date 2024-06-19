@@ -14,21 +14,22 @@ public class ZVersionHandler extends ZSaveHandler {
 	public static final long ZVERSION_INITIAL_VALUE = 0L;
 
 	@Override
-	public void handle(final Object entityObject) {
-		final Field[] fs = entityObject.getClass().getDeclaredFields();
+	public SUA handle(final SUA sua) {
+		final Field[] fs = sua.getEntityClass().getDeclaredFields();
 		for (final Field f : fs) {
 			if (f.isAnnotationPresent(ZVersion.class)) {
 				f.setAccessible(true);
 				try {
-					final Object zvv = f.get(entityObject);
+					final Object zvv = f.get(sua.getEntityObject());
 					if (zvv == null) {
-						f.set(entityObject, ZVERSION_INITIAL_VALUE);
+						f.set(sua.getEntityObject(), ZVERSION_INITIAL_VALUE);
 					}
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+		return sua;
 	}
 
 	@Override

@@ -8,16 +8,15 @@ package com.vo;
  * @date 2024年6月16日 上午4:49:42
  *
  */
-public class ZUpdateHandler implements ZEntityHandler {
+public abstract class ZUpdateHandler implements ZEntityHandler {
 	// FIXME 2024年6月16日 上午5:35:22 zhangzhen :继续提供扩展接口：在sql执行前的动作，
 	//	如：1、给所有的select 操作都加入一个条件[where is_delete = 0]
 	//		2、@ZVersion update时动态生成where条件
 	// 		等等
 
 	@Override
-	public void handle(final Object entityObject) {
-		// TODO Auto-generated method stub
-
+	public SUA handle(final SUA sua) {
+		return sua;
 	}
 
 	@Override

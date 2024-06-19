@@ -13,10 +13,11 @@ public interface ZEntityHandler {
 
 	/**
 	 * 对字段做的处理
-	 *
-	 * @param entityObject @ZEntity标记的对象
+	 * 
+	 * @param sua TODO
+	 * @return TODO
 	 */
-	void handle(Object entityObject);
+	SUA handle(SUA sua);
 
 	/**
 	 * 是否符合某个条件
