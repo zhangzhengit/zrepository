@@ -40,8 +40,12 @@ public class ZDatasourcePropertiesLoader {
 
 	private static ZDatasourceProperties INSTANCE;
 
+	// 不用 ConcurrentMap
+	private final static WeakHashMap C = new WeakHashMap<>();
+
 	public static ZDatasourceProperties getInstance(final String dataSourceName) {
-		return initialize(dataSourceName);
+		final Object computeIfAbsent = C.computeIfAbsent(dataSourceName, x -> initialize(dataSourceName));
+		return (ZDatasourceProperties) computeIfAbsent;
 	}
 
 	private static ZDatasourceProperties initialize(final String dataSourceName) {
@@ -224,24 +228,7 @@ public class ZDatasourcePropertiesLoader {
 		return write;
 	}
 
-	private final static WeakHashMap C = new WeakHashMap<>();
 	private static PropertiesConfiguration getProperties(final String dataSourceName) {
-
-		final Object p = C.get(dataSourceName);
-		if (p != null) {
-			return (PropertiesConfiguration) p;
-		}
-
-		synchronized (dataSourceName.intern()) {
-			final PropertiesConfiguration p2 = getProperties0(dataSourceName);
-			C.put(dataSourceName, p2);
-			return p2;
-		}
-
-	}
-
-
-	private static PropertiesConfiguration getProperties0(final String dataSourceName) {
 		try {
 			return new PropertiesConfiguration(DATASOURCE_PROPERTIES_PATH + dataSourceName);
 		} catch (final ConfigurationException e) {
