@@ -80,10 +80,10 @@ public class SU {
 
 	// FIXME 2024年6月2日 上午12:09:26 zhangzhen : 本类所有方法都计入了className和callerMethodName,用来做sql执行统计功能用，待做
 
-	public static <T> Page<T> page(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final T t, final Sort sort, final String sql,
+	public static <T> Page<T> page(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass,final Class<T> returnType, final T t, final Sort sort, final String sql,
 			final Integer size, final Integer page) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		if (size <= 0) {
 			throw new IllegalArgumentException("size 必须大于0！size = " + size);
@@ -108,8 +108,8 @@ public class SU {
 
 			final StringBuilder columnBuilder = new StringBuilder();
 
-			final String pageCountSQLT = "select count(*) from " + cls.getAnnotation(ZEntity.class).tableName()
-					+ " where COLUMN;";
+			final String pageCountSQLT = "select count(*) from " + entityClass.getAnnotation(ZEntity.class).tableName()
+					+ " where COLUMN";
 
 			for (int i = 1; i <= size2; i++) {
 				columnBuilder.append(" ").append(kl.get(i - 1)).append(" = ? ");
@@ -132,23 +132,31 @@ public class SU {
 					? pageCountSQLT.replace(MethodRegex.COLUMN, columnBuilder.toString())
 							: pageCountSQLT.replace(" " + MethodRegex.WHERE + " " + MethodRegex.COLUMN, columnBuilder.toString());
 
+
 			final String pageSqlFinal = pageSql.replace(MethodRegex.LIMIT, sort.done() + Sort.SPACE + MethodRegex.LIMIT);
+
+			final SUA suapageSql = excludedDeletedHandler(entityClass, t, returnType, pageSqlFinal, null);
+			final String pageSqlFinal2 = suapageSql.getSql();
+
+			final SUA suapageCountSql = excludedDeletedHandler(entityClass, t, returnType, pageCountSql, null);
+			final String pageCountSql2 = suapageCountSql.getSql();
+
 			final int offset = (page - 1) * size;
 			final int rows = size;
 
 			if (isShowSQL(dataSourceName)) {
 				if (fMap.isEmpty()) {
-					LOG.info("page分页查询-[{}]-[{},{}]", pageSqlFinal, rows, offset);
-					LOG.info("page总条数查询-[{}]", pageCountSql);
+					LOG.info("page分页查询-[{}]-[{},{}]", pageSqlFinal2, rows, offset);
+					LOG.info("page总条数查询-[{}]", pageCountSql2);
 				} else {
-					LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal, fMap.values(), rows, offset);
-					LOG.info("page总条数查询-[{}]-[{}]", pageCountSql, fMap.values());
+					LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal2, fMap.values(), rows, offset);
+					LOG.info("page总条数查询-[{}]-[{}]", pageCountSql2, fMap.values());
 				}
 			}
 
-			ps = connection.prepareStatement(pageSqlFinal);
+			ps = connection.prepareStatement(pageSqlFinal2);
 			int index = 1;
-			final Field[] fs = cls.getDeclaredFields();
+			final Field[] fs = entityClass.getDeclaredFields();
 			for (final Field field : fs) {
 				if (field.isAnnotationPresent(ZTransient.class)) {
 					continue;
@@ -175,7 +183,7 @@ public class SU {
 				rL.add(tR);
 			}
 
-			psc = connection.prepareStatement(pageCountSql);
+			psc = connection.prepareStatement(pageCountSql2);
 			int indexPSC = 1;
 			for (final Field field : fs) {
 				if (field.isAnnotationPresent(ZTransient.class)) {
@@ -268,15 +276,15 @@ public class SU {
 		final String gUpdateColumn = gUpdateColumn(t, fs);
 
 		final String sqlF = sql.replace(MethodRegex.COLUMN, gUpdateColumn);
-		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
 
-		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
-		sh.forEach(h -> ((ZUpdateHandler)h).handle(sua));
+		updateHandler(entityClass, t, sqlF);
+
 		final AtomicReference<String> sqlFAR = new AtomicReference<>(sqlF);
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		if (zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP) {
+			// FIXME 2024年6月19日 下午7:33:21 zhangzhen : 抽取为一个handler
 			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
 			if(zvf.isPresent()) {
 				final Field vf = zvf.get();
@@ -337,6 +345,12 @@ public class SU {
 		}
 
 		return false;
+	}
+
+	private static <T> void updateHandler(final Class<T> entityClass, final T t, final String sqlF) {
+		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
+		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
+		sh.forEach(h -> h.handle(sua));
 	}
 
 	private static <T> Long incrementZVersionValue(final T t, final Field vf) {
@@ -452,7 +466,7 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 
 
-		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE);
+		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 		final SUA sua = new SUA(entityClass, null, null, sql,new Object[] { id});
 		sh.forEach(h -> ((ZDeleteHandler)h).handle(sua));
 
@@ -487,8 +501,8 @@ public class SU {
 		return false;
 	}
 
-	public static <T> Map<Object, Boolean> existByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object idList, final Class<T> cls,
-			final String sql) {
+	public static <T> Map<Object, Boolean> existByIdIn(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Object idList, final Class<T> entityClass, final String sql) {
 
 		final Map<Object, Boolean> v = Maps.newHashMap();
 		if (idList == null) {
@@ -510,7 +524,7 @@ public class SU {
 
 		// select ZID,count(*) from TABLE_NAME where @ in (?) group by ZID;
 
-		final Field zidF = getZID(cls);
+		final Field zidF = getZID(entityClass);
 		final String dbColumnName = ZFieldConverter.toDbField(zidF.getName());
 		final String sqlF = sql.replace(MethodRegex.ZID, dbColumnName);
 
@@ -518,9 +532,13 @@ public class SU {
 		for (final Object id : idNotNullList) {
 			idJoiner.add(String.valueOf(id));
 		}
-		final String sqlF2 = sqlF.replaceFirst("\\?", idJoiner.toString());
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String sqlF1 = sqlF.replaceFirst("\\?", idJoiner.toString());
+
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sqlF1, null);
+		final String sqlF2 = sua.getSql();
+
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		// 开始查询
 		if (isShowSQL(dataSourceName)) {
@@ -563,27 +581,31 @@ public class SU {
 		return v;
 	}
 
-	public static <T> boolean existById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
+	public static <T> boolean existById(final String zrSubClassName, final String callerMethodName,
+			final Mode mode, final Object id, final Class<T> entityClass, final String sql) {
 
 		if (Objects.isNull(id)) {
 			return false;
 		}
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql,new Object[] { id} );
+		final String s = sua.getSql();
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
-			ps.setObject(1, id);
 
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s,id);
 			}
+
+			ps = connection.prepareStatement(s);
+			ps.setObject(1, id);
 
 			rs = ps.executeQuery();
 			if (rs.next()) {
@@ -660,27 +682,37 @@ public class SU {
 		return ZRepositoryMain.getDB(dataSourceName);
 	}
 
-	private static <T> List<Object> saveAllMysqlAndPGSQL(final Mode mode, final Class<T> cls, final String sqlParam,
+	private static <T> List<Object> saveAllMysqlAndPGSQL(final Mode mode, final Class<T> entityClass, final String sqlParam,
 			final List<T> tList) {
 
-		final Field[] declaredFields = cls.getDeclaredFields();
+		final Field[] declaredFields = entityClass.getDeclaredFields();
 		final Optional<Field> zid = Lists.newArrayList(declaredFields).stream()
 				.filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
 		if (!zid.isPresent()) {
 			throw new IllegalArgumentException(
-					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + cls.getCanonicalName());
+					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + entityClass.getCanonicalName());
 		}
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final ZConnection zConnection = zc.getZConnection();
 		final Connection connection = zConnection.getConnection();
 
-		final String sql = generateSaveAllSQL(cls, sqlParam);
+		final String sql = generateSaveAllSQL(entityClass, sqlParam);
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+
+			tList.parallelStream().forEach(t -> {
+				final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
+				final SUA sua = new SUA(entityClass, t, entityClass, sql, null);
+				sh.forEach(h -> h.handle(sua));
+			});
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("批量插入{}条数据 - [{}]", tList.size(), sql);
+			}
 
 			ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
@@ -705,9 +737,7 @@ public class SU {
 				}
 			});
 
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("批量插入{}条数据 - [{}]", tList.size(), sql);
-			}
+
 
 			ps.executeBatch();
 
@@ -844,9 +874,9 @@ public class SU {
 		final String sql2 = sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES,
 				joiner.toString());
 
-		final Set<Object> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
+		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sql2, null);
-		sh.forEach(h -> ((ZSaveHandler)h).handle(sua));
+		sh.forEach(h -> h.handle(sua));
 
 		PreparedStatement ps;
 		if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
@@ -994,9 +1024,9 @@ public class SU {
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class<T> cls,final Class<T> returnType, final String sql, final Object wrapper) {
+			final Class<T> entityClass,final Class<T> returnType, final String sql, final Object wrapper) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
@@ -1006,7 +1036,7 @@ public class SU {
 		try {
 
 			final ZRWrapper w = (ZRWrapper) wrapper;
-			final String select = gSelectFromReturnType(cls);
+			final String select = gSelectFromReturnType(entityClass);
 			final String x = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select) + " "
 					+ MethodRegex.WHERE + " " + w.done();
 
@@ -1023,7 +1053,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
 			returnZConnectionIfZCPool(dataSourceName, zc);
@@ -1046,23 +1076,29 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> List<T> findAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final String sql) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
+		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+		final String s = sua.getSql();
+
+		final String select = gSelectFromReturnType(entityClass);
+		final String sF = s.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		try {
-			// "select * from user where id = ?"
-			final String s = sql;
-			ps = connection.prepareStatement(s);
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}]", sql);
-			}
 
+		if (isShowSQL(dataSourceName)) {
+			LOG.info("[{}]", sF);
+		}
+
+		try {
+
+			ps = connection.prepareStatement(sF);
 			rs = ps.executeQuery();
 
 			final ResultSetMetaData metaData = rs.getMetaData();
@@ -1070,7 +1106,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
 			returnZConnectionIfZCPool(dataSourceName, zc);
@@ -1097,46 +1133,25 @@ public class SU {
 		return en.dataSourceName();
 	}
 
-	// FIXME 2023年9月24日 下午3:41:35 zhanghen: 继续写，测试各种db和java的日期类型转换
-	//	private static <T> Object handValue(final T t, final Object columValue, final Field field) {
-	//		if (columValue instanceof LocalDateTime) {
-	//			final Date utilDate = Date.from(((LocalDateTime) columValue).atZone(ZoneId.systemDefault()).toInstant());
-	//
-	//			if(field.getType().equals(java.util.Date.class)) {
-	//				return utilDate;
-	//			}
-	//			if( field.getType().equals(java.sql.Date.class)) {
-	//				return new java.sql.Date(utilDate.getTime());
-	//			}
-	//			final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);
-	//			if (zdf != null) {
-	//				final String format = zdf.format().getFormat();
-	//				final SimpleDateFormat sss = new SimpleDateFormat(format);
-	//
-	//				final String format2 = sss.format(utilDate);
-	//
-	//				return DateUtil.parse(format2, format);
-	//			}
-	//
-	//			return utilDate;
-	//		}
-	//
-	//		return columValue;
-	//	}
 
-	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
+	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> entityClass, final String sql) {
 		final Date invokeTime = new Date();
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		final long start = System.currentTimeMillis();
 
+		final String select = gSelectFromReturnType(entityClass);
+		final String sql2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql2, null);
+		final String s = sua.getSql();
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			final String s = sql;
-			// select * from user where id in (?)
+
 			final StringJoiner joiner = new StringJoiner(",");
 			for (final Object id : idList) {
 				joiner.add(String.valueOf(id));
@@ -1144,6 +1159,8 @@ public class SU {
 			final String param = joiner.toString();
 			final String s2 = s.replace("?", param);
 			ps = connection.prepareStatement(s2);
+
+
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("根据主键批量查询 - [{}]个主键值 - [{}]", idList.size(), s);
 			}
@@ -1155,11 +1172,11 @@ public class SU {
 			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idList.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), cls, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				rList.add(t);
 			}
 
-			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, start, s2, cls.getAnnotation(ZEntity.class).tableName());
+			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, start, s2, entityClass.getAnnotation(ZEntity.class).tableName());
 
 			return rList;
 		} catch (SQLException | SecurityException e) {
@@ -1199,14 +1216,14 @@ public class SU {
 		}
 	}
 
-	private static <T> T findById0(final DBEnum dbEnum, final Mode mode, final Object id,final Class cls, final String sql, final ZConnection zc) {
+	private static <T> T findById0(final DBEnum dbEnum, final Mode mode, final Object id,final Class entityClass, final String sql, final ZConnection zc) {
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
 			String sT = null;
 
-			final String select = gSelectFromReturnType(cls);
+			final String select = gSelectFromReturnType(entityClass);
 			final String s1 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (id == null) {
@@ -1218,7 +1235,7 @@ public class SU {
 				ps.setObject(1, id);
 			}
 
-			if (isShowSQL(getDataSourceNameFromClassType(cls))) {
+			if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
 				LOG.info("[{}],[{}]", sT, id);
 			}
 
@@ -1228,7 +1245,7 @@ public class SU {
 
 			if (rs.next()) {
 				final int count = metaData.getColumnCount();
-				return (T) newT(dbEnum, cls, rs, metaData, count);
+				return (T) newT(dbEnum, entityClass, rs, metaData, count);
 			}
 
 		} catch (SQLException
@@ -1246,19 +1263,34 @@ public class SU {
 		return null;
 	}
 
-	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object id, final Class<T> cls, final String sql) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Object id, final Class<T> entityClass, final String sql) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
+		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+		final String sql2 = sua.getSql();
+
 		try {
-			final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, cls, sql, zc.getZConnection());
-			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql, cls.getAnnotation(ZEntity.class).tableName());
+			final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2, zc.getZConnection());
+			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql, entityClass.getAnnotation(ZEntity.class).tableName());
 			return t;
 		} finally {
 			returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
 		}
 
+	}
+
+	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,
+			final String sql, final Object[] arg) {
+		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SELECT_EXCLUDED_DELETED);
+		final SUA sua = new SUA(entityClass, entityObject, returnClass, sql, arg);
+
+		// FIXME 2024年6月19日 下午6:19:32 zhangzhen : 如有多个，按注解顺序执行，并且修改下面执行方式
+
+		sh.forEach(h -> ((ZAllHandler)h).handle(sua));
+		return sua;
 	}
 
 	private static <T> T newT(final DBEnum dbEnum, final Class<T> cls, final ResultSet rs,
@@ -1414,28 +1446,32 @@ public class SU {
 
 	// FIXME 2024年5月20日 上午10:22:38 zhangzhen: TODO 继续支持：声明式方法，如果值传了null，则 = null 改为 is null
 
-	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,final String sql, final Object... fieldArray) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Class<T> entityClass, final Class<T> returnType,final String sql, final Object... fieldArray) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			// "select * from user where id = ?"
+
 			final String select = gSelectFromReturnType(returnType);
 			final String s = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(s);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, s, fieldArray);
+			final String s2 = sua.getSql();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}],[{}]", s2, Arrays.toString(fieldArray));
+			}
+
+			ps = connection.prepareStatement(s2);
 
 			int i = 1;
 			for (final Object object : fieldArray) {
 				setXX_fieldValue(object, ps, i);
 				i++;
-			}
-
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", s, Arrays.toString(fieldArray));
 			}
 
 			rs = ps.executeQuery();
@@ -1450,8 +1486,7 @@ public class SU {
 			}
 
 			return r;
-		} catch (SQLException
-				| SecurityException e) {
+		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 			try {
 				connection.rollback();
@@ -1501,34 +1536,29 @@ public class SU {
 		return joiner.toString();
 	}
 
-	public static <T> List<T> findByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object fieldValue) {
+	public static <T> List<T> findByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass,final Class<T> returnType, final String sql, final Object fieldValue) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			// "select * from user where xx = ?"
-			String s = null;
 
 			final String select = gSelectFromReturnType(returnType);
 			final String x = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			if (fieldValue == null) {
-				s = x.replaceFirst(" = \\?", " IS NULL");
-				ps = connection.prepareStatement(s);
-			} else {
-				s = x;
-				ps = connection.prepareStatement(s);
-				final int index = 1;
-				setXX_fieldValue(fieldValue, ps, index);
-			}
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null);
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
+
+			ps = connection.prepareStatement(s);
+			final int index = 1;
+			setXX_fieldValue(fieldValue, ps, index);
 
 			rs = ps.executeQuery();
 
@@ -1586,18 +1616,17 @@ public class SU {
 	}
 
 	// FIXME 2024年5月14日 下午9:49:14 zhangzhen: in 还需要特殊处理 blob类型的，还没测试，不知道要不要改？
-	public static <T> List<T> findByXXIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,
+	public static <T> List<T> findByXXIn(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Class<T> entityClass, final Class<T> returnType,
 			final String sql, final Object... fieldArray) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		Statement statement = null;
 		ResultSet rs = null;
 		try {
-			// "select * from user where id = ?"
-			statement = connection.createStatement();
 
 			String s = sql;
 			for (final Object object : fieldArray) {
@@ -1624,10 +1653,14 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = s.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
+			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, fieldArray);
+			final String sF = sua.getSql();
+
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}]", sqlColumn);
+				LOG.info("[{}]", sF);
 			}
-			rs = statement.executeQuery(sqlColumn);
+			statement = connection.createStatement();
+			rs = statement.executeQuery(sF);
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
@@ -1655,8 +1688,8 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByIdLessThan(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql, final Object field) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> List<T> findByIdLessThan(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final Class<T> returnType, final String sql, final Object field) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -1667,12 +1700,15 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
-			ps.setObject(1, field);
+			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null);
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, field);
+				LOG.info("[{}],[{}]", s, field);
 			}
+
+			ps = connection.prepareStatement(s);
+			ps.setObject(1, field);
 
 			rs = ps.executeQuery();
 
@@ -1700,8 +1736,8 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXXEndingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> List<T> findByXXXEndingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass,final Class<T> returnType, final String sql, final Object field) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -1712,13 +1748,17 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
+			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null);
+
+			final String s = sua.getSql();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}],[{}]", s, "%" + field);
+			}
+
+			ps = connection.prepareStatement(s);
 			ps.setObject(1, "%" + field);
 
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, "%" + field);
-			}
-
 			rs = ps.executeQuery();
 
 			final ResultSetMetaData metaData = rs.getMetaData();
@@ -1747,10 +1787,10 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXXStartingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final Class<T> returnType,
+	public static <T> List<T> findByXXXStartingWith(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final Class<T> returnType,
 			final String sql, final Object field) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
@@ -1761,12 +1801,15 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
-			ps.setObject(1, field + "%");
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, field + "%");
+				LOG.info("[{}],[{}]", s, field + "%");
 			}
+
+			ps = connection.prepareStatement(s);
+			ps.setObject(1, field + "%");
 
 			rs = ps.executeQuery();
 
@@ -1795,8 +1838,9 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXOrYY(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object... field) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> List<T> findByXXOrYY(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Class<T> entityClass, final Class<T> returnType, final String sql, final Object... field) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -1807,7 +1851,13 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, field);
+			final String s = sua.getSql();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}],[{}]", s, Arrays.toString(field));
+			}
+			ps = connection.prepareStatement(s);
 
 			int index = 1;
 			for (final Object object : field) {
@@ -1815,9 +1865,6 @@ public class SU {
 				index++;
 			}
 
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
-			}
 
 			rs = ps.executeQuery();
 
@@ -1848,9 +1895,9 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXBetween(final String zrSubClassName, final String callerMethodName,
-			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Mode mode, final Class<T> entityClass, final Class<T> returnType, final String sql,
 			final Object... fiedlArray) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -1861,11 +1908,14 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fiedlArray);
+			final String s = sua.getSql();
+
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(fiedlArray));
+				LOG.info("[{}],[{}]", s, Arrays.toString(fiedlArray));
 			}
 
-			ps = connection.prepareStatement(sqlColumn);
+			ps = connection.prepareStatement(s);
 
 			int index = 1;
 			for (final Object f : fiedlArray) {
@@ -1904,10 +1954,10 @@ public class SU {
 
 	// XXX 不和findByXXIsNullAndXX 复用代码，最后一个参数不同，区分Object... 仅传一个值并且为数组的情况，有bug
 	public static <T> List<T> findByXXIsNullAndXXAndXX(final String zrSubClassName, final String callerMethodName,
-			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Mode mode, final Class<T> enittyClass, final Class<T> returnType, final String sql,
 			final Object... fieldArray) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(enittyClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -1918,11 +1968,14 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
+			final SUA sua = excludedDeletedHandler(enittyClass, null, returnType, sqlColumn, fieldArray);
+			final String s = sua.getSql();
+
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(fieldArray));
+				LOG.info("[{}],[{}]", s, Arrays.toString(fieldArray));
 			}
 
-			ps = connection.prepareStatement(sqlColumn);
+			ps = connection.prepareStatement(s);
 
 			int i = 1;
 			for (final Object object : fieldArray) {
@@ -1958,10 +2011,10 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXIsNullAndXXIsNullAndXXAndXX(final String zrSubClassName, final String callerMethodName,
-			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Mode mode, final Class<T> entityClass, final Class<T> returnType, final String sql,
 			final Object... fieldValue) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -1972,11 +2025,14 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fieldValue);
+			final String s = sua.getSql();
+
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(fieldValue));
+				LOG.info("[{}],[{}]", s, Arrays.toString(fieldValue));
 			}
 
-			ps = connection.prepareStatement(sqlColumn);
+			ps = connection.prepareStatement(s);
 
 			int i = 1;
 			for (final Object object : fieldValue) {
@@ -2011,10 +2067,10 @@ public class SU {
 		return Collections.emptyList();
 	}
 	public static <T> List<T> findByXXIsNullAndXXIsNullAndXX(final String zrSubClassName, final String callerMethodName,
-			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Mode mode, final Class<T> entityClass, final Class<T> returnType, final String sql,
 			final Object fieldValue) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -2025,14 +2081,13 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final String s = sua.getSql();
 			if (isShowSQL(dataSourceName)) {
-				final Object v = fieldValue.getClass().isArray()
-						? Arrays.toString(new Object[] { fieldValue})
-								: fieldValue;
-				LOG.info("[{}],[{}]", sqlColumn, v);
+				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
-			ps = connection.prepareStatement(sqlColumn);
+			ps = connection.prepareStatement(s);
 
 			final int i = 1;
 			setXX_fieldValue(fieldValue, ps, i);
@@ -2065,9 +2120,9 @@ public class SU {
 	}
 
 	public static <T> List<T> findByXXIsNullAndXX(final String zrSubClassName, final String callerMethodName,
-			final Mode mode, final Class<T> cls, final Class<T> returnType, final String sql,
+			final Mode mode, final Class<T> entityClass, final Class<T> returnType, final String sql,
 			final Object fieldValue) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -2078,15 +2133,13 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final String s = sua.getSql();
 			if (isShowSQL(dataSourceName)) {
-				// FIXME 2024年6月4日 下午8:29:01 zhangzhen : 要区分fieldValue是否数组类型
-				final Object v = fieldValue.getClass().isArray()
-						? Arrays.toString(new Object[] { fieldValue})
-								: fieldValue;
-				LOG.info("[{}],[{}]", sqlColumn, v);
+				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
-			ps = connection.prepareStatement(sqlColumn);
+			ps = connection.prepareStatement(s);
 
 			final int i = 1;
 			setXX_fieldValue(fieldValue, ps, i);
@@ -2127,13 +2180,16 @@ public class SU {
 		try {
 
 			final String select = gSelectFromReturnType(returnType);
-			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
+			final SUA sua = excludedDeletedHandler(cls, null, returnType, sqlColumn, null);
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}]", sqlColumn);
+				LOG.info("[{}]", s);
 			}
+
+			ps = connection.prepareStatement(s);
 
 			rs = ps.executeQuery();
 
@@ -2163,8 +2219,8 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findByXXLike(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql, final Object field) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> List<T> findByXXLike(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass,final Class<T> returnType, final String sql, final Object field) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -2173,14 +2229,18 @@ public class SU {
 		try {
 
 			final String select = gSelectFromReturnType(returnType);
-			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+			final String s1 = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
-			ps.setObject(1, "%" + field + "%");
+			final SUA sss = excludedDeletedHandler(entityClass, null, returnType, s1, null);
+			final String s2 = sss.getSql();
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, "%" + field + "%");
+				LOG.info("[{}],[{}]", s2, "%" + field + "%");
 			}
+
+			ps = connection.prepareStatement(s2);
+			ps.setObject(1, "%" + field + "%");
+
 
 			rs = ps.executeQuery();
 
@@ -2226,8 +2286,8 @@ public class SU {
 		ZCPool.getInstance(dataSourceName).returnZConnectionAndCommit(zc);
 	}
 
-	public static <T> List<T> findByXXIsNull(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls,final Class<T> returnType, final String sql) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> List<T> findByXXIsNull(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass,final Class<T> returnType, final String sql) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -2238,11 +2298,15 @@ public class SU {
 			final String select = gSelectFromReturnType(returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}]", sqlColumn);
+				LOG.info("[{}]", s);
 			}
+
+			ps = connection.prepareStatement(s);
+
 
 			rs = ps.executeQuery();
 
@@ -2272,20 +2336,25 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static <T> Long count(final Mode mode, final Class<T> cls, final String sql,final ZConnection zc, final String dataSourceName) {
+	private static <T> Long count(final Mode mode, final Class<T> entityClass, final String sql,final ZConnection zc, final String dataSourceName) {
 
 		final Connection connection = zc.getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+
+
+
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql, null);
+		final String s = sua.getSql();
+
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
 
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", s);
 			}
 
+			ps = connection.prepareStatement(s);
 			rs = ps.executeQuery();
 
 			if (rs.next()) {
@@ -2300,7 +2369,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(getDataSourceNameFromClassType(cls), zc);
+			returnZConnectionAndCommit(getDataSourceNameFromClassType(entityClass), zc);
 			close(rs, ps);
 		}
 
@@ -2315,28 +2384,28 @@ public class SU {
 
 	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
 	// 会被认为是Object... a 是一个byte[]，而不是a.length = 1 并且第一个值是byte[].
-	public static <T> Long countingByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql, final Object... fieldValue) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> Long countingByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final String sql, final Object... fieldValue) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
 
-			// FIXME 2024年5月13日 下午8:59:22 zhangzhen: 这里继续考虑好，是 生成代理类时，把T和Field也传进来吗？方便在此setXXX赋值
-			// 否则只能 判断参数值类型来赋值，可能声明或传来的参数值类型不符，要到sql执行了才报错就太晚了，报错越早越好。
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+
+			final String s = sua.getSql();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}],[{}]", s, Arrays.toString(fieldValue));
+			}
+			ps = connection.prepareStatement(s);
 
 			int index = 1;
 			for (final Object v : fieldValue) {
 				setXX_fieldValue(v, ps, index);
 				index++;
-			}
-
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", s, Arrays.toString(fieldValue));
 			}
 
 			rs = ps.executeQuery();
@@ -2362,26 +2431,28 @@ public class SU {
 		return 0L;
 	}
 
-	public static <T> Long countingByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql, final Object fieldValue) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> Long countingByXX(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Class<T> entityClass, final String sql, final Object fieldValue) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
 
-			// FIXME 2024年5月13日 下午8:59:22 zhangzhen: 这里继续考虑好，是 生成代理类时，把T和Field也传进来吗？方便在此setXXX赋值
-			// 否则只能 判断参数值类型来赋值，可能声明或传来的参数值类型不符，要到sql执行了才报错就太晚了，报错越早越好。
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
 
-			final int index = 1;
-			setXX_fieldValue(fieldValue, ps, index);
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
+			ps = connection.prepareStatement(s);
+
+			final int index = 1;
+			setXX_fieldValue(fieldValue, ps, index);
+
 
 			rs = ps.executeQuery();
 
@@ -2407,9 +2478,9 @@ public class SU {
 	}
 
 	//	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls,
-	public static <T> List<T> findByXXOrderByXXLimit(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> cls,
+	public static <T> List<T> findByXXOrderByXXLimit(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> entityClass,
 			final Class<T> returnType, final String sql, final Object... field) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -2418,18 +2489,22 @@ public class SU {
 		try {
 
 			final String select = gSelectFromReturnType(returnType);
-			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			ps = connection.prepareStatement(sqlColumn);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, field);
+			final String s = sua.getSql();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}],[{}]", s, Arrays.toString(field));
+			}
+
+			ps = connection.prepareStatement(s);
 			int i = 1;
 			for (final Object object : field) {
 				setXX_fieldValue(object, ps, i);
 				i++;
 			}
 
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", sqlColumn, Arrays.toString(field));
-			}
 
 			rs = ps.executeQuery();
 

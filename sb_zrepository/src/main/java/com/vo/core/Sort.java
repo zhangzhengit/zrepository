@@ -19,11 +19,11 @@ public class Sort<T> {
 
 	public static final String SPACE = " ";
 
-	private static final String ASC = " asc";
+	private static final String ASC = "ASC";
 
-	private static final String DESC = " desc";
+	private static final String DESC = "DESC";
 
-	private static final String ORDER_BY = "order by";
+	public static final String ORDER_BY = "ORDER BY";
 
 	private final List<String> x = Lists.newArrayList();
 
@@ -33,7 +33,7 @@ public class Sort<T> {
 
 	public Sort<T> ascendingBy(final String column) {
 		this.addOrderBy();
-		this.x.add(SPACE + column + ASC);
+		this.x.add(SPACE + column + SPACE + ASC);
 		return this;
 	}
 
@@ -41,22 +41,21 @@ public class Sort<T> {
 		final Field field = ReflectionUtil.getField(function);
 		this.addOrderBy();
 		final String name = field.getName();
-		this.x.add(SPACE + name + ASC);
+		this.x.add(SPACE + name + SPACE + ASC);
 		return this;
 	}
 
 	public Sort<T> descendingBy(final SerializableFunction<T, Object> function) {
 		final Field field = ReflectionUtil.getField(function);
-
 		this.addOrderBy();
 		final String name = field.getName();
-		this.x.add(SPACE + name + DESC);
+		this.x.add(SPACE + name + SPACE + DESC);
 		return this;
 	}
 
 	public Sort<T> descendingBy(final String column) {
 		this.addOrderBy();
-		this.x.add(SPACE + column + DESC);
+		this.x.add(SPACE + column + SPACE + DESC);
 		return this;
 	}
 

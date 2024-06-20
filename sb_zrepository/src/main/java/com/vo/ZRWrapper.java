@@ -141,7 +141,7 @@ import lombok.Getter;
  */
 public class ZRWrapper<T> {
 
-	private static final String ALWAYS_TRUE = " 1 = 1 ";
+	public static final String ALWAYS_TRUE = " 1 = 1 ";
 	public static final String SPACE = " ";
 	private static final String AND = MethodRegex.AND;
 	private static final String OR = MethodRegex.OR;

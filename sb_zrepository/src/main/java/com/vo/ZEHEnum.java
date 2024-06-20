@@ -13,5 +13,7 @@ public enum ZEHEnum {
 
 	UPDATE,
 
-	DELETE,;
+	DELETE_Logical,
+
+	SELECT_EXCLUDED_DELETED,;
 }
