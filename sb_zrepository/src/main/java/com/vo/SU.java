@@ -1046,11 +1046,15 @@ public class SU {
 			final String x = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select) + " "
 					+ MethodRegex.WHERE + " " + w.done();
 
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null);
+
+			final String x2 = sua.getSql();
+
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}]", x);
+				LOG.info("[{}]", x2);
 			}
 
-			ps = connection.prepareStatement(x);
+			ps = connection.prepareStatement(x2);
 
 			rs = ps.executeQuery();
 
