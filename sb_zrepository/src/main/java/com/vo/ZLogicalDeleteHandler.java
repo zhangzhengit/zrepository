@@ -38,8 +38,8 @@ public class ZLogicalDeleteHandler extends ZDeleteHandler {
 						+ zldo.get().getAnnotation(ZLogicalDelete.class).deleted()
 						+ " WHERE "
 						+ idColumnName
-						+ " = "
-						+ "?;"
+						+ " in "
+						+ "(?);"
 						;
 
 		sua.setSql(update);

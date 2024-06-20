@@ -378,23 +378,25 @@ public class SU {
 		return idValue;
 	}
 
-	public static <T> boolean deleteAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
+	public static <T> boolean deleteAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final String sql) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps =null;
 		try {
-			final String s = sql;
-			ps = connection.prepareStatement(s);
-			// FIXME 2023年9月6日 上午2:39:45 zhanghen: 配置为参数
-			ps.setQueryTimeout(22);
+
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+
+			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}]", s);
 			}
+
+			ps = connection.prepareStatement(s);
 
 			final int executeUpdate = ps.executeUpdate();
 
@@ -415,8 +417,8 @@ public class SU {
 		return false;
 	}
 
-	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> cls, final String sql) {
-		final String dataSourceName = getDataSourceNameFromClassType(cls);
+	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> entityClass, final String sql) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
@@ -426,9 +428,17 @@ public class SU {
 
 			final String params = String.join(",", Collections.nCopies(idList.size(), "?"));
 
-			final String sqlT = sql.replace("?", params);
+			final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
+			final SUA sua = new SUA(entityClass, null, null, sql, null);
+			sh.forEach(h -> ((ZDeleteHandler) h).handle(sua));
+
+			final String s2 = sua.getSql();
+			final String sqlT = s2.replace("?", params);
 
 			ps = connection.prepareStatement(sqlT);
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("根据主键批量删除 - [{}]个主键值 - [{}]", idList.size(), s2);
+			}
 
 			int index = 1;
 			for (final Object id : idList) {
@@ -436,9 +446,6 @@ public class SU {
 				index++;
 			}
 
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("根据主键批量删除 - [{}]个主键值 - [{}]", idList.size(), sql);
-			}
 
 			final int executeUpdate = ps.executeUpdate();
 
@@ -533,16 +540,15 @@ public class SU {
 			idJoiner.add(String.valueOf(id));
 		}
 
-		final String sqlF1 = sqlF.replaceFirst("\\?", idJoiner.toString());
-
-		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sqlF1, null);
-		final String sqlF2 = sua.getSql();
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sqlF, null);
+		final String sqlF1 = sua.getSql();
+		final String sqlF2 = sqlF1.replaceFirst("\\?", idJoiner.toString());
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		// 开始查询
 		if (isShowSQL(dataSourceName)) {
-			LOG.info("根据[{}]个ID批量查询是否存在-[{}]", idNotNullList.size(), sqlF);
+			LOG.info("根据[{}]个ID批量查询是否存在-[{}]", idNotNullList.size(), sqlF1);
 		}
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);

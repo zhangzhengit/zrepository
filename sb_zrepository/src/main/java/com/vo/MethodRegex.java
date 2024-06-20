@@ -274,7 +274,7 @@ public class MethodRegex {
 
 		// deleteById
 		REGEX_MAP_DELETEBYID.put(deleteById, "DELETE " + FROM + " TABLE_NAME " + WHERE + " @ = ?");
-		REGEX_MAP_DELETEBYID.put(deleteAll, "DELETE " + FROM + " TABLE_NAME");
+		REGEX_MAP_DELETEBYID.put(deleteAll, "DELETE " + FROM + " TABLE_NAME"  + " " + WHERE + ZRWrapper.ALWAYS_TRUE);
 
 		// deleteByIdIn
 		REGEX_MAP_DELETEBYID.put(deleteByIdIn, "DELETE " + FROM + " TABLE_NAME " + WHERE + " @ IN (?)");
