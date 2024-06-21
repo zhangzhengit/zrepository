@@ -88,7 +88,7 @@ public class ZCPool {
 			return pool;
 		}
 
-		synchronized (dataSourceName.intern()) {
+		synchronized ("ZCPool.getInstance-" + dataSourceName) {
 			final ZCPool newPool = new ZCPool();
 			newPool.dataSourceName = dataSourceName;
 			newPool.initialize(dataSourceName);
