@@ -58,8 +58,6 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月16日
  *
  */
-// FIXME 2024年5月17日 上午8:12:47 zhangzhen: 当前支持的mysql，如果查询条件的值传来了，那么把sql中的=都替换为is，即 xx is null
-
 // FIXME 2023年9月16日 下午7:57:12 zhanghen: 考虑清楚每个方法 @ZID 字段为空怎么处理
 // FIXME 2024年5月18日 下午12:29:49 zhangzhen: LOG 要不要使用 PreparedStatement.toString 代替？
 
@@ -69,9 +67,6 @@ import cn.hutool.core.util.StrUtil;
 //	2、数组类型，要Arrays.toString输出 等等
 
 public class SU {
-	// FIXME 2024年5月10日 下午9:15:39 zhangzhen: 由于支持了二进制类型，参数传来数组，log.xx时需要 Array.toString 记得改
-
-	private static final long ZVERSION_INITIAL_VALUE = 0L;
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -1199,28 +1194,23 @@ public class SU {
 		}
 	}
 
-	private static <T> T findById0(final DBEnum dbEnum, final Mode mode, final Object id,final Class entityClass, final String sql, final ZConnection zc) {
+	private static <T> T findById0(final DBEnum dbEnum, final Mode mode, final Object id, final Class entityClass,
+			final String sql, final ZConnection zc) {
+
+		final String select = gSelectFromReturnType(entityClass);
+		final String sF = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			String sT = null;
-
-			final String select = gSelectFromReturnType(entityClass);
-			final String s1 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
-
-			if (id == null) {
-				sT = s1.replaceFirst("= \\?", "IS NULL");
-				ps = zc.getConnection().prepareStatement(sT);
-			} else {
-				sT = s1;
-				ps = zc.getConnection().prepareStatement(sT);
-				ps.setObject(1, id);
-			}
 
 			if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
-				LOG.info("[{}],[{}]", sT, id);
+				LOG.info("[{}],[{}]", sF, id);
 			}
+
+			ps = zc.getConnection().prepareStatement(sF);
+			final int index = 1;
+			ps.setObject(index, id);
 
 			rs = ps.executeQuery();
 
@@ -1426,8 +1416,6 @@ public class SU {
 		}
 		return object;
 	}
-
-	// FIXME 2024年5月20日 上午10:22:38 zhangzhen: TODO 继续支持：声明式方法，如果值传了null，则 = null 改为 is null
 
 	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Class<T> entityClass, final Class<T> returnType,final String sql, final Object... fieldArray) {
@@ -2708,25 +2696,12 @@ public class SU {
 		return (Integer) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.DELETE, arg);
 	}
 
-	public static  <T> Object zQueryInsert(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName,final Class<T> cls, final String sql,final Object... arg) {
+	public static <T> Object zQueryInsert(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Object entityTName, final Class<T> cls, final String sql, final Object... arg) {
 		return updateOrDeleteOrInsert(mode, entityTName, cls, sql, SUEnum.INSERT, arg);
 	}
 
-	/**
-	 * 把一个sql中的 指定顺序的 = ? 替换为 is null
-	 *
-	 * @param sql 如：select * from blobt where id = ? and name = ?
-	 * @param i   第几个，如上例子，要替换 id = ? ，则传值1
-	 */
-	// FIXME 2024年5月18日 下午8:30:34 zhangzhen: SU里面的方法要不要加一个参数：method.getPS.name[] ，直接替换就行了，就不需要自己查找然后替换了
-	public static void sqlR(final String sql, final int i) {
-		if (i <= 0) {
-			throw new IllegalArgumentException("i 必须大于0！i = " + i);
-		}
-
-	}
-
-	public static Field getZID(final Class cls) {
+	private static Field getZID(final Class cls) {
 		final Field[] fs = cls.getDeclaredFields();
 		for (final Field f : fs) {
 			if(f.isAnnotationPresent(ZID.class)) {
