@@ -16,7 +16,7 @@ import com.vo.exception.UpdateWithoutWhereException;
  *
  */
 @ZOrder(value = 1)
-public class ZPreventDeleteAllHandler extends ZDeleteHandler {
+public class ZPreventDeleteAllHandler extends ZDeleteAllHandler {
 
 	@Override
 	public SUA handle(final SUA sua) {
@@ -29,6 +29,18 @@ public class ZPreventDeleteAllHandler extends ZDeleteHandler {
 
 		final String sql = sua.getSql();
 
+		final String preventDeleteAllMessage = sql
+				+ "\r\n\t"
+				+ "[" + sua.getZrSubClassName() + "." + sua.getCallerMethodName() + "]"
+				+ "\r\n\t"
+				+ "本功能由 @" + ZPreventDeleteAll.class.getCanonicalName()  + " 提供"
+				+ "\r\n\t"
+				+ "如果就是要删除 ["
+				+ sua.getEntityClass().getAnnotation(ZEntity.class).tableName()
+				+ "] 表中的全部数据, 请删除 @" + ZEntity.class.getSimpleName() +" 对象 ["
+				+ sua.getEntityClass().getSimpleName() + "] 上的 [@" + ZPreventDeleteAll.class.getCanonicalName() + "] 注解 "
+				+ "\r\n\t";
+
 		if (Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZLogicalDelete.class)).findAny().isPresent()) {
 			// 逻辑删除 UPDATE @ZLogicalDelete = 删除值 这个sql没定义模板，就直接判断后面带没带WHERE 吧
 			final String sqlUpper = sql.trim().toUpperCase();
@@ -40,7 +52,7 @@ public class ZPreventDeleteAllHandler extends ZDeleteHandler {
 					sqlUpper.replace(Sort.SPACE, "")
 					.endsWith((MethodRegex.WHERE + ZRWrapper.ALWAYS_TRUE).replace(Sort.SPACE, "") + ";")
 					) {
-				throw new UpdateWithoutWhereException(sql);
+				throw new UpdateWithoutWhereException(preventDeleteAllMessage);
 			}
 
 			return sua;
@@ -51,17 +63,9 @@ public class ZPreventDeleteAllHandler extends ZDeleteHandler {
 			return sua;
 		}
 
-		final String preventDeleteAllMessage = sql
-				+ "\r\n\t"
-				+ "本功能由 @" + ZPreventDeleteAll.class.getCanonicalName()  + " 提供"
-				+ "\r\n\t"
-				+ "如果就是要删除 ["
-				+ sua.getEntityClass().getAnnotation(ZEntity.class).tableName()
-				+ "] 表中的全部数据, 请删除 @" + ZEntity.class.getSimpleName() +" 对象 ["
-				+ sua.getEntityClass().getSimpleName() + "] 上的 [@" + ZPreventDeleteAll.class.getCanonicalName() + "] 注解 "
-				+ "\r\n\t";
+
 		if (!sqlUpper.contains(MethodRegex.WHERE)) {
-			throw new DeleteWithoutWhereException(sql);
+			throw new DeleteWithoutWhereException(preventDeleteAllMessage);
 		}
 
 		final boolean endsWith = sqlUpper.replace(Sort.SPACE, "")

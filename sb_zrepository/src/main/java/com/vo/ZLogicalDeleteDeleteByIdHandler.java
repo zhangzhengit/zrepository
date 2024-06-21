@@ -15,7 +15,7 @@ import com.vo.anno.ZEntity;
  *
  */
 @ZOrder
-public class ZLogicalDeleteHandler extends ZDeleteHandler {
+public class ZLogicalDeleteDeleteByIdHandler extends ZDeleteByIdHandler {
 
 	@Override
 	public SUA handle(final SUA sua) {

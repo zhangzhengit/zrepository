@@ -362,14 +362,14 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 
 
-		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE);
+		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_ALL);
 		final SUA sua = new SUA(entityClass, null, entityClass, sql, null);
+		sua.setZrSubClassName(zrSubClassName);
+		sua.setCallerMethodName(callerMethodName);
 		sh.forEach(h -> h.handle(sua));
 
 		PreparedStatement ps =null;
 		try {
-
-			final SUA sua2 = excludedDeletedHandler(entityClass, null, null, sql, null);
 
 			final String s = sua.getSql();
 
@@ -411,7 +411,7 @@ public class SU {
 
 			final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 			final SUA sua = new SUA(entityClass, null, null, sql, null);
-			sh.forEach(h -> ((ZDeleteHandler) h).handle(sua));
+			sh.forEach(h -> ((ZDeleteByIdHandler) h).handle(sua));
 
 			final String s2 = sua.getSql();
 			final String sqlT = s2.replace("?", params);
@@ -456,7 +456,7 @@ public class SU {
 
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 		final SUA sua = new SUA(entityClass, null, null, sql,new Object[] { id});
-		sh.forEach(h -> ((ZDeleteHandler)h).handle(sua));
+		sh.forEach(h -> ((ZDeleteByIdHandler)h).handle(sua));
 
 		final String s = sua.getSql();
 

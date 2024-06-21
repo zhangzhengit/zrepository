@@ -15,6 +15,8 @@ public enum ZEHEnum {
 
 	DELETE,
 
+	DELETE_ALL,
+
 	DELETE_Logical,
 
 	SELECT_EXCLUDED_DELETED,;

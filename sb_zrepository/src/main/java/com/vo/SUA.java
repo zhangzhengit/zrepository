@@ -25,6 +25,9 @@ public class SUA {
 
 	ZC2 zc2;
 
+	String zrSubClassName;
+	String callerMethodName;
+
 	/**
 	 * hanlder处理后返回的部分where 条件，如： name = ?
 	 */

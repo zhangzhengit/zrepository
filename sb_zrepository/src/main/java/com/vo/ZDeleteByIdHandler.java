@@ -8,7 +8,7 @@ package com.vo;
  * @date 2024年6月16日 上午4:49:42
  *
  */
-public abstract class ZDeleteHandler implements ZEntityHandler {
+public abstract class ZDeleteByIdHandler implements ZEntityHandler {
 
 	@Override
 	public SUA handle(final SUA sua) {
@@ -17,7 +17,6 @@ public abstract class ZDeleteHandler implements ZEntityHandler {
 
 	@Override
 	public boolean condition(final Class<?> entityClass) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

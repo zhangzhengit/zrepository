@@ -4,6 +4,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,15 +32,15 @@ public class ZEntityHandlerScanner {
 		set(ZEHEnum.UPDATE, updateHS);
 
 
-		final Set<ZEntityHandler> DELETEDHS = getZEntityHandlerSubClass(packageName, ZDeleteHandler.class);
+		final Set<ZEntityHandler> DELETEDHS = getZEntityHandlerSubClass(packageName, ZDeleteByIdHandler.class);
 		set(ZEHEnum.DELETE_Logical, DELETEDHS);
 
 		final Set<ZEntityHandler> EXCLUDED_DELETEDHS = getZEntityHandlerSubClass(packageName, ZAllHandler.class);
 		set(ZEHEnum.SELECT_EXCLUDED_DELETED, EXCLUDED_DELETEDHS);
 		// FIXME 2024年6月16日 上午5:07:55 zhangzhen : 继续写
 
-		final Set<ZEntityHandler> deleteHS = getZEntityHandlerSubClass(packageName, ZDeleteHandler.class);
-		set(ZEHEnum.DELETE, deleteHS);
+		final Set<ZEntityHandler> deleteHS = getZEntityHandlerSubClass(packageName, ZDeleteAllHandler.class);
+		set(ZEHEnum.DELETE_ALL, deleteHS);
 
 	}
 
@@ -85,6 +87,34 @@ public class ZEntityHandlerScanner {
 				throw new ZRepositoryException(s);
 			}
 		}
+
+		final Map<String, List<ZEntityHandler>> pMap = saveHS.stream()
+				.collect(Collectors.groupingBy(h -> h.getClass().getSuperclass().getCanonicalName()));
+
+		final Set<Entry<String, List<ZEntityHandler>>> es = pMap.entrySet();
+		for (final Entry<String, List<ZEntityHandler>> e : es) {
+
+			final Set<Integer> os = Sets.newHashSet();
+			for (final ZEntityHandler h : e.getValue()) {
+				final ZOrder zo = h.getClass().getAnnotation(ZOrder.class);
+				if (zo == null) {
+					continue;
+				}
+
+				final int v = zo.value();
+				final boolean add = os.add(h.getClass().getAnnotation(ZOrder.class).value());
+				if (!add) {
+					final String s = e.getKey() + " 子类"
+							+ " ["
+							+ h.getClass().getCanonicalName()
+							+ "] "
+							+ "的 @" + ZOrder.class.getCanonicalName()
+							+ " 注解值 [" + v + "] 重复，请修改此值";
+					throw new ZRepositoryException(s);
+				}
+			}
+		}
+
 
 		final List<ZEntityHandler> xl = Lists.newArrayList(saveHS);
 		xl.sort(Comparator.comparing(h -> h.getClass().getAnnotation(ZOrder.class).value()));
