@@ -1886,6 +1886,17 @@ public class ZRepositoryMain {
 		final String tableName = typeClass.getAnnotation(ZEntity.class).tableName();
 
 		final Field[] fs = typeClass.getDeclaredFields();
+
+		final long zversionCount = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).count();
+		if (zversionCount > 1) {
+			final String m = "@" + ZEntity.class.getSimpleName()
+					+ "类[" + typeClass.getSimpleName() + "] "
+					+ "只允许有一个 @" + ZVersion.class + " 字段,"
+					+ "当前有[" + zversionCount + "]个"
+					;
+			throw new IllegalArgumentException(m);
+		}
+
 		for (final Field f : fs) {
 			// FIXME 2024年5月27日 下午8:49:49 zhangzhen: 继续测试命名
 			final String name = f.getName();
@@ -2020,6 +2031,7 @@ public class ZRepositoryMain {
 
 					checkZCT(typeClass, o, ZCreateTime.class, ZCreateTimeHandler.SUPPORTED_CLASS_SET);
 					checkZCT(typeClass, o, ZUpdateTime.class, ZUpdateTimeHandler.SUPPORTED_CLASS_SET);
+
 					checkZCT(typeClass, o, ZVersion.class, ZVersionHandler.SUPPORTED_CLASS_SET);
 
 				}
