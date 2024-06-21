@@ -70,8 +70,7 @@ public class ZEntityHandlerScanner {
 
 	private static void set(final ZEHEnum zehEnum,final Set<ZEntityHandler> saveHS ) {
 
-		if(saveHS.size() > 1) {
-			// FIXME 2024年6月21日 上午11:53:32 zhangzhen : 定义注解
+		if (saveHS.size() > 1) {
 			final Optional<ZEntityHandler> noZORDER = saveHS.stream().filter(h -> !h.getClass().isAnnotationPresent(ZOrder.class))
 					.findAny();
 
