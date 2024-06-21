@@ -30,12 +30,13 @@ import java.lang.annotation.Target;
 	  1、则[ZRepository.deleteById]为物理删除：delete where id = ?
 	  2、并且[select]操作不会自动加入[is_delete = @ZLogicalDelete.undeleted()]的where条件
 
+ 执行 [ZRepository.update] 时，带本注解的字段值是什么，就update为什么，不做特殊判断
+
  *
  * @author zhangzhen
  * @date 2024年6月16日 下午4:54:43
  *
  */
-// FIXME 2024年6月19日 下午6:27:59 zhangzhen : 带有本注解的字段是否允许update？
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
