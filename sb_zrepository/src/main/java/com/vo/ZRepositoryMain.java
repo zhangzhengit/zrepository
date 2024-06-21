@@ -2052,6 +2052,8 @@ public class ZRepositoryMain {
 
 					checkZCT(typeClass, o, ZCreateTime.class, ZCreateTimeHandler.SUPPORTED_CLASS_SET);
 					checkZCT(typeClass, o, ZUpdateTime.class, ZUpdateTimeHandler.SUPPORTED_CLASS_SET);
+					checkZCT(typeClass, o, ZVersion.class, ZVersionHandler.SUPPORTED_CLASS_SET);
+
 				}
 
 				final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)

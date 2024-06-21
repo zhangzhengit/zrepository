@@ -2,6 +2,9 @@ package com.vo;
 
 import java.lang.reflect.Field;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
 /**
  * @ZVersion save 时的动作：如果带 @ZVersion 的字段值为null，则自动给一个初始值
  *
@@ -10,6 +13,8 @@ import java.lang.reflect.Field;
  *
  */
 public class ZVersionHandler extends ZSaveHandler {
+
+	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Long.class));
 
 	public static final long ZVERSION_INITIAL_VALUE = 0L;
 
