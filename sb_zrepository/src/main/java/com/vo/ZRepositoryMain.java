@@ -100,38 +100,6 @@ public class ZRepositoryMain {
 		return ZCPool.getInstance(dataSourceName);
 	}
 
-	public static void start() {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZRMain.start()");
-
-
-		// 0 checkZEntityField
-		//		checkZEntityField();
-
-		// 1 建立连接池
-		//		ZCPool.getInstance();
-
-		// 2 扫描 @ZEntity的类
-		//		final Set<Class<?>> zeClassSet = scanZEntity();
-		//		gWrapperRepository(zeClassSet);
-
-		// 3给 ZR 的子类根据方法名称来生成对应的sql
-		//		gSqlForZRSubclass(zeClassSet);
-		//		final Set<Class<?>> zrSubclassSet = scanZRSubclass();
-
-		//		generateSqlForZRSubclass(zrSubclassSet);
-
-
-		// 测试 插入一条数据
-
-		// FIXME 2023年6月16日 上午11:08:00 zhanghen: 先生成ZR的子接口的实现类
-		//		generateClassForZRSubinterface(zrSubclassSet);
-
-
-		// FIXME 2023年6月16日 上午10:59:52 zhanghen: 自己写一个aop
-
-	}
-
 	public static Map<Class, ZClass> generateClassForZRSubinterfaceMap(final Set<Class<?>> zrSubclassSet) {
 
 		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
