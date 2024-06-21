@@ -20,15 +20,20 @@ import java.lang.annotation.Target;
   	@ZLogicalDelete
 	private Integer isDelete;
 }
- 判断 @ZEntity 是否存在 @ZLogicalDelete 字段：
- 	有：
-	  1、则执行[ZRepository.deleteById]操作时使用逻辑删除：update is_delete = @ZLogicalDelete.deleted() where id = ?
-	  2、并且[select]操作(手动定义的@ZQuery除外)都自动加入where条件：is_delete = @ZLogicalDelete.undeleted()
-  	  3、[ZRepository.save] 时自动给is_delete字段赋值为 @ZLogicalDelete.undeleted()
 
-  	无：
-	  1、则[ZRepository.deleteById]为物理删除：delete where id = ?
-	  2、并且[select]操作不会自动加入[is_delete = @ZLogicalDelete.undeleted()]的where条件
+正常声明：
+ 	public interface BlobRepository extends ZRepository<BlobEntity, Integer>{}
+
+正常使用：
+	blobRepository.deleteById
+
+  程序会自动判断	@ZEntity 类中是否存在 @ZLogicalDelete 字段：
+ 	有：
+	  1、则执行[ZRepository.deleteById]操作时改用逻辑删除：update is_delete = @ZLogicalDelete.deleted() where id = ?
+	  2、并且所有的[select]操作(手动定义的@ZQuery除外)都自动加入where条件：is_delete = @ZLogicalDelete.undeleted()
+  	  3、[ZRepository.save] 时自动给 @ZLogicalDelete 字段赋值为 @ZLogicalDelete.undeleted()
+
+  	无：则所有操作都是正常流程
 
  执行 [ZRepository.update] 时，带本注解的字段值是什么，就update为什么，不做特殊判断
 
