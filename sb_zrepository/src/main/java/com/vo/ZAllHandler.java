@@ -16,7 +16,6 @@ public abstract class ZAllHandler implements ZEntityHandler {
 
 	@Override
 	public boolean condition(final Class<?> entityClass) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
