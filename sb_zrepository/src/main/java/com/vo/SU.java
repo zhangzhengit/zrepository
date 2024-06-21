@@ -277,28 +277,13 @@ public class SU {
 
 		final String sqlF = sql.replace(MethodRegex.COLUMN, gUpdateColumn);
 
-		updateHandler(entityClass, t, sqlF);
-
 		final AtomicReference<String> sqlFAR = new AtomicReference<>(sqlF);
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		if (zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP) {
-			// FIXME 2024年6月19日 下午7:33:21 zhangzhen : 抽取为一个handler
-			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
-			if(zvf.isPresent()) {
-				final Field vf = zvf.get();
-				final Long oldVV = incrementZVersionValue(t, vf);
-				if (vf != null) {
-					final String versionColumnName = ZFieldConverter.toDbField(vf.getName());
-					final String version = versionColumnName + " = " + oldVV;
-					final String replace = sqlFAR.get().replace(MethodRegex.WHERE, MethodRegex.WHERE + Sort.SPACE + version
-							+ Sort.SPACE + MethodRegex.AND
-							);
-					sqlFAR.set(replace);
-				}
-			}
-		}
+		final SUA updateHandler = updateHandler(entityClass, t, sqlF, zc);
+
+		sqlFAR.set(updateHandler.getSql());
 
 		final Connection connection = zc.getZConnection().getConnection();
 		PreparedStatement ps  = null;
@@ -347,22 +332,13 @@ public class SU {
 		return false;
 	}
 
-	private static <T> void updateHandler(final Class<T> entityClass, final T t, final String sqlF) {
+	private static <T> SUA updateHandler(final Class<T> entityClass, final T t, final String sqlF, final ZC2 zc2) {
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
+		sua.setZc2(zc2);
 		sh.forEach(h -> h.handle(sua));
-	}
 
-	private static <T> Long incrementZVersionValue(final T t, final Field vf) {
-		try {
-			final Object versionValue = vf.get(t);
-			final Long nVV = (Long) versionValue + 1L;
-			setZVersionValue(t, vf, nVV);
-			return (Long) versionValue;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return sua;
 	}
 
 	private static <T> Object getUpdateIdValue(final T t, final Optional<Field> zidO) {
@@ -905,14 +881,6 @@ public class SU {
 		return new Object[] {rs,ps};
 	}
 
-	private static <T> void setZVersionValue(final T t, final Field vf, final Long versionValue) {
-		vf.setAccessible(true);
-		try {
-			vf.set(t, versionValue);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}
 
 	private static <T> boolean addPS(final DBEnum dbEnum, final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
 			throws SQLException {

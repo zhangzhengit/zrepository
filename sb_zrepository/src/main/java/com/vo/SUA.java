@@ -23,6 +23,8 @@ public class SUA {
 	String sql;
 	Object[] arg;
 
+	ZC2 zc2;
+
 	/**
 	 * hanlder处理后返回的部分where 条件，如： name = ?
 	 */
