@@ -25,6 +25,8 @@ public class MethodRegex {
 	// FIXME 2023年9月27日 下午4:09:13 zhanghen: TODO 支持findMax/MinXXByXX这种形式
 
 	public static final String SELECT = "SELECT";
+	public static final String DELETE = "DELETE";
+	public static final String UPDATE = "UPDATE";
 	public static final String FROM = "FROM";
 	public static final String WHERE = "WHERE";
 	public static final String LIMIT = "LIMIT";

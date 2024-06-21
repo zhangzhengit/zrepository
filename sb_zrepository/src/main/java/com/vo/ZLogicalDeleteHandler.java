@@ -14,6 +14,7 @@ import com.vo.anno.ZEntity;
  * @date 2024年6月16日 下午5:07:30
  *
  */
+@ZOrder
 public class ZLogicalDeleteHandler extends ZDeleteHandler {
 
 	@Override

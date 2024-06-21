@@ -13,6 +13,7 @@ import com.vo.core.Sort;
  * @date 2024年6月21日 上午10:40:26
  *
  */
+@ZOrder(value = 1)
 public class ZVersionOptimisticLockHandler extends ZUpdateHandler {
 
 	@Override

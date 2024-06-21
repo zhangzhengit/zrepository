@@ -12,6 +12,7 @@ import java.util.Optional;
  * @date 2024年6月19日 下午5:44:32
  *
  */
+@ZOrder(value = 1)
 public class ZLogicalDeleteSaveHandler extends ZSaveHandler {
 
 	@Override

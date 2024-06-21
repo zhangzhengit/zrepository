@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
  * @date 2024年6月16日 上午4:48:06
  *
  */
+@ZOrder(value = 2)
 public class ZVersionHandler extends ZSaveHandler {
 
 	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Long.class));

@@ -361,10 +361,15 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
+
+		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE);
+		final SUA sua = new SUA(entityClass, null, entityClass, sql, null);
+		sh.forEach(h -> h.handle(sua));
+
 		PreparedStatement ps =null;
 		try {
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+			final SUA sua2 = excludedDeletedHandler(entityClass, null, null, sql, null);
 
 			final String s = sua.getSql();
 

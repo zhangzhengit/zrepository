@@ -1,10 +1,17 @@
 package com.vo;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.exception.ZRepositoryException;
 
 /**
  *
@@ -29,6 +36,9 @@ public class ZEntityHandlerScanner {
 		final Set<ZEntityHandler> EXCLUDED_DELETEDHS = getZEntityHandlerSubClass(packageName, ZAllHandler.class);
 		set(ZEHEnum.SELECT_EXCLUDED_DELETED, EXCLUDED_DELETEDHS);
 		// FIXME 2024年6月16日 上午5:07:55 zhangzhen : 继续写
+
+		final Set<ZEntityHandler> deleteHS = getZEntityHandlerSubClass(packageName, ZDeleteHandler.class);
+		set(ZEHEnum.DELETE, deleteHS);
 
 	}
 
@@ -57,7 +67,30 @@ public class ZEntityHandlerScanner {
 	private static final HashMap<ZEHEnum, Set<ZEntityHandler>> m = Maps.newHashMap();
 
 	private static void set(final ZEHEnum zehEnum,final Set<ZEntityHandler> saveHS ) {
-		m.put(zehEnum, saveHS);
+
+		if(saveHS.size() > 1) {
+			// FIXME 2024年6月21日 上午11:53:32 zhangzhen : 定义注解
+			final Optional<ZEntityHandler> noZORDER = saveHS.stream().filter(h -> !h.getClass().isAnnotationPresent(ZOrder.class))
+					.findAny();
+
+			if (noZORDER.isPresent()) {
+
+				final String s = ZEntityHandler.class.getCanonicalName() + " " + "对象"
+						+ " ["
+						+ noZORDER.get().getClass().getCanonicalName()
+						+ "] "
+
+						+ "缺失 @" + ZOrder.class.getCanonicalName()
+						+ " 注解，请加入此注解";
+				throw new ZRepositoryException(s);
+			}
+		}
+
+		final List<ZEntityHandler> xl = Lists.newArrayList(saveHS);
+		xl.sort(Comparator.comparing(h -> h.getClass().getAnnotation(ZOrder.class).value()));
+		final LinkedHashSet<ZEntityHandler> vs = Sets.newLinkedHashSet(xl);
+
+		m.put(zehEnum, vs);
 	}
 
 	public static Set<ZEntityHandler> get(final ZEHEnum zehEnum) {

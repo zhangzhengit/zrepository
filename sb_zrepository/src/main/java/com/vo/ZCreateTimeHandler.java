@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
  * @date 2024年6月16日 上午5:25:45
  *
  */
+@ZOrder
 public class ZCreateTimeHandler extends ZSaveHandler {
 
 	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Date.class));
