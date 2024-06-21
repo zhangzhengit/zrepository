@@ -103,17 +103,17 @@ public class SU {
 
 			final StringBuilder columnBuilder = new StringBuilder();
 
-			final String pageCountSQLT = "select count(*) from " + entityClass.getAnnotation(ZEntity.class).tableName()
-					+ " where COLUMN";
+			final String pageCountSQLT = MethodRegex.SELECT + " COUNT(*) " + MethodRegex.FROM + " "
+					+ entityClass.getAnnotation(ZEntity.class).tableName() + " " + MethodRegex.WHERE + " COLUMN";
 
 			for (int i = 1; i <= size2; i++) {
 				columnBuilder.append(" ").append(kl.get(i - 1)).append(" = ? ");
 				if (i < size2) {
-					columnBuilder.append(" and ");
+					columnBuilder.append(Sort.SPACE + MethodRegex.AND + Sort.SPACE);
 				}
 			}
 			if (columnBuilder.length() <= 0) {
-				columnBuilder.append(" 1 = 1 ");
+				columnBuilder.append(ZRWrapper.ALWAYS_TRUE);
 			}
 
 			final String select = gSelectFromReturnType(returnType);
