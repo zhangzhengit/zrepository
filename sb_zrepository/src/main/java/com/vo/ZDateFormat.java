@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
  * @date 2023年9月24日
  *
  */
+// FIXME 2024年6月22日 下午7:01:52 zhangzhen : 启动校验只能用在什么类型上，当前使用时只在java.util.Date类型上做了校验
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })

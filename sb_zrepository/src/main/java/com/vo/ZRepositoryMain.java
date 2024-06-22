@@ -839,9 +839,8 @@ public class ZRepositoryMain {
 				return findByXXBetween(myZRClass, entityClass, className1, method);
 			}
 
-			// FIXME 2024年6月9日 上午3:27:39 zhangzhen : 这个in似乎功能还有问题，以后再写这个的参数检验
 			if (methodname.matches(MethodRegex.GROUP_findByxx_in)) {
-				return findByXXIn(className1, method);
+				return findByXXIn(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByxx_in);
 			}
 
 			if (methodname.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)) {
@@ -1644,10 +1643,47 @@ public class ZRepositoryMain {
 		}
 	}
 
-	private static String findByXXIn(final String className1, final Method method) {
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+	private static String findByXXIn(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
+
+		final D d = findFieldName(entityClass, method.getName());
+
+		final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
+		final String x = filedNameMethodNameOrder.get(0);
+		final Optional<Field> o = Arrays.stream(entityClass.getDeclaredFields()).filter(f -> f.getName().equals(ZFieldConverter.toJavaField(ZFieldConverter.toDbField(x)))).findAny();
+		final Field fo = o.get();
+		if (fo.getType().isArray()) {
+			throw new IllegalArgumentException(
+					"\r\n\t"
+							+ methodRegex + "声明式方法["+myZRClass.getSimpleName() + "."+method.getName()+"]类型不支持:"
+							+ "\r\n\t"
+							+ "不支持数组类型"
+							+ "\r\n\t"
+							+ "["+method.getName()+"]中的["
+							+ filedNameMethodNameOrder.get(0) + "]是数组类型,请修改方法声明为支持的类型"
+							+ "\r\n\t"
+					);
+		}
+
+		if (method.getParameters().length == 0) {
+			throw new IllegalArgumentException(
+					"\r\n\t"
+							+ methodRegex + "声明式方法["+myZRClass.getSimpleName() + "."+method.getName()+"]参数个数错误:"
+							+ "\r\n\t"
+							+ "必须有且只有一个类型为["+ List.class.getSimpleName() +"/" + Set.class.getSimpleName() + "]的参数"
+							+ "\r\n\t"
+							+ "请修改方法声明:给方法添加一个类型为[" + List.class.getSimpleName() +"/" + Set.class.getSimpleName() +"]的参数"
+							+ "\r\n\t"
+					);
+		}
+
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
 		final String modeString = modeString(method);
-		final Class returnType = getClassType(method);
+		final Class<?> returnType = getClassType(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
