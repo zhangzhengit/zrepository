@@ -1939,9 +1939,6 @@ public class ZRepositoryMain {
 
 				final Field esF1 = findAny.get();
 				if (!esF1.getType().equals(f.getType())) {
-					// FIXME 2024年6月22日 下午6:52:15 zhangzhen : 这个校验是测pgsql测出来的，
-					// 之前好多问题都是sqlite和mysql测试通过，pgsql测试不通过，才加的校验
-					// 到这里才提示太晚了，看能不能也改为在启动时校验
 					final String m =
 							"\r\n\t"
 									+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型中的字段类型错误:"
