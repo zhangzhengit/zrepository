@@ -92,7 +92,6 @@ public class MethodRegex {
 
 	public static final String GROUP_findByXXIsNull = "findBy.+IsNull";
 	public static final String GROUP_findByXXIsNullAndXX = "findBy.+IsNullAnd.+";
-	// FIXME 2024年6月4日 下午5:00:12 zhangzhen : 继续支持更多的模板，如：findByXXAndXXAndXXIsNull
 	public static final String GROUP_findByXXIsNullAndXXAndXX = "findBy.+IsNullAnd.+And.+";
 	public static final String GROUP_findByXXIsNullAndXXAndXXAndXX = "findBy.+IsNullAnd.+And.+And.+";
 
