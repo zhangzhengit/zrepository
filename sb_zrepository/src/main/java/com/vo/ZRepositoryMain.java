@@ -1099,8 +1099,6 @@ public class ZRepositoryMain {
 							;
 			throw new IllegalArgumentException(xxx);
 		}
-		// FIXME 2024年6月8日 下午11:57:49 zhangzhen : 不继续校验了，比如findByStringEndingWith(String x)/(Character x)都可以
-		// 就这么算一个feature吧。不算bug,只要参数是支持的类型其中之一就行，没必要那么严格,实际上还可能造成不方便使用
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
