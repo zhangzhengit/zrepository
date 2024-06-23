@@ -87,9 +87,7 @@ public class MethodRegex {
 	public static final String GROUP_findByXXLike = "findBy.+Like";
 
 	// FIXME 2024年6月7日 下午6:51:15 zhangzhen : not like /like 对于java里的boolean(对应mysql/sqlite中的tinyint)，要转为tinyinit来比较
-	// FIXME 2024年6月7日 下午6:56:05 zhangzhen : 要不要启动时校验findByXXLike/NotLike 语句中的类型必须是字符？
 
-	// FIXME 2024年6月7日 下午6:58:52 zhangzhen : pgsql 好多类型不支持 not like，看来直接启动校验like/notlike 只能用于字符类型算了
 	public static final String GROUP_findByXXNotLike = "findBy.+NotLike";
 
 	public static final String GROUP_findByXXIsNull = "findBy.+IsNull";
