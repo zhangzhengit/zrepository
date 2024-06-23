@@ -195,11 +195,6 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 
-	// FIXME 2024年6月13日 下午11:27:34 zhangzhen : Float 类型还待定，还在考虑要不要在 @see DBType 中取消掉支持Float类型
-	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Float value) {
-		return this.addValue0(function, value, SQLOperatorEnum.EQ);
-	}
-
 	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Double value) {
 		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
@@ -263,10 +258,6 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
-	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Float value) {
-		return this.addValue0(function, value, SQLOperatorEnum.NE);
-	}
-
 	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final Double value) {
 		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
@@ -327,10 +318,6 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Long value) {
-		return this.addValue0(function, value, SQLOperatorEnum.LT);
-	}
-
-	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final Float value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
@@ -399,10 +386,6 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
-	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Float value) {
-		return this.addValue0(function, value, SQLOperatorEnum.LTE);
-	}
-
 	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final Double value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
@@ -466,10 +449,6 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
-	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Float value) {
-		return this.addValue0(function, value, SQLOperatorEnum.GT);
-	}
-
 	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final Double value) {
 		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
@@ -530,10 +509,6 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Long value) {
-		return this.addValue0(function, value, SQLOperatorEnum.GTE);
-	}
-
-	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final Float value) {
 		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
 
