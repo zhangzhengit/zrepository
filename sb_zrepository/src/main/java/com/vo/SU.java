@@ -1262,8 +1262,6 @@ public class SU {
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SELECT_EXCLUDED_DELETED);
 		final SUA sua = new SUA(entityClass, entityObject, returnClass, sql, arg);
 
-		// FIXME 2024年6月19日 下午6:19:32 zhangzhen : 如有多个，按注解顺序执行，并且修改下面执行方式
-
 		sh.forEach(h -> ((ZAllHandler)h).handle(sua));
 		return sua;
 	}
