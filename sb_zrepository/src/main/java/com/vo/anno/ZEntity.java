@@ -16,10 +16,7 @@ import com.vo.conn.ZDatasourcePropertiesLoader;
  * 	1、8个基本类型的包装类型
  * 	2、String
  * 	3、byte[] - 对应blob类型
-
- 	FIXME 2024年5月12日 下午9:20:36 zhangzhen:  注意：现在只做了mysql
-
- * 	4、java.sql.Date、java.sql.Date、java.sql.Time、java.sql.Timestamp
+ * 	4、java.sql.Date、java.util.Date、java.sql.Time、java.sql.Timestamp
  * 		分别对应DB(暂时为mysql)的 DATE、TIME、DATETIME、TIMESTAMP
  *
  *
@@ -59,9 +56,9 @@ public @interface ZEntity {
 
 	/**
 	 * 此table所在的数据源，从哪个数据源读取/使用此table.
-	 * 
+	 *
 	 * 完整的文件名，如：zdatasource-sqlite.properties
-	 * 
+	 *
 	 * @return
 	 */
 	// FIXME 2024年5月31日 下午2:54:32 zhangzhen : 此字段是为了一个工程中引用了 repository_starter
