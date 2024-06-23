@@ -290,7 +290,6 @@ public enum SQLOperatorEnum {
 			// return "'" + encodeHexString + "'";
 			// FIXME 2024年6月12日 下午9:08:10 zhangzhen : 还有点问题，不支持
 			throw new UnsupportedOperationException("array类型不支持");
-			// FIXME 2024年6月12日 下午9:09:07 zhangzhen : float 等值查询也有问题，干脆在DBType中不支持float算了?
 		}
 
 		return value;
