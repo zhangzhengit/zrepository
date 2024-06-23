@@ -19,8 +19,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-
-// FIXME 2024年6月16日 上午4:39:45 zhangzhen : 写这个，启动校验类型，
 public @interface ZUpdateTime {
 
 }
