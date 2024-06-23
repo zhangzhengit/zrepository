@@ -14,7 +14,6 @@ import com.vo.SerializableFunction;
  * @data 2024年5月19日 下午4:40:49
  *
  */
-// FIXME 2024年6月11日 下午10:30:50 zhangzhen : 继续写：用方法引用随意构造>= < = like between等等条件的类
 public class Sort<T> {
 
 	public static final String SPACE = " ";
