@@ -30,13 +30,6 @@ import com.vo.core.Sort;
 // 这种情况是否合理？是否根据column类型来确定用 is null 或者 = null?
 
 // FIXME 2024年5月10日 下午10:21:52 zhangzhen: blob 类型 = 可以了，in 还是有问题
-// FIXME 2024年6月4日 下午4:32:37 zhangzhen : TODO ： 所有声明式方法和本类中方法不支持is null语句(已支持的改掉)
-// 如果传值为null，则默认不包含此字段。如：
-//findByAAndB(String a) 传值findByAAndB(null,"b的值") 则只生成包含b的sql：[where b = 'b的值']直接忽略a
-// 需要查询null的考虑如下：
-// 1、继续添加 findByXXIsNull 这种模板方法，但是似乎工作量太大
-// 2、添加一个注解，表示不忽略传值null的字段，如上方法 findByAAndB
-// 加入注解@ZDonotignorenull，传值findByAAndB(null,"b的值")则正常生成sql： [where a is null and b = 'b的值']
 
 public interface ZRepository<T, ID> {
 
