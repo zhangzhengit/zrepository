@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.vo.ReflectionUtil;
 import com.vo.SerializableFunction;
+import com.vo.ZFieldConverter;
 
 /**
  * ZRepository.page 方法的排序条件对象
@@ -26,21 +27,21 @@ public class Sort<T> {
 
 	private final List<String> x = Lists.newArrayList();
 
-	public static <T> Sort<T> create() {
-		return new Sort<>();
-	}
+	public static <T> Sort<T> create(final Class<T> entityClass) {
+		if (entityClass == null) {
+			throw new NullPointerException("entityClass不能为空");
+		}
 
-	public Sort<T> ascendingBy(final String column) {
-		this.addOrderBy();
-		this.x.add(SPACE + column + SPACE + ASC);
-		return this;
+		final Sort<T> sort = new Sort<>();
+		return sort;
 	}
 
 	public Sort<T> ascendingBy(final SerializableFunction<T, Object> function) {
 		final Field field = ReflectionUtil.getField(function);
 		this.addOrderBy();
 		final String name = field.getName();
-		this.x.add(SPACE + name + SPACE + ASC);
+		final String dbField = ZFieldConverter.toDbField(name);
+		this.x.add(SPACE + dbField + SPACE + ASC);
 		return this;
 	}
 
@@ -48,13 +49,8 @@ public class Sort<T> {
 		final Field field = ReflectionUtil.getField(function);
 		this.addOrderBy();
 		final String name = field.getName();
-		this.x.add(SPACE + name + SPACE + DESC);
-		return this;
-	}
-
-	public Sort<T> descendingBy(final String column) {
-		this.addOrderBy();
-		this.x.add(SPACE + column + SPACE + DESC);
+		final String dbField = ZFieldConverter.toDbField(name);
+		this.x.add(SPACE + dbField + SPACE + DESC);
 		return this;
 	}
 
