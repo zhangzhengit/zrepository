@@ -959,11 +959,7 @@ public class ZRepositoryMain {
 			}
 
 			// 最后面是@ZQuery自定义方法
-
-			// FIXME 2024年6月9日 上午7:36:12 zhangzhen : ZR中固定的和用户声明式的方法都检验了参数个数和类型。
-			//			下面的自定义sql的怎么检验？要分析自定义sql中的占位符个数和method.getparameters.length了？
 			if (methodSQL.isZQuery()) {
-				final String sqlTemplate = methodSQL.getSqlTemplate();
 				return zQuery(myZRClass, entityClass, className1, method, methodSQL.getSqlTemplate(), entityTName);
 			}
 
