@@ -1732,7 +1732,7 @@ public class ZRepositoryMain {
 			}
 
 			subClassMethodName = "zQuerySelect";
-			checkZQuerySelect(method, sqlTemplate);
+			checkZQuerySelect(myZRClass, method, sqlTemplate);
 		} else if (u.startsWith("UPDATE")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryUpdate";
@@ -1784,12 +1784,13 @@ public class ZRepositoryMain {
 
 	/**
 	 * 校验 select 语句中的 ?占位符，必须组为一个数组排序后符合 ?1 ?2 ?3 的顺序
-	 *
+	 * @param myZRClass TODO
 	 * @param method
 	 * @param sqlTemplate
+	 *
 	 * @return
 	 */
-	public static int[] checkZQuerySelect(final Method method, final String sqlTemplate) {
+	public static int[] checkZQuerySelect(final Class<?> myZRClass, final Method method, final String sqlTemplate) {
 
 		if (method.getParameterAnnotations().length <= 0) {
 			return null;
@@ -1803,13 +1804,11 @@ public class ZRepositoryMain {
 				return v;
 			}
 
-			return checkZQuerySelect0(method, sqlTemplate, k);
+			return checkZQuerySelect0(myZRClass, method, sqlTemplate, k);
 		}
-
-
 	}
 
-	private static int[] checkZQuerySelect0(final Method method, final String sqlTemplate, final String k) {
+	private static int[] checkZQuerySelect0(final Class<?> myZRClass, final Method method, final String sqlTemplate, final String k) {
 		final String regex = "\\?(\\d+)";
 		final Pattern pattern = Pattern.compile(regex);
 		final java.util.regex.Matcher matcher = pattern.matcher(sqlTemplate);
@@ -1820,31 +1819,96 @@ public class ZRepositoryMain {
 		while (matcher.find()) {
 			find = true;
 			final String a = matcher.group(1);
-			argOrderArray[i] = Integer.parseInt(a);
+			final int aV = Integer.parseInt(a);
+			if (i >= argOrderArray.length) {
+				throw new IllegalArgumentException(
+
+						"\r\n\t"
+								+ "@" + ZQuery.class.getSimpleName() + " 方法"
+								+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]SQL参数个数声明错误:"
+								+ "\r\n\t"
+								+ "@"+ZQuery.class.getSimpleName() + ".sql=[" + sqlTemplate + "]"
+								+ "\r\n\t"
+								+ "方法参数个数有[" + method.getParameterCount() + "]个,当前已解析出["
+								+ (i + 1) + "]个?占位符"
+								+ "\r\n\t"
+								+ "请检查代码:修改方法参数个数和?个数一致"
+								+ "\r\n\t"
+						);
+			}
+
+			argOrderArray[i] = aV;
 			i++;
 		}
 
 		if (!find) {
 			throw new IllegalArgumentException(
-					"@" + ZQuery.class.getCanonicalName() + " 方法"
-							+ " ["
-							+ method.getName()
-							+ "] "
-							+ "的自定义sql - [" + sqlTemplate + "] 中的?占位符必须符合 [?从1开始递增的数字] 的模式，如 ?1 ?2 ?3 ");
+					"\r\n\t"
+							+ "@" + ZQuery.class.getSimpleName() + " 方法"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]占位符声明错误:"
+							+ "\r\n\t"
+							+ "的自定义sql - [" + sqlTemplate + "] 中的?占位符必须符合 [?从1开始递增的数字] 的模式，如 ?1 ?2 ?3 "
+							+ "\r\n\t"
+					);
 		}
-		System.out.println("a = " + Arrays.toString(argOrderArray));
-		System.out.println("method.name = " + method.getName());
+
+		final int c = StrUtil.count(sqlTemplate, "?");
+		if (c != method.getParameterCount()) {
+			throw new IllegalArgumentException(
+					"\r\n\t"
+							+ "@" + ZQuery.class.getSimpleName() + " 方法"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]SQL参数个数声明错误:"
+							+ "\r\n\t"
+							+ "方法参数个数[" + method.getParameterCount() + "]和SQL中?个数["+c+"]不一致"
+							+ "\r\n\t"
+							+ "@"+ZQuery.class.getSimpleName() + ".sql=[" + sqlTemplate + "]"
+							+ "\r\n\t"
+							+ "请检查代码:修改方法参数个数和?个数一致"
+							+ "\r\n\t"
+
+					);
+		}
 
 		Arrays.sort(argOrderArray);
+
+		// FIXME 2024年6月23日 下午3:53:45 zhangzhen : 继续校验， argOrderArray 去重复后个数也必须和method.getParameterCount()一致
+		final HashSet<Integer> set = Sets.newHashSet();
+		for (final Integer x : argOrderArray) {
+			if (!set.add(x)) {
+				throw new IllegalArgumentException(
+
+						"\r\n\t"
+								+ "@" + ZQuery.class.getSimpleName()
+								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]SQL中的?占位符声明错误:"
+								+ "\r\n\t"
+								+ "@"+ZQuery.class.getSimpleName() + ".sql=[" + sqlTemplate + "]"
+								+ "\r\n\t"
+								+ "?必须从?1开始递增,如?1 ?2 ?3...(不要求第一个必须是?1,也可以是[?2 ?3 ?1]等形式)"
+								+ "\r\n\t"
+								+ "请检查代码:修改当前SQL中的?为从从?1开始递增"
+								+ "\r\n\t"
+						) ;
+			}
+		}
+
+		// FIXME 2024年6月23日 下午3:47:06 zhangzhen : debug 代码，记得删除
+		if ("selectMaxBd1ByIdxxxx".equals(method.getName())) {
+			final int x = 20;
+		}
+
 		for (int ix = 0; ix < argOrderArray.length; ix++) {
 			if (argOrderArray[ix] != (ix + 1)) {
-				throw new IllegalArgumentException("@" + ZQuery.class.getCanonicalName()
-						+ " 方法"
-						+ " ["
-						+ method.getName()
-						+ "] "
-						+ "自定义sql - [" + sqlTemplate
-						+ "] 中的 ?占位符 必须从1开始依次递增 "
+				throw new IllegalArgumentException(
+						"\r\n\t"
+								+ "@" + ZQuery.class.getSimpleName()
+								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]SQL中的?占位符声明错误:"
+								+ "\r\n\t"
+								+ "@"+ZQuery.class.getSimpleName() + ".sql=[" + sqlTemplate + "]"
+								+ "\r\n\t"
+								+ "?必须从?1开始递增,如?1 ?2 ?3...(不要求第一个必须是?1,也可以是[?2 ?3 ?1]等形式)"
+								+ "\r\n\t"
+								+ "请检查代码:修改当前SQL中的?为从从?1开始递增"
+								+ "\r\n\t"
 						) ;
 			}
 		}
