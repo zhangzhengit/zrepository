@@ -1871,7 +1871,6 @@ public class ZRepositoryMain {
 
 		Arrays.sort(argOrderArray);
 
-		// FIXME 2024年6月23日 下午3:53:45 zhangzhen : 继续校验， argOrderArray 去重复后个数也必须和method.getParameterCount()一致
 		final HashSet<Integer> set = Sets.newHashSet();
 		for (final Integer x : argOrderArray) {
 			if (!set.add(x)) {
