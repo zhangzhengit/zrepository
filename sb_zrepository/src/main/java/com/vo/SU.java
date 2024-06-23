@@ -2669,10 +2669,10 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static int zQueryUpdate(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName ,final Object object, final String sql,
+	public static Integer zQueryUpdate(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName ,final Object object, final String sql,
 			final Object... arg) throws IllegalAccessException {
 
-		return (int) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.UPDATE, arg);
+		return (Integer) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.UPDATE, arg);
 	}
 
 	private static Object updateOrDeleteOrInsert(final Mode mode, final Object entityTName, final Object object, final String sql, final SUEnum suEnum, final Object... arg) {

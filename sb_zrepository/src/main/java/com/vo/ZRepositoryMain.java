@@ -1694,38 +1694,92 @@ public class ZRepositoryMain {
 	}
 
 	private static String zQuery(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
+
+		final String u = sqlTemplate.trim().toUpperCase();
+		String subClassMethodName = null ;
+
+		final Class<?> returnType = method.getReturnType();
+		if (u.startsWith(MethodRegex.SELECT)) {
+			if (!List.class.equals(returnType)) {
+				final String m =
+						"\r\n\t"
+								+ "@" + ZQuery.class.getSimpleName()
+								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型声明错误:"
+								+ "\r\n\t"
+								+ "[SELECT]操作必须返回[" + List.class.getCanonicalName() + "]类型,当前返回类型为["
+								+ returnType.getCanonicalName() + "]"
+								+ "\r\n\t"
+								+ "请修改代码:把返回类型改为[" + List.class.getCanonicalName() + "<T>" + "]的形式"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m);
+			}
+
+			final Class<?> genericReturnType = getGenericReturnType(method);
+			if (genericReturnType == null) {
+				final String m =
+						"\r\n\t"
+								+ "@" + ZQuery.class.getSimpleName()
+								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型声明错误:"
+								+ "\r\n\t"
+								+ "返回类型必须声明为[" + List.class.getCanonicalName() + "<T>]带泛型参数的形式,"
+								+ "当前无泛型参数"
+								+ "\r\n\t"
+								+ "请修改代码:把返回类型改为[" + List.class.getCanonicalName() + "<T>" + "]带泛型参数的形式"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m);
+			}
+
+			subClassMethodName = "zQuerySelect";
+			checkZQuerySelect(method, sqlTemplate);
+		} else if (u.startsWith("UPDATE")) {
+			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
+			subClassMethodName = "zQueryUpdate";
+		} else if (u.startsWith("DELETE")) {
+			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
+			subClassMethodName = "zQueryDelete";
+		} else if (u.startsWith("INSERT")) {
+			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
+			subClassMethodName = "zQueryInsert";
+		} else {
+			final String m = "@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句";
+			throw new IllegalArgumentException(m);
+		}
+
+
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
 		}
 
-		// FIXME 2024年6月23日 下午1:05:30 zhangzhen : 这个应该不行，不能用这个通用逻辑，要特殊判断
-		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
-
 		final String modeString = modeString(method);
-
-		final String u = sqlTemplate.trim().toUpperCase();
-		String subClassMethodName = null ;
-		if (u.startsWith("SELECT")) {
-			subClassMethodName = "zQuerySelect";
-			checkZQuerySelect(method, sqlTemplate);
-		} else if (u.startsWith("UPDATE")) {
-			subClassMethodName = "zQueryUpdate";
-		} else if (u.startsWith("DELETE")) {
-			subClassMethodName = "zQueryDelete";
-		} else if (u.startsWith("INSERT")) {
-			subClassMethodName = "zQueryInsert";
-		} else {
-			throw new IllegalArgumentException(
-					"@" + ZQuery.class.getSimpleName() + " 只支持 SELECT/UPDATE/DELETE/INSERT 语句");
-		}
-
 		final String methodName1 = "\"" + method.getName() + "\"";
+
+		final Class<?> returnType2 = getReturnType(method);
 
 		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
-				+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+				+ returnType2.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
+	private static void checkZQueryUpdateDeleteInsert(final Class<?> myZRClass, final Method method,
+			final Class<?> returnType) {
+		if (!Integer.class.equals(returnType)) {
+			final String m =
+					"\r\n\t"
+							+ "@" + ZQuery.class.getSimpleName()
+							+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型声明错误:"
+							+ "\r\n\t"
+							+ "返回类型必须声明为[" + Integer.class.getCanonicalName() + "]类型,当前类型为["
+							+ returnType.getCanonicalName() + "]"
+							+ "\r\n\t"
+							+ "请修改代码:把返回类型改为[" + Integer.class.getCanonicalName() + "]类型"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m);
+		}
 	}
 
 	/**
@@ -1846,6 +1900,22 @@ public class ZRepositoryMain {
 		}
 
 		return returnType;
+	}
+
+	private static Class<?> getGenericReturnType(final Method method) {
+		final Type returnType = method.getGenericReturnType();
+		// 如果有泛型参数，如List<MyEntity>
+		if (returnType instanceof ParameterizedType) {
+			final ParameterizedType parameterizedType = (ParameterizedType) returnType;
+			final Type[] typeArguments = parameterizedType.getActualTypeArguments();
+			if (typeArguments.length > 0) {
+				final Type typeArgument = typeArguments[0];
+				if (typeArgument instanceof Class) {
+					return (Class<?>) typeArgument;
+				}
+			}
+		}
+		return null;
 	}
 
 	private static Class<?> getReturnType(final Method method) {
