@@ -744,8 +744,6 @@ public class SU {
 					r.add(Short.valueOf(String.valueOf(id)));
 				} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
 					r.add(Long.valueOf(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
-					r.add(Float.valueOf(String.valueOf(id)));
 				} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
 					r.add(Double.valueOf(String.valueOf(id)));
 				} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
@@ -919,23 +917,6 @@ public class SU {
 				ps.setInt(i, (Integer) v2);
 			} else if (fn.equals(Long.class.getCanonicalName())) {
 				ps.setLong(i, (Long) v2);
-			} else if (fn.equals(Float.class.getCanonicalName())) {
-				// FIXME 2024年5月17日 上午1:51:06 zhangzhen: 继续测这个mysql是否要改为setDouble
-				// ps.setFloat(i, (Float) v2);
-
-				// FIXME 2024年5月21日 下午10:46:17 zhangzhen:
-				// guoguang docker run 1071324756/percona-mysql-5.7 遇到了问题：
-				// setFloat查不出数据，还要用setDouble才行。
-				// guoguang docker run 1071324756/postgresql-11-with-zhparser
-				// setFloat和setDouble都行
-				// orangepi3 apt install 的 mysql-8.0.33-0ubuntu0.20.04.4 setFloat
-				// 可以查出，改为setDouble也可以
-				// panther apt install 的 mysql-8.0.34-0ubuntu0.22.04.1 setFloat
-				// 可以查出，改为setDouble也可以
-				// pgsql 上面两个没装成功，virtualbox 里的ubuntu install的pgsql和docker run 的上面那个版本pgsql
-				// setFloat double 都可以
-
-				ps.setDouble(i, Float.parseFloat(String.valueOf(v2)));
 			} else if (fn.equals(Double.class.getCanonicalName())) {
 				ps.setDouble(i, (Double) v2);
 			} else if (fn.equals(String.class.getCanonicalName())) {
@@ -1318,8 +1299,6 @@ public class SU {
 					field.set(object, Integer.valueOf(String.valueOf(value)));
 				} else if (cn.equals(Long.class.getCanonicalName())) {
 					field.set(object, Long.valueOf(String.valueOf(value)));
-				} else if (cn.equals(Float.class.getCanonicalName())) {
-					field.set(object, Float.valueOf(String.valueOf(value)));
 				} else if (cn.equals(Double.class.getCanonicalName())) {
 					field.set(object, Double.valueOf(String.valueOf(value)));
 				} else if (cn.equals(BigDecimal.class.getCanonicalName())) {
@@ -1574,9 +1553,6 @@ public class SU {
 		if (fieldValue.getClass().equals(Character.class)) {
 			// XXX 测试发现，char类型，setObject不行，还是用setString吧。其他类型如果不出错就仍然setObject吧
 			ps.setString(index, String.valueOf(String.valueOf(fieldValue).charAt(0)));
-		} else if (fieldValue.getClass().equals(Float.class)) {
-			// XXX mysql float 类型查不出数据，暂用setDouble(index,float)。 TODO 继续测试有何问题
-			ps.setDouble(index, Float.parseFloat(String.valueOf(fieldValue)));
 		} else if(fieldValue.getClass().equals(java.util.Date.class)){
 			ps.setTimestamp(index, new java.sql.Timestamp(((Date) fieldValue).getTime()));
 		} else if(fieldValue.getClass().equals(java.sql.Date.class)){

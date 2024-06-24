@@ -24,7 +24,7 @@ public class ZRMethodU {
 	public static final ImmutableSet<Class<?>> GTE = ImmutableSet.copyOf(Sets.newHashSet(
 			Date.class,java.sql.Date.class,Time.class,Timestamp.class,
 			Byte.class, Short.class, Integer.class, Long.class,
-			Float.class, Double.class, BigDecimal.class, BigInteger.class, String.class, Character.class));
+			Double.class, BigDecimal.class, BigInteger.class, String.class, Character.class));
 
 	/**
 	 * LIKE / NOT LIKE 支持的字段类型
