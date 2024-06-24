@@ -4,10 +4,12 @@ import java.lang.reflect.Field;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.StringJoiner;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.google.common.collect.Sets;
 import com.vo.exception.ZRWrapperTypeException;
 
 import cn.hutool.core.date.DateUtil;
@@ -316,16 +318,21 @@ public enum SQLOperatorEnum {
 		}
 
 		final Iterable<?> i = (Iterable<?>) value;
-		final StringJoiner joiner = new StringJoiner(",", "(", ")");
+		final HashSet<Object> set = Sets.newHashSet();
 		boolean h = false;
 		for (final Object v : i) {
 			h = true;
 			final Object vR = addAll(field, v, dbEnum);
-			joiner.add(String.valueOf(vR));
+			set.add(vR);
 		}
 
 		if (!h) {
 			return "(null)";
+		}
+
+		final StringJoiner joiner = new StringJoiner(",", "(", ")");
+		for (final Object vR : set) {
+			joiner.add(String.valueOf(vR));
 		}
 
 		return joiner.toString();
