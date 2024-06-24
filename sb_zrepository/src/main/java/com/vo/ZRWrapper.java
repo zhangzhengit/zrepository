@@ -674,6 +674,12 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> in(final SerializableFunction<T, Object> function, final Iterable<?> iterable) {
+		final Field f = ReflectionUtil.getField(function);
+		final boolean array = f.getType().isArray();
+		if (array) {
+			throw new UnsupportedOperationException("数组类型不支持:" + iterable);
+		}
+
 		if (iterable == null) {
 			return this.addValue0(function, null, SQLOperatorEnum.IN);
 		}
@@ -698,6 +704,12 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	public ZRWrapper<T> notIn(final SerializableFunction<T, Object> function, final Iterable<?> iterable) {
+		final Field f = ReflectionUtil.getField(function);
+		final boolean array = f.getType().isArray();
+		if (array) {
+			throw new UnsupportedOperationException("数组类型不支持:" + iterable);
+		}
+
 		if (iterable == null) {
 			return this.addValue0(function, null, SQLOperatorEnum.NOT_IN);
 		}
@@ -745,8 +757,98 @@ public class ZRWrapper<T> {
 	 * @return
 	 */
 	// FIXME 2024年6月13日 下午11:45:02 zhangzhen : between/ 等，下面的继续添加重载方法
-	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Object value1,
-			final Object value2) {
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Integer value1,
+			final Integer value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Double value1,
+			final Double value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final java.sql.Date value1,
+			final java.sql.Date value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Date value1,
+			final Date value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Time value1,
+			final Time value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Boolean value1,
+			final Boolean value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Short value1,
+			final Short value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Character value1,
+			final Character value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final BigDecimal value1,
+			final BigDecimal value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final String value1,
+			final String value2) {
 		if ((value1 == null) && (value2 == null)) {
 			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
 		}

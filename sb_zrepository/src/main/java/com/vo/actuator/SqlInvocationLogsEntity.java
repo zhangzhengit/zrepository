@@ -2,8 +2,9 @@ package com.vo.actuator;
 
 import java.util.Date;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.vo.ZDateFormat;
+import com.vo.ZDateFormatEnum;
 import com.vo.ZID;
 import com.vo.anno.ZEntity;
 
@@ -51,6 +52,7 @@ public class SqlInvocationLogsEntity {
 	 * 此 ZRepository的Method执行的时间点
 	 */
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
+	@ZDateFormat(format = ZDateFormatEnum.YYYY_MM_DD_HH_MM_SS)
 	Date invokeTime;
 
 	/**

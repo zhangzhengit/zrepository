@@ -187,14 +187,14 @@ public enum SQLOperatorEnum {
 	IN("IN", "IN查询") {
 		@Override
 		public Object hValue(final Field field, final Object value, final DBEnum dbEnum) {
-			return inAndNotIn(value);
+			return inAndNotIn(field, value, dbEnum);
 		}
 	},
 
 	NOT_IN("NOT IN", "NOT IN查询") {
 		@Override
 		public Object hValue(final Field field, final Object value, final DBEnum dbEnum) {
-			return inAndNotIn(value);
+			return inAndNotIn(field, value, dbEnum);
 		}
 	},
 
@@ -304,7 +304,7 @@ public enum SQLOperatorEnum {
 		return value;
 	}
 
-	private static Object inAndNotIn(final Object value) {
+	private static Object inAndNotIn(final Field field, final Object value, final DBEnum dbEnum) {
 		if (value == null) {
 			return "(" + value + ")";
 		}
@@ -320,7 +320,8 @@ public enum SQLOperatorEnum {
 		boolean h = false;
 		for (final Object v : i) {
 			h = true;
-			joiner.add(String.valueOf(v));
+			final Object vR = addAll(field, v, dbEnum);
+			joiner.add(String.valueOf(vR));
 		}
 
 		if (!h) {

@@ -2243,9 +2243,9 @@ public class ZRepositoryMain {
 
 					checkZCT(typeClass, o, ZCreateTime.class, ZCreateTimeHandler.SUPPORTED_CLASS_SET);
 					checkZCT(typeClass, o, ZUpdateTime.class, ZUpdateTimeHandler.SUPPORTED_CLASS_SET);
-
 					checkZCT(typeClass, o, ZVersion.class, ZVersionHandler.SUPPORTED_CLASS_SET);
 
+					checkZDF(typeClass, o);
 				}
 
 				final List<String> fieldNameList = Arrays.stream(fs).map(Field::getName)
@@ -2328,6 +2328,26 @@ public class ZRepositoryMain {
 			getPoolInstance(typeClass.getAnnotation(ZEntity.class).dataSourceName()).returnZConnectionAndCommit(zConnection);
 		}
 
+	}
+
+	private static void checkZDF(final Class<?> typeClass, final Optional<Field> o) {
+		if (o.get().getType().equals(java.util.Date.class)) {
+			final ZDateFormat annotation = o.get().getAnnotation(ZDateFormat.class);
+			if(annotation==null) {
+				final String m =
+						"\r\n\t"
+								+ "@" + ZEntity.class.getSimpleName() + "对象["
+								+ typeClass.getSimpleName()
+								+ "." + o.get().getName() + "]"
+								+ "缺少 @" + ZDateFormat.class.getSimpleName() + " 注解"
+								+ "\r\n\t"
+								+ "请检查代码:给["+typeClass.getSimpleName() + "." + o.get().getName()+"]添加 @" + ZDateFormat.class.getSimpleName() + " 注解"
+								+ "\r\n\t"
+
+								;
+				throw new IllegalArgumentException(m);
+			}
+		}
 	}
 
 	private static void checkZCT(final Class<?> typeClass, final Optional<Field> o, final Class<? extends Annotation> checkClass, final ImmutableSet<Class<?>> supportedClassSet) {
