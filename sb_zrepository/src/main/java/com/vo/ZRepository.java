@@ -77,7 +77,10 @@ public interface ZRepository<T, ID> {
 	T save(T t);
 
 	/**
-	 * 批量insert，忽略 @ZID 字段，其他字段值什么是insert为什么，包括null
+	 * 批量insert，忽略 @ZID 字段，其他字段值什么是insert为什么，包括null，
+	 * 忽略掉List<T>参数中的null元素，不去重复，如：传值Lists.newArrayList(null,T1,T1)
+	 * 三个元素其中一个为null，另外两个内容相同，则忽略掉null元素，另外两个相同元素会
+	 * 插入两条数据，最终返回两条新插入数据的ID
 	 *
 	 * @param tList
 	 * @return 返回插入对象的ID

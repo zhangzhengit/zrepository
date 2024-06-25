@@ -653,6 +653,7 @@ public class SU {
 			return Collections.emptyList();
 		}
 
+		final List<T> tl2 = tList.stream().filter(x -> x!=null).collect(Collectors.toList());
 
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 
@@ -667,8 +668,8 @@ public class SU {
 			final ZConnection zc = zc2.getZConnection();
 			final Connection connection = zc.getConnection();
 
-			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tList.size());
-			for (final T t : tList) {
+			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tl2.size());
+			for (final T t : tl2) {
 				try {
 					final Object[] a = save0(zc.getDbEnum(), cls, t, sqlParam, connection);
 					final ResultSet rs = (ResultSet) a[0];
@@ -687,7 +688,7 @@ public class SU {
 
 		case MYSQL:
 		case POSTGRESQL:
-			return saveAllMysqlAndPGSQL(mode, cls, sqlParam, tList);
+			return saveAllMysqlAndPGSQL(mode, cls, sqlParam, tl2);
 
 		default:
 			break;
