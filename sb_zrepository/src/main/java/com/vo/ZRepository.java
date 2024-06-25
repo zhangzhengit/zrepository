@@ -131,7 +131,10 @@ public interface ZRepository<T, ID> {
 	 * 根据 @ZID 字段批量删除对象
 	 *
 	 * @param idList
-	 * @return
+	 * @return	如果成功删除的数量=参数去重复的数量，则返回true，否则false；
+	 * 			参数为null或empty也返回false,
+	 * 			如果参数中只有一部分存在于数据库也回返回false，
+	 * 			因为只会成功删除掉这一部分存在的
 	 *
 	 */
 	// FIXME 2024年5月14日 下午8:09:51 zhangzhen: mysql deleteByIdIn 一千万个id 报错：怎么办，是提示修改server参数，还是限制此方法不能传太多参数？

@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.vo.actuator.SqlInvocationLogsConfigurationProperties;
 import com.vo.actuator.SqlInvocationLogsEntity;
 import com.vo.actuator.SqlInvocationLogsService;
@@ -423,6 +425,12 @@ public class SU {
 	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final List<Object> idList, final Class<T> entityClass, final String sql) {
 
+		if ((idList == null) || idList.isEmpty()) {
+			return false;
+		}
+
+		final HashSet<Object> idSet = Sets.newHashSet(idList);
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
@@ -431,7 +439,7 @@ public class SU {
 
 		try {
 
-			final String params = String.join(",", Collections.nCopies(idList.size(), "?"));
+			final String params = String.join(",", Collections.nCopies(idSet.size(), "?"));
 
 			final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 			final SUA sua = new SUA(entityClass, null, null, sql, null);
@@ -442,19 +450,18 @@ public class SU {
 
 			ps = connection.prepareStatement(sqlT);
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("根据主键批量删除 - [{}]个主键值 - [{}]", idList.size(), s2);
+				LOG.info("根据主键批量删除 - [{}]个主键值 - [{}]", idSet.size(), s2);
 			}
 
 			int index = 1;
-			for (final Object id : idList) {
+			for (final Object id : idSet) {
 				ps.setObject(index, id);
 				index++;
 			}
 
-
 			final int executeUpdate = ps.executeUpdate();
 
-			return executeUpdate >= 1;
+			return executeUpdate == idSet.size();
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
