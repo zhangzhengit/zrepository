@@ -829,6 +829,9 @@ public class SU {
 			final Mode mode, final Class<T> entityClass,
 			final Class<?> entityTName, final T t, final String sql) {
 
+		if (t == null) {
+			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".save方法: t 参数不能为null");
+		}
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
