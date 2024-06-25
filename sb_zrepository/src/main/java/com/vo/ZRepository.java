@@ -162,7 +162,7 @@ public interface ZRepository<T, ID> {
 
 		需要判断某个字段为NULL/不为NULL，使用isNull/notNull方法.
 
-	 * @param wrapper
+	 * @param wrapper	如果本参数为null或者无任何条件(没调用任何eq/lt/like等方法)，则默认为查询全部数据
 	 * @return
 	 */
 	List<T> find(ZRWrapper<T> wrapper);

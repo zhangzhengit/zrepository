@@ -1030,10 +1030,10 @@ public class SU {
 		ResultSet rs = null;
 		try {
 
-			final ZRWrapper w = (ZRWrapper) wrapper;
 			final String select = gSelectFromReturnType(entityClass, entityClass);
+			final String where = wrapper == null ? ZRWrapper.ALWAYS_TRUE : ((ZRWrapper) wrapper).done();
 			final String x = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select) + " "
-					+ MethodRegex.WHERE + " " + w.done();
+					+ MethodRegex.WHERE + " " + where;
 
 			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null);
 
