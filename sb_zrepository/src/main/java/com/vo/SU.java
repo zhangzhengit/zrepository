@@ -1269,6 +1269,11 @@ public class SU {
 
 	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Object id, final Class<T> entityClass, final String sql) {
+
+		if (id == null) {
+			return null;
+		}
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
