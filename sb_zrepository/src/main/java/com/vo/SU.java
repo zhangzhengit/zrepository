@@ -1075,7 +1075,8 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static <T> List<T> findAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final String sql) {
+	public static <T> List<T> findAll(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Class<T> entityClass, final String sql) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
@@ -1133,7 +1134,15 @@ public class SU {
 	}
 
 
-	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> entityClass, final String sql) {
+	public static <T> List<T> findByIdIn(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final List<Object> idList, final Class<T> entityClass, final String sql) {
+
+		if ((idList == null) || idList.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		final HashSet<Object> idSet = Sets.newHashSet(idList);
+
 		final Date invokeTime = new Date();
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
@@ -1152,7 +1161,7 @@ public class SU {
 		try {
 
 			final StringJoiner joiner = new StringJoiner(",");
-			for (final Object id : idList) {
+			for (final Object id : idSet) {
 				joiner.add(String.valueOf(id));
 			}
 			final String param = joiner.toString();
@@ -1161,14 +1170,14 @@ public class SU {
 
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("根据主键批量查询 - [{}]个主键值 - [{}]", idList.size(), s);
+				LOG.info("根据主键批量查询 - [{}]个主键值 - [{}]", idSet.size(), s);
 			}
 
 			rs = ps.executeQuery();
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idList.size());
+			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idSet.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
