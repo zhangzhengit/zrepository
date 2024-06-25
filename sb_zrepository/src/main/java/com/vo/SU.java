@@ -1144,6 +1144,7 @@ public class SU {
 		final HashSet<Object> idSet = Sets.newHashSet(idList);
 
 		final Date invokeTime = new Date();
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
