@@ -78,10 +78,18 @@ public class SU {
 	// FIXME 2024年6月2日 上午12:09:26 zhangzhen : 本类所有方法都计入了className和callerMethodName,用来做sql执行统计功能用，待做
 
 	public static <T> Page<T> page(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class<T> entityClass, final Class<T> returnType, final T t, final Sort sort, final String sql,
+			final Class<T> entityClass, final Class<T> returnType, final T t, final Sort<T> sort, final String sql,
 			final Integer size, final Integer page) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
+
+		if (t == null) {
+			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: t 参数不能为null");
+		}
+
+		if (sort == null) {
+			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: sort 参数不能为null");
+		}
 
 		if (size == null) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: size 参数不能为null");
@@ -98,6 +106,7 @@ public class SU {
 		if (page <= 0) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: page 参数必须大于0！page = " + page);
 		}
+
 
 		PreparedStatement ps=null;
 		ResultSet rs=null;
