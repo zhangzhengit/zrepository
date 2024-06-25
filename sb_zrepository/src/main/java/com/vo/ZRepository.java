@@ -26,11 +26,6 @@ import com.vo.core.Sort;
  *
  *
  */
-// FIXME 2024年5月3日 下午8:41:30 zhangzhen: findByIsDelete 这种方法，isDelete为int类型，生成的sql 是 is_delete = null,
-// 这种情况是否合理？是否根据column类型来确定用 is null 或者 = null?
-
-// FIXME 2024年5月10日 下午10:21:52 zhangzhen: blob 类型 = 可以了，in 还是有问题
-
 public interface ZRepository<T, ID> {
 
 	/**
