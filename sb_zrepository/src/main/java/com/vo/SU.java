@@ -1623,7 +1623,7 @@ public class SU {
 
 	public static <T> List<T> findByXXIn(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Class<T> entityClass, final Class<T> returnType,
-			final String sql, final Object value) {
+			final String sql, final Object value, final String fieldName) {
 
 		if (value == null) {
 			return Collections.emptyList();
@@ -1650,25 +1650,41 @@ public class SU {
 			for (final Object v : set) {
 
 				if ((v instanceof String) || (v instanceof Character)) {
-					joiner.add("'" + String.valueOf(v) + "'");
-				} else if ((v instanceof Time) || (v instanceof Date) || (v instanceof java.sql.Date)
-						|| (v instanceof Timestamp)) {
+					joiner.add("'" + v + "'");
+				} else if ((v.getClass() == java.sql.Time.class) || (v.getClass() == java.sql.Date.class)
+						|| (v.getClass() == Timestamp.class) || (v.getClass() == java.util.Date.class)) {
 					if (dbEnum == DBEnum.SQLITE) {
-						if (v instanceof Time) {
-							joiner.add(String.valueOf(((Time) v).getTime()));
-						} else if (v instanceof Date) {
-							joiner.add(String.valueOf(((Date) v).getTime()));
-						} else if (v instanceof Timestamp) {
-							joiner.add(String.valueOf(((Timestamp) v).getTime()));
-						} else if (v instanceof java.sql.Date) {
+						if (v.getClass() == java.sql.Time.class) {
+							joiner.add(String.valueOf(((java.sql.Time) v).getTime()));
+						} else if (v.getClass() == java.sql.Date.class) {
 							joiner.add(String.valueOf(((java.sql.Date) v).getTime()));
+						} else if (v.getClass() == Timestamp.class) {
+							joiner.add(String.valueOf(((Timestamp) v).getTime()));
+						} else if (v.getClass() == java.util.Date.class) {
+							joiner.add(String.valueOf(((java.util.Date) v).getTime()));
 						}
 					} else {
-						if (v instanceof Date) {
-							final String vDate = DateUtil.format(((Date) v), ZDateFormatEnum.YYYY_MM_DD_HH_MM_SS.getFormat());
-							joiner.add("'" + String.valueOf(vDate) + "'");
+						if (v.getClass() == java.util.Date.class) {
+							final Optional<Field> findAny = Arrays.stream(entityClass.getDeclaredFields())
+									.filter(f -> ZFieldConverter.toJavaField(ZFieldConverter.toDbField(f.getName()))
+											.equals(ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName))))
+									.findAny();
+
+							if (findAny.isPresent()) {
+								final Field ef = findAny.get();
+								final ZDateFormatEnum format = ef.getAnnotation(ZDateFormat.class).format();
+								if (format != null) {
+									final String vDate = DateUtil.format(((Date) v), format.getFormat());
+									joiner.add("'" + String.valueOf(vDate) + "'");
+								} else {
+									joiner.add("'" + v + "'");
+								}
+							} else {
+								joiner.add("'" + v + "'");
+							}
+						} else {
+							joiner.add("'" + v + "'");
 						}
-						joiner.add("'" + String.valueOf(v) + "'");
 					}
 				} else {
 					joiner.add(String.valueOf(v));

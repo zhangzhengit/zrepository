@@ -1675,13 +1675,15 @@ public class ZRepositoryMain {
 			joiner.add(parameter.getName());
 		}
 
+		final String fieldName = d.getFiledNameMethodNameOrder().stream().collect(Collectors.joining(",","\"","\""));
+
 		final String modeString = modeString(method);
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ","+fieldName+");";
 	}
 
 	private static String zQuery(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
