@@ -271,8 +271,13 @@ public class SU {
 		return fMap;
 	}
 
-	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName,final Mode mode,
+	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Class<T> entityClass, final T t, final String sql) {
+
+		if (t == null) {
+			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".update方法: t 参数不能为null");
+		}
+
 		final Field[] fs = t.getClass().getDeclaredFields();
 
 		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
@@ -370,7 +375,8 @@ public class SU {
 		return idValue;
 	}
 
-	public static <T> boolean deleteAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final String sql) {
+	public static <T> boolean deleteAll(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Class<T> entityClass, final String sql) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
@@ -414,7 +420,9 @@ public class SU {
 		return false;
 	}
 
-	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName,final Mode mode, final List<Object> idList, final Class<T> entityClass, final String sql) {
+	public static <T> boolean deleteByIdIn(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final List<Object> idList, final Class<T> entityClass, final String sql) {
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
