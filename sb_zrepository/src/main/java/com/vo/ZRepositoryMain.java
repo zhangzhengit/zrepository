@@ -158,9 +158,6 @@ public class ZRepositoryMain {
 	 */
 	public static Set<Class<?>> scanZRepositorySubinterface(final String packageName) {
 
-		// FIXME 2024年5月4日 下午2:32:49 zhangzhen: 暂时允许字段中出现sql关键字
-		//		checkZEntityField(packageName);
-
 		final Set<Class<?>> zrSubclassSet = Sets.newHashSet();
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		for (final Class<?> cls : clsSet) {
@@ -2005,39 +2002,6 @@ public class ZRepositoryMain {
 
 		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getCanonicalName()+",sql,"
 		+ joiner.toString() + ");";
-	}
-
-	/**
-	 * 校验 @ZEntity 中的字段，如：不允许出现SQL关键字等等
-	 * @param packageName TODO
-	 *
-	 * @return 返回 @ZEntity 的类
-	 *
-	 */
-	private static Set<Class<?>> checkZEntityField(final String packageName) {
-		final Set<Class<?>> zeSet = Sets.newHashSet();
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
-		for (final Class<?> c : clsSet) {
-			final boolean isZE = c.isAnnotationPresent(ZEntity.class);
-			if (!isZE) {
-				continue;
-			}
-
-			final Field[] fs = c.getDeclaredFields();
-			for (final Field f : fs) {
-				final String fName = f.getName();
-				final boolean sqlKeyword = SqlPattern.isSqlKeyword(fName);
-				if (sqlKeyword) {
-					throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类中字段不允许出现SQL关键字," +ZEntity.class.getSimpleName()+" 类 = " +
-							c.getSimpleName() + ",filed = " + fName);
-				}
-
-			}
-
-			zeSet.add(c);
-		}
-
-		return zeSet;
 	}
 
 	/**
