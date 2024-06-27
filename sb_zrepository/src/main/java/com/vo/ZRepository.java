@@ -18,7 +18,7 @@ import com.vo.core.Sort;
  * 	List<BlobEntity> findByDateAndInteger1(Date date,Integer integer1);
 
  * 2、自定义查询，使用 @ZQuery 注解自定义SQL，如：
- * 	@ZQuery(sql = "select * from blobt where id >= ?")
+	@ZQuery(sql = "select * from blobt where id >= ?1")
 	List<BlobEntity> selectGTEId(Integer id);
  *
  * @param <T>  @ZEntity 标记的类
