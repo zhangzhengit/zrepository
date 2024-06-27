@@ -55,7 +55,7 @@ public class ZExcludedDeletedHandler extends ZAllHandler {
 		if (sua.getSql().toUpperCase().contains(ZRWrapper.ALWAYS_TRUE)) {
 
 			final String sqlZED =
-					sua.getSql().replace(ZRWrapper.ALWAYS_TRUE, ZRWrapper.ALWAYS_TRUE + Sort.SPACE + v);
+					sua.getSql().replace(ZRWrapper.ALWAYS_TRUE, ZRWrapper.ALWAYS_TRUE + v);
 
 			sua.setSql(sqlZED);
 			return sua;
