@@ -153,10 +153,10 @@ public class SU {
 
 			final String pageSqlFinal = pageSql.replace(MethodRegex.LIMIT, sort.done() + Sort.SPACE + MethodRegex.LIMIT);
 
-			final SUA suapageSql = excludedDeletedHandler(entityClass, t, returnType, pageSqlFinal, null);
+			final SUA suapageSql = excludedDeletedHandler(entityClass, t, returnType, pageSqlFinal, null, zc);
 			final String pageSqlFinal2 = suapageSql.getSql();
 
-			final SUA suapageCountSql = excludedDeletedHandler(entityClass, t, returnType, pageCountSql, null);
+			final SUA suapageCountSql = excludedDeletedHandler(entityClass, t, returnType, pageCountSql, null, zc);
 			final String pageCountSql2 = suapageCountSql.getSql();
 
 			final int offset = (page - 1) * size;
@@ -388,6 +388,7 @@ public class SU {
 
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_ALL);
 		final SUA sua = new SUA(entityClass, null, entityClass, sql, null);
+		sua.setZc2(zc);
 		sua.setZrSubClassName(zrSubClassName);
 		sua.setCallerMethodName(callerMethodName);
 		sh.forEach(h -> h.handle(sua));
@@ -443,6 +444,7 @@ public class SU {
 
 			final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 			final SUA sua = new SUA(entityClass, null, null, sql, null);
+			sua.setZc2(zc);
 			sh.forEach(h -> ((ZDeleteByIdHandler) h).handle(sua));
 
 			final String s2 = sua.getSql();
@@ -487,6 +489,7 @@ public class SU {
 
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 		final SUA sua = new SUA(entityClass, null, null, sql,new Object[] { id});
+		sua.setZc2(zc);
 		sh.forEach(h -> ((ZDeleteByIdHandler)h).handle(sua));
 
 		final String s = sua.getSql();
@@ -552,18 +555,19 @@ public class SU {
 			idJoiner.add(String.valueOf(id));
 		}
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sqlF, null);
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sqlF, null, zc);
 		final String sqlF1 = sua.getSql();
 		final String sqlF2 = sqlF1.replaceFirst("\\?", idJoiner.toString());
 
-		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		// 开始查询
 		if (isShowSQL(dataSourceName)) {
 			LOG.info("根据[{}]个ID批量查询是否存在-[{}]", idNotNullList.size(), sqlF1);
 		}
 
-		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
@@ -611,7 +615,9 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql,new Object[] { id} );
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql,new Object[] { id}, zc );
+		sua.setZc2(zc);
+
 		final String s = sua.getSql();
 
 		PreparedStatement ps = null;
@@ -671,7 +677,7 @@ public class SU {
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tl2.size());
 			for (final T t : tl2) {
 				try {
-					final Object[] a = save0(zc.getDbEnum(), cls, t, sqlParam, connection);
+					final Object[] a = save0(zc.getDbEnum(), cls, t, sqlParam, connection, null);
 					final ResultSet rs = (ResultSet) a[0];
 					if (rs.next()) {
 						final Object id = rs.getObject(1);
@@ -838,7 +844,7 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 		try {
 
-			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection);
+			final Object[] a = save0(zc.getZConnection().getDbEnum(), entityClass, t, sql, connection, null);
 			final ResultSet rs = (ResultSet) a[0];
 			try {
 
@@ -872,13 +878,14 @@ public class SU {
 	}
 
 	private static <T> Object[] save0(final DBEnum dbEunum, final Class<T> entityClass, final T t, final String sql,
-			final Connection connection) throws SQLException {
+			final Connection connection, final ZC2 zc2) throws SQLException {
 
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = entityClass.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
-			if(field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class) && (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY))) {
+			if (field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class)
+					&& (field.getAnnotation(ZID.class).strategy() == ZGenerationType.IDENTITY))) {
 				continue;
 			}
 			fieldCount++;
@@ -896,6 +903,7 @@ public class SU {
 
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sql2, null);
+		sua.setZc2(zc2);
 		sh.forEach(h -> h.handle(sua));
 
 		PreparedStatement ps;
@@ -1035,7 +1043,7 @@ public class SU {
 			final String x = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select) + " "
 					+ MethodRegex.WHERE + " " + where;
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null, zc);
 
 			final String x2 = sua.getSql();
 
@@ -1083,7 +1091,7 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
 		final String s = sua.getSql();
 
 		final String select = gSelectFromReturnType(entityClass, entityClass);
@@ -1154,7 +1162,7 @@ public class SU {
 		final String select = gSelectFromReturnType(entityClass, entityClass);
 		final String sql2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql2, null);
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql2, null, zc);
 		final String s = sua.getSql();
 
 		PreparedStatement ps = null;
@@ -1278,7 +1286,7 @@ public class SU {
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
 		final String sql2 = sua.getSql();
 
 		try {
@@ -1292,9 +1300,10 @@ public class SU {
 	}
 
 	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,
-			final String sql, final Object[] arg) {
+			final String sql, final Object[] arg, final ZC2 zc2) {
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SELECT_EXCLUDED_DELETED);
 		final SUA sua = new SUA(entityClass, entityObject, returnClass, sql, arg);
+		sua.setZc2(zc2);
 
 		sh.forEach(h -> ((ZAllHandler)h).handle(sua));
 		return sua;
@@ -1462,7 +1471,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String s = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, s, fieldArray);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, s, fieldArray, zc);
 			final String s2 = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -1558,7 +1567,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String x = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -1698,7 +1707,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = s.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null, zc);
 			final String sF = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -1745,7 +1754,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -1793,7 +1802,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null, zc);
 
 			final String s = sua.getSql();
 
@@ -1846,7 +1855,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -1896,7 +1905,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, field);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, field, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -1953,7 +1962,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fiedlArray);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fiedlArray, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -2013,7 +2022,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fieldArray);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fieldArray, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -2070,7 +2079,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fieldValue);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fieldValue, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -2126,7 +2135,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null, zc);
 			final String s = sua.getSql();
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, fieldValue);
@@ -2178,7 +2187,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null, zc);
 			final String s = sua.getSql();
 			if (isShowSQL(dataSourceName)) {
 				LOG.info("[{}],[{}]", s, fieldValue);
@@ -2227,7 +2236,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -2276,7 +2285,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String s1 = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sss = excludedDeletedHandler(entityClass, null, returnType, s1, null);
+			final SUA sss = excludedDeletedHandler(entityClass, null, returnType, s1, null, zc);
 			final String s2 = sss.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -2343,7 +2352,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, null, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {
@@ -2381,7 +2390,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static <T> Long count(final Mode mode, final Class<T> entityClass, final String sql,final ZConnection zc, final String dataSourceName) {
+	private static <T> Long count(final Mode mode, final Class<T> entityClass, final String sql,final ZConnection zc, final String dataSourceName, final ZC2 zc2) {
 
 		final Connection connection = zc.getConnection();
 
@@ -2390,7 +2399,7 @@ public class SU {
 
 
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql, null);
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql, null, zc2);
 		final String s = sua.getSql();
 
 		try {
@@ -2424,7 +2433,7 @@ public class SU {
 	public static <T> Long count(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(cls);
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		return count(mode, cls, sql,zc.getZConnection(), dataSourceName);
+		return count(mode, cls, sql,zc.getZConnection(), dataSourceName, zc);
 	}
 
 	// FIXME 2024年5月18日 下午3:30:32 zhangzhen:  countingByXXAndXX 多个条件的不能改为Object...然后复用 countingByXX，因为可能一个条件的条件为byte[]
@@ -2438,7 +2447,7 @@ public class SU {
 		ResultSet rs = null;
 		try {
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
 
 			final String s = sua.getSql();
 
@@ -2486,7 +2495,7 @@ public class SU {
 		ResultSet rs = null;
 		try {
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null);
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
 
 			final String s = sua.getSql();
 
@@ -2536,7 +2545,7 @@ public class SU {
 			final String select = gSelectFromReturnType(entityClass, returnType);
 			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, field);
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, field, zc);
 			final String s = sua.getSql();
 
 			if (isShowSQL(dataSourceName)) {

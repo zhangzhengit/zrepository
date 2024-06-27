@@ -13,6 +13,7 @@ import com.vo.core.Sort;
  * @date 2024年6月19日 下午5:03:25
  *
  */
+@ZOrder
 public class ZExcludedDeletedHandler extends ZAllHandler {
 
 	private static final String LIMIT = MethodRegex.LIMIT;
