@@ -16,10 +16,11 @@ import com.google.common.collect.Sets;
 @ZOrder
 public class ZUpdateTimeHandler extends ZUpdateHandler {
 
-	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(Date.class));
+	public static final ImmutableSet<Class<?>> SUPPORTED_CLASS_SET = ImmutableSet.copyOf(Sets.newHashSet(java.util.Date.class));
 
 	@Override
 	public SUA handle(final SUA sua) {
+		// XXX 2024年6月27日 下午9:46:08 zhangzhen : update 操作，也不取 @ZDateFormat 了，暂时还没发现有问题
 		final java.util.Date now = new Date();
 		final Field[] fs = sua.getEntityClass().getClass().getDeclaredFields();
 		for (final Field f : fs) {
