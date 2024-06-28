@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.vo.anno.ZEntity;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
+import com.vo.core.Sort;
 
 import lombok.Getter;
 
@@ -141,6 +142,7 @@ import lombok.Getter;
  */
 public class ZRWrapper<T> {
 
+	private static final int ZERO = 0;
 	public static final String ALWAYS_TRUE = " 1 = 1 ";
 	public static final String SPACE = " ";
 	private static final String AND = MethodRegex.AND;
@@ -152,6 +154,8 @@ public class ZRWrapper<T> {
 	 * 存放由各个方法传值而来构造的WHERE条件
 	 */
 	private final List<String> where = Lists.newArrayList();
+	private final List<String> orderBy = Lists.newArrayList(Sort.ORDER_BY);
+	private final List<String> limit = Lists.newArrayList();
 
 	@Getter
 	private final Class<T> entityClass;
@@ -901,6 +905,52 @@ public class ZRWrapper<T> {
 	}
 
 	/**
+	 * 构造 LIMIT 条件，多次调用本方法，会以最后一次为准，每次调用本方法，如果已经有了 LIMIT 条件，则本次的覆盖掉上次的
+	 *
+	 * @param limit
+	 * @param offset
+	 * @return
+	 */
+	public synchronized ZRWrapper<T> limit(final Integer limit, final Integer offset) {
+		if (!this.limit.isEmpty()) {
+			this.limit.clear();
+		}
+
+		this.limit.add(MethodRegex.LIMIT + Sort.SPACE + limit + Sort.SPACE + MethodRegex.OFFSET + Sort.SPACE + offset);
+		return this;
+	}
+
+	/**
+	 * 取前N条，等同于limit方法：limit(rows, 0);
+	 *
+	 * @param n
+	 * @return
+	 */
+	public synchronized ZRWrapper<T> fetchFirstNRows(final Integer n) {
+		return this.limit(n, ZERO);
+	}
+
+	public ZRWrapper<T> orderByAsc(final SerializableFunction<T, Object> function) {
+		final Field f = ReflectionUtil.getField(function);
+		final boolean b = this.orderBy.size() > 1;
+		if (b) {
+			this.orderBy.add(ZRepositoryMain.DELIMITER);
+		}
+		this.orderBy.add(Sort.SPACE + ZFieldConverter.toDbField(f.getName()) + Sort.SPACE + Sort.ASC);
+		return this;
+	}
+
+	public ZRWrapper<T> orderByDesc(final SerializableFunction<T, Object> function) {
+		final Field f = ReflectionUtil.getField(function);
+		final boolean b = this.orderBy.size() > 1;
+		if (b) {
+			this.orderBy.add(ZRepositoryMain.DELIMITER);
+		}
+		this.orderBy.add(Sort.SPACE + ZFieldConverter.toDbField(f.getName()) + Sort.SPACE + Sort.DESC);
+		return this;
+	}
+
+	/**
 	 * 由本条件，组合另一个条件，两个条件之间的关系为 AND.
 	 * 如：
 		  	final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class)<>();
@@ -999,10 +1049,15 @@ public class ZRWrapper<T> {
 	 * 按当前的条件，组合出WHERE条件
 	 */
 	public String done() {
-		final String w =
-				this.where.isEmpty()
-				? ALWAYS_TRUE : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
-		return w;
+
+		final String wH = this.where.isEmpty() ? ALWAYS_TRUE
+				: "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
+
+		final String oH = this.orderBy.size() == 1 ? wH : wH + this.orderBy.stream().collect(Collectors.joining(SPACE)) + Sort.SPACE;
+
+		final String lH = this.limit.isEmpty() ? oH : oH + this.limit.stream().collect(Collectors.joining(SPACE));
+
+		return lH;
 	}
 
 	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value,

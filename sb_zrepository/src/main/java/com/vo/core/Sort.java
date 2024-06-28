@@ -19,9 +19,9 @@ public class Sort<T> {
 
 	public static final String SPACE = " ";
 
-	private static final String ASC = "ASC";
+	public static final String ASC = "ASC";
 
-	private static final String DESC = "DESC";
+	public static final String DESC = "DESC";
 
 	public static final String ORDER_BY = "ORDER BY";
 
