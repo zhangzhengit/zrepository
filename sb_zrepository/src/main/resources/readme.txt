@@ -13,9 +13,7 @@
 	
 	2 resources目录下新建 zdatasource.properties 
 	  配置详见文件 zdatasource.properties
-	  	
-	  	目前支持：mysql和postgresql，只测试了ubuntu上的mysql-8.0 percona-mysql-5.7 postgresql-14和11版本
-	  	20240527：支持了sqlite，仅测试了3.30.1版本，并且saveAll没法返回自增的主键值
+	  支持的数据库有pgsql mysql sqlite
 		
 	3 声明一个Entity，如：
 	
@@ -46,22 +44,24 @@
 			表示一个字段不与table中的column对应，只在java代码里使用
 	
 	4 声明 UserEntity 对应的 UserRepository，此接口需要继承ZRepository接口,
+		ZRepository<T,ID> 两个泛型参数第一个是@ZEntity标记的类，第二个是类的@ZID的字段类型
 	
 		public interface UserRepository extends com.vo.ZRepository<UserEntity, Long> {
 			
 			// 支持声明式方法，如下：
 			// 参数类型和名称需要 与 UserEntity 中匹配
 			
-			// 等同于 select UserEntity所有字段 from user where name = name参数值;
+			// 等同于 SELECT [UserEntity里非@ZTransient的所有字段] FROM user WHERE name = name参数值;
 			List<UserEntity> findByName(String name);
 			
-			// 等同于 select count(*) from user where age = age参数值;
+			// 等同于 SELECT count(*) FROM user WHERE age = age参数值;
 			Long countingByAge(Integer age);
 			
-			// 等同于 select UserEntity所有字段 from user where name like %name参数值%;
+			// 等同于 SELECT [UserEntity里非@ZTransient的所有字段] FROM user WHERE name LIKE %name参数值%;
 			List<UserEntity> findByNameLike(String name);
 			
-			// 等同于 select UserEntity所有字段 from user where status = status参数值 order by id desc limit limit参数值 offset offset参数值;
+			// 等同于 SELECT [UserEntity里非@ZTransient的所有字段] FROM user WHERE status = status参数值
+				 ORDER BY id DESC LIMIT limit参数值 OFFSET offset参数值;
 			List<UserEntity> findByStatusOrderByIdDescLimit(Long status, int limit, int offset);
 			
 			..........
@@ -69,24 +69,61 @@
 		
 		}
 		
-		# ZRepository 的两个泛型参数：
-			第一个是子接口对应的@ZEntity类，本例中是 UserEntity类。
-			第二个是@ZEntity类的@ZID字段的类型，本例中是Long
-		
 		到此，UserRepository 接口已继承 ZRepository 中固定的一些方法，
 		支持的声明式方法详见：MethodRegex中的GROUP_开头的正则表达式.
 		
 		# 声明式方法findBy开头的，支持自定义返回对象，如：定义一个MyEntity，
-		里面只有 id和name两个Field，则生成的SQL的select部分为 select id,name
+		里面只有 id和name两个Field，则生成的SQL的select部分为 SELECT id,name
 			可使用自定义类型来减少网络传输、利用索引覆盖、屏蔽敏感字段、让业务逻辑更清晰等等。 
 		
 		
-	5 @Autowired  UserRepository userRepository;
+	5 @Autowired UserRepository userRepository;
 	  即可使用 UserRepository 中声明式方法和 ZRepository 中的固有方法
 	  
 	6 事务：注解 @ZTransaction
-		在需要事务的方法上加上此注解接口实现事务
+		在需要事务的方法上加上此注解接口实现事务，如：
 		
+		@ZTransaction
+		public void versionTestById(final Integer id) {
+			final BlobEntity e = this.bbbbbbbbbbbb.findById(id);
+			e.setName("这是测试 version乐观锁而改的,updateTime = " + new Date());
+			final boolean update = this.bbbbbbbbbbbb.update(e);
+			if (!update) {
+				// 下面两种选择一种即可
+				// 1
+				// ZTransactionAOP.rollback();
+				// 2
+				throw new NullPointerException("更新失败");
+			}
+		}
+		
+		执行出现异常会自动回滚事务。如上例子需要特殊判断是否回滚的，有两种方式可以回滚事务：
+			1、ZTransactionAOP.rollback();
+			2、抛出一个异常
+		
+	7 逻辑删除：@ZLogicalDelete 
+		在 @ZEntity里的字段上使用本注解，如：
+		
+		@ZLogicalDelete
+		private Integer isDelete;
+		
+		在ZR.deleteById时，变为 [UPDATE TABLE SET is_delete = [指定的表示删除的值] where id = ?]
+		并且所有非@ZQuery的select操作，都会在where后面加入[is_delete = [指定的表示未删除的值] ]
+		
+	8 乐观锁：@ZVersion
+		在 @ZEntity里的字段上使用本注解，如：
+		
+		@ZVersion
+		private Integer version;
+		
+		则在[findByXX、修改数据、update]的过程中会自动使用version控制乐观锁，如上三步：
+		@see [6 事务：注解 @ZTransaction]
+		
+		1、findByXX 		得到 version = 5, 
+		2、setXX			修改了部分数据
+		3、update 		会自动给update语句加入  [version = 5]的条件
+		
+	
 # 二 其他使用,调用  ZRepositoryStarter.startZRepository(扫描的包名)， 
 	得到Map<Class,ZClass> 为Map<ZRepository子接口的Class，其代理类的ZClass>。自行处理
 	
