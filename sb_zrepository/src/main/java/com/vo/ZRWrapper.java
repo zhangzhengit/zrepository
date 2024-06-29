@@ -931,6 +931,9 @@ public class ZRWrapper<T> {
 
 	/**
 	 * 取前N条，等同于limit方法：limit(rows, 0);
+	 * 本方法和	limit(final Integer limit, final Integer offset) 会互相覆盖，
+	 * 即后调用的值会覆盖掉先调用的值
+	 *
 	 *
 	 * @param n
 	 * @return
