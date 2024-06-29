@@ -943,6 +943,50 @@ public class ZRWrapper<T> {
 	}
 
 	/**
+	 * 分页，本方法是不查询总条数的分页，只需要展示每页数据的需求，可以使用本方法。
+	 * 如需总数(select count(*) from TABLE)的分页，需要展示[总条数]的分页请使用 ZRepository.page 方法
+	 *
+	 * 本方法等同于 limit(final Integer limit, final Integer offset)
+	 *
+	 * 如：
+	 * 		fetchPage(1,20)	: 每页显示20条，取第1页
+	 * 等同于
+	 * 		limit(20,0)		: 取前20条
+	 * 生成的SQL都一样：
+	 * 		LIMIT 20 OFFSET 0
+	 *
+	 * 本方法和
+	 * 		limit(final Integer limit, final Integer offset)、fetchFirstNRows(final Integer n)
+	 * 	三者都会互相覆盖
+	 *
+	 * @param page 页数，表示当前要取第几页，从1开始
+	 * @param size 每页显示的条数，不能小于0
+	 * @return
+	 */
+	public ZRWrapper<T> fetchPage(final Integer page, final Integer size) {
+		if (page == null) {
+			throw new NullPointerException("page 不能为空");
+		}
+
+		if (size == null) {
+			throw new NullPointerException("size 不能为空");
+		}
+
+		if (page.intValue() <= 0) {
+			throw new NullPointerException("page 不能小于1");
+		}
+
+		if (size.intValue() <= 0) {
+			throw new NullPointerException("size 不能小于1");
+		}
+
+		final int offset = size * (page - 1);
+		final int limit = size;
+
+		return this.limit(limit, offset);
+	}
+
+	/**
 	 * 添加一个升序排序条件
 	 *
 	 * @param function
