@@ -16,6 +16,7 @@ import com.vo.anno.ZEntity;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.core.Sort;
+import com.vo.exception.ZRepositoryException;
 
 import lombok.Getter;
 
@@ -93,10 +94,10 @@ import lombok.Getter;
  *
  *		生成WHERE：WHERE name like '?%' AND char IS NULL AND create_time < ?
  *
- * 多查询条件（对个本类对象组合出的查询条件）：
+ * 多查询条件（多个本类对象组合出的查询条件）：
  *
  * 查询： 条件1：name 不为空 并且 id 在某个范围内 并且 time 小于某个时间点
- * 	 或者 条件2：byte1 在为空 并且 long1 不等于 3
+ * 	 或者 条件2：byte1 为空 并且 long1 不等于 3
  *		final ZRWrapper<BlobEntity> eq = ZRWrapper.wrap(BlobEntity.class);
 		eq.notNull(BlobEntity::getName);
 		eq.between(BlobEntity::getId, 200, 5000);
@@ -160,9 +161,21 @@ public class ZRWrapper<T> {
 	@Getter
 	private final Class<T> entityClass;
 
+	/**
+	 * 构造一个本类对象，Class 为 @ZEntity 标记的类
+	 *
+	 * @param <T>
+	 * @param entityClass
+	 * @return
+	 */
 	public static <T> ZRWrapper<T> wrap(final Class<T> entityClass) {
 		if (entityClass == null) {
 			throw new NullPointerException("entityClass不能为空");
+		}
+
+		if (!entityClass.isAnnotationPresent(ZEntity.class)) {
+			throw new ZRepositoryException(
+					"entityClass必须是 @" + ZEntity.class.getCanonicalName() + " 标记的类，当前为 " + entityClass);
 		}
 
 		final ZRWrapper<T> w = new ZRWrapper<>(entityClass);
@@ -172,6 +185,7 @@ public class ZRWrapper<T> {
 	private ZRWrapper(final Class<T> entityClass) {
 		this.entityClass = entityClass;
 	}
+
 	/**
 	 * 等值,构造条件如: name = ?
 	 * 调用本方法的方式为：
@@ -598,8 +612,6 @@ public class ZRWrapper<T> {
 	 *
 	 * 调用本方法的方式为：
 	 * 		wrapper.isNull(MyEntity::getName());
-	 * 或者
-	 * 		wrapper.isNull(MyEntity::getName());
 	 *
 	 * @param function
 	 * @param value
@@ -614,8 +626,6 @@ public class ZRWrapper<T> {
 	 *
 	 * 调用本方法的方式为：
 	 * 		wrapper.notNull(MyEntity::getName());
-	 * 或者
-	 * 		wrapper.notNull(MyEntity::getName());
 	 *
 	 * @param function
 	 * @param value
@@ -626,7 +636,7 @@ public class ZRWrapper<T> {
 	}
 
 	/**
-	 * 后缀匹配查询,构造条件如: name LIKE '?%'
+	 * 后缀匹配查询,构造条件如: name LIKE '%?'
 	 *
 	 * 调用本方法的方式为：
 	 * 		wrapper.endingWith(MyEntity::getName(),myEntity.getName());
@@ -646,7 +656,7 @@ public class ZRWrapper<T> {
 	}
 
 	/**
-	 * 前缀匹配查询,构造条件如: name LIKE '%?'
+	 * 前缀匹配查询,构造条件如: name LIKE '?%'
 	 *
 	 * 调用本方法的方式为：
 	 * 		wrapper.startingWith(MyEntity::getName(),myEntity.getName());
@@ -760,7 +770,6 @@ public class ZRWrapper<T> {
 	 * @param value2
 	 * @return
 	 */
-	// FIXME 2024年6月13日 下午11:45:02 zhangzhen : between/ 等，下面的继续添加重载方法
 	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Integer value1,
 			final Integer value2) {
 		if ((value1 == null) && (value2 == null)) {
@@ -930,23 +939,33 @@ public class ZRWrapper<T> {
 		return this.limit(n, ZERO);
 	}
 
+	/**
+	 * 添加一个升序排序条件
+	 *
+	 * @param function
+	 * @return
+	 */
 	public ZRWrapper<T> orderByAsc(final SerializableFunction<T, Object> function) {
-		final Field f = ReflectionUtil.getField(function);
-		final boolean b = this.orderBy.size() > 1;
-		if (b) {
-			this.orderBy.add(ZRepositoryMain.DELIMITER);
-		}
-		this.orderBy.add(Sort.SPACE + ZFieldConverter.toDbField(f.getName()) + Sort.SPACE + Sort.ASC);
-		return this;
+		return this.orderBy(function, Sort.ASC);
 	}
 
+	/**
+	 * 添加一个降序排序条件
+	 *
+	 * @param function
+	 * @return
+	 */
 	public ZRWrapper<T> orderByDesc(final SerializableFunction<T, Object> function) {
-		final Field f = ReflectionUtil.getField(function);
-		final boolean b = this.orderBy.size() > 1;
-		if (b) {
+		return this.orderBy(function, Sort.DESC);
+	}
+
+	private ZRWrapper<T> orderBy(final SerializableFunction<T, Object> function, final String order) {
+		if (this.orderBy.size() > 1) {
 			this.orderBy.add(ZRepositoryMain.DELIMITER);
 		}
-		this.orderBy.add(Sort.SPACE + ZFieldConverter.toDbField(f.getName()) + Sort.SPACE + Sort.DESC);
+
+		final Field f = ReflectionUtil.getField(function);
+		this.orderBy.add(Sort.SPACE + ZFieldConverter.toDbField(f.getName()) + Sort.SPACE + order);
 		return this;
 	}
 
