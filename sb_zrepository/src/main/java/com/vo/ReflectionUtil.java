@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Supplier;
 
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -19,21 +20,9 @@ import org.springframework.util.ReflectionUtils;
  */
 public class ReflectionUtil {
 
-	private static Map<Object, Field> cache = new WeakHashMap<>();
-
-	public static <T, R> String getFieldName(final SerializableFunction<T, R> function) {
-		final Field field = ReflectionUtil.getField(function);
-		return field.getName();
-	}
-
 	public static <T, R> Field getField(final SerializableFunction<T, R> function) {
-		final Field v = cache.get(function);
-		if (v != null) {
-			return v;
-		}
-		final Field v2 = findField(function);
-		cache.put(function, v2);
-		return v2;
+		final Supplier<Field> supplier = () -> findField(function);
+		return ZRC.computeIfAbsent(function, supplier);
 	}
 
 	public static <T, R> Field findField(final SerializableFunction<T, R> function) {

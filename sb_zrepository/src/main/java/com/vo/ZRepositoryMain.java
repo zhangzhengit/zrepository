@@ -1784,21 +1784,12 @@ public class ZRepositoryMain {
 	 * @return
 	 */
 	public static int[] checkZQuerySelect(final Class<?> myZRClass, final Method method, final String sqlTemplate) {
-
 		if (method.getParameterAnnotations().length <= 0) {
 			return null;
 		}
-
+		
 		final String k = method.getName() + "@" + sqlTemplate;
-		synchronized (k.intern()) {
-
-			final int[] v = (int[]) C.get(k);
-			if(v !=null) {
-				return v;
-			}
-
-			return checkZQuerySelect0(myZRClass, method, sqlTemplate, k);
-		}
+		return ZRC.computeIfAbsent(k, () -> checkZQuerySelect0(myZRClass, method, sqlTemplate, k));
 	}
 
 	private static int[] checkZQuerySelect0(final Class<?> myZRClass, final Method method, final String sqlTemplate, final String k) {
@@ -1905,11 +1896,8 @@ public class ZRepositoryMain {
 			}
 		}
 
-		C.put(k, argOrderArray);
 		return argOrderArray;
 	}
-
-	private static final WeakHashMap<String, Object> C = new WeakHashMap<>();
 
 	private static Class<?> getReturnTypeAndCheckTFields(final Class<?> myZRClass, final Class<?> entityClass, final Method method) {
 		final Class<?> returnType = getReturnType(method);
@@ -2500,18 +2488,8 @@ public class ZRepositoryMain {
 	 * @return
 	 */
 	public static DataSourceDTO findCatalog(final String url) {
-		final String k = "findCatalog" + "@" + url;
-		final Object d = C.get(k);
-		if (d != null) {
-			return (DataSourceDTO) d;
-		}
-
-		synchronized (k.intern()) {
-			final DataSourceDTO d2 = findCatalog0(url);
-			C.put(k, d2);
-			return d2;
-		}
-
+		final String key = "findCatalog" + "@" + url;
+		return ZRC.computeIfAbsent(key, () -> findCatalog0(url));
 	}
 
 	private static DataSourceDTO findCatalog0(final String url) {

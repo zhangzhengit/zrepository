@@ -1102,23 +1102,14 @@ public class ZRWrapper<T> {
 	}
 
 	private DBEnum getDBEnum() {
-		final DBEnum v = C.get(this.entityClass);
-		if (v != null) {
-			return v;
-		}
-
-		final DBEnum v2 = this.getDBEnum0();
-		C.put(this.entityClass, v2);
-		return v2;
+		final String key = this.entityClass.getCanonicalName();
+		return ZRC.computeIfAbsent(key, this::getDBEnum0);
 	}
 
 	private DBEnum getDBEnum0() {
 		final String dataSourceName = this.entityClass.getAnnotation(ZEntity.class).dataSourceName();
-		final ZCPool cp = ZCPool.getInstance(dataSourceName);
-		final DBEnum dbEnum = cp.getDbEnum(Mode.WRITE);
-		return dbEnum;
+		final ZCPool pool = ZCPool.getInstance(dataSourceName);
+		return pool.getDbEnum(Mode.WRITE);
 	}
-
-	private final static Map<Class<?>, DBEnum> C = new WeakHashMap<>();
 
 }

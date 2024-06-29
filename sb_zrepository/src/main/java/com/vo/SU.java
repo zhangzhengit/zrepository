@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -1513,21 +1514,9 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-
-	private static final WeakHashMap<String, Object> C = new WeakHashMap<>();
-
 	private static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
-		final String k = returnType.getCanonicalName();
-		final Object v = C.get(k);
-		if (v != null) {
-			return (String) v;
-		}
-
-		synchronized (k.intern()) {
-			final String v2 = gSelectFromReturnType0(entityClass, returnType);
-			C.put(k, v2);
-			return v2;
-		}
+		final Supplier<String> supplier = () -> gSelectFromReturnType0(entityClass, returnType);
+		return ZRC.computeIfAbsent(entityClass, supplier);
 	}
 
 	private static String gSelectFromReturnType0(final Class entityClass, final Class returnType) {

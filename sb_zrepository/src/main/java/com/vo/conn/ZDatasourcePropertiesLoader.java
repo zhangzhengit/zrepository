@@ -1,12 +1,12 @@
 package com.vo.conn;
 
 import java.util.List;
-import java.util.WeakHashMap;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.Lists;
+import com.vo.ZRC;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
 
@@ -40,12 +40,8 @@ public class ZDatasourcePropertiesLoader {
 
 	private static ZDatasourceProperties INSTANCE;
 
-	// 不用 ConcurrentMap
-	private final static WeakHashMap C = new WeakHashMap<>();
-
 	public static ZDatasourceProperties getInstance(final String dataSourceName) {
-		final Object computeIfAbsent = C.computeIfAbsent(dataSourceName, x -> initialize(dataSourceName));
-		return (ZDatasourceProperties) computeIfAbsent;
+		return ZRC.computeIfAbsent(dataSourceName, () ->initialize(dataSourceName));
 	}
 
 	private static ZDatasourceProperties initialize(final String dataSourceName) {
