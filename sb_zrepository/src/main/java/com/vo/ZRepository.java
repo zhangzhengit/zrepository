@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.vo.core.Page;
-import com.vo.core.Sort;
-
 
 /**
  *
@@ -27,19 +25,6 @@ import com.vo.core.Sort;
  *
  */
 public interface ZRepository<T, ID> {
-
-	/**
-	 * 分页查询，按T中非空字段等值查询，有多个非空字段则用and连接
-	 *
-	 * @param t    查询条件，根据对象里非null的字段来查询，等值查询
-	 * @param sort 排序条件
-	 * @param page 第几页，从1开始
-	 * @param size 一页显示几条
-	 * @return
-	 *
-	 */
-	// FIXME 2024年5月4日 下午10:46:33 zhangzhen: TODO :支持了blob类型后，page还要改，包括其他方法都要重新仔细测试
-	Page<T> page(T t, Sort<T> sort, Integer page, Integer size);
 
 	/**
 	 * select count(*) from 表
@@ -162,9 +147,32 @@ public interface ZRepository<T, ID> {
 
 		需要判断某个字段为NULL/不为NULL，使用isNull/notNull方法.
 
+
+
 	 * @param wrapper	如果本参数为null或者无任何条件(没调用任何eq/lt/like等方法)，则默认为查询全部数据
 	 * @return
 	 */
 	List<T> find(ZRWrapper<T> wrapper);
 
+	/**
+	 * 分页查询，带[总条数]的分页查询，使用 ZRWrapper 来构造where部分和order by 部分
+	 * page和size两个参数都控制分页。
+	 *
+	 * 如果只是要展示一页一页的数据，而不需要[总条数]，请使用本类的 List<T> find(ZRWrapper<T> wrapper) 方法，
+	 * 使用 ZRWrapper的[limit/fetchFirstNRows/fetchPage]三个方法之一即可实现分页，并且避免[SELECT COUNT(*)]操作
+	 *
+	 * @param wrapper
+	 * 				用法同 List<T> find(ZRWrapper<T> wrapper)List<T> find(ZRWrapper<T> wrapper) 方法，
+	 * 				区别是本方法会忽略掉[limit/fetchFirstNRows/fetchPage]三个方法的赋值。
+	 * 				-------------------------------------------------------
+	 * 				手动构造的条件，包括where 和 order by这两部分，
+	 * 				不包括limit/fetchFirstNRows/fetchPage部分，这三个方法即使调用了也无效，
+	 * 				也会被本方法的page和size覆盖掉，即：使用本方法的page和size参数来控制分页
+	 *
+	 * @param page 第几页，从1开始
+	 * @param size 一页显示几条
+	 * @return
+	 *
+	 */
+	Page<T> page(ZRWrapper<T> wrapper, Integer page, Integer size);
 }

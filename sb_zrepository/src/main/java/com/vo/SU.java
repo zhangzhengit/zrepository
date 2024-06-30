@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -81,18 +80,15 @@ public class SU {
 	// FIXME 2024年6月2日 上午12:09:26 zhangzhen : 本类所有方法都计入了className和callerMethodName,用来做sql执行统计功能用，待做
 
 	public static <T> Page<T> page(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class<T> entityClass, final Class<T> returnType, final T t, final Sort<T> sort, final String sql,
-			final Integer size, final Integer page) {
+			final Class<T> entityClass, final Class<T> returnType, final ZRWrapper<T> wrapper, final Integer size, final Integer page) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
-		if (t == null) {
-			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: t 参数不能为null");
+		if (wrapper == null) {
+			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: wrapper 参数不能为null");
 		}
 
-		if (sort == null) {
-			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: sort 参数不能为null");
-		}
+		wrapper.fetchPage(page, size);
 
 		if (size == null) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: size 参数不能为null");
@@ -110,7 +106,6 @@ public class SU {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".page方法: page 参数必须大于0！page = " + page);
 		}
 
-
 		PreparedStatement ps=null;
 		ResultSet rs=null;
 		PreparedStatement psc = null;
@@ -119,78 +114,31 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 		try {
 
-			final Map<String, Object> fMap = getNotNullFieldMap(t);
+			final String pageSql =
+					wrapper.done().getSql();
 
-			final Set<String> keySet = fMap.keySet();
-			final int size2 = keySet.size();
-			final ArrayList<String> kl = Lists.newArrayList(keySet);
-
-			final StringBuilder columnBuilder = new StringBuilder();
-
-			final String pageCountSQLT = MethodRegex.SELECT + " COUNT(*) " + MethodRegex.FROM + " "
-					+ entityClass.getAnnotation(ZEntity.class).tableName() + " " + MethodRegex.WHERE + " COLUMN";
-
-			for (int i = 1; i <= size2; i++) {
-				columnBuilder.append(" ").append(kl.get(i - 1)).append(" = ? ");
-				if (i < size2) {
-					columnBuilder.append(Sort.SPACE + MethodRegex.AND + Sort.SPACE);
-				}
-			}
-			if (columnBuilder.length() <= 0) {
-				columnBuilder.append(ZRWrapper.ALWAYS_TRUE);
-			}
-
-			final String select = gSelectFromReturnType(entityClass, returnType);
-			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
-
-			final String pageSql = columnBuilder.length() > 0
-					? sqlColumn.replace(MethodRegex.COLUMN, columnBuilder.toString())
-							: sqlColumn.replace(" " + MethodRegex.WHERE + " " + MethodRegex.COLUMN, columnBuilder.toString());
-
-			final String pageCountSql = columnBuilder.length() > 0
-					? pageCountSQLT.replace(MethodRegex.COLUMN, columnBuilder.toString())
-							: pageCountSQLT.replace(" " + MethodRegex.WHERE + " " + MethodRegex.COLUMN, columnBuilder.toString());
-
-
-			final String pageSqlFinal = pageSql.replace(MethodRegex.LIMIT, sort.done() + Sort.SPACE + MethodRegex.LIMIT);
-
-			final SUA suapageSql = excludedDeletedHandler(entityClass, t, returnType, pageSqlFinal, null, zc);
+			final SUA suapageSql = excludedDeletedHandler(entityClass, null, returnType, pageSql, null, zc);
 			final String pageSqlFinal2 = suapageSql.getSql();
 
-			final SUA suapageCountSql = excludedDeletedHandler(entityClass, t, returnType, pageCountSql, null, zc);
+			final String pageCountSqlT =
+					MethodRegex.SELECT + Sort.SPACE
+					+ "COUNT(*)"
+					+ Sort.SPACE + MethodRegex.FROM
+					+ Sort.SPACE
+					+ entityClass.getAnnotation(ZEntity.class).tableName()
+					+ Sort.SPACE + MethodRegex.WHERE
+					+ Sort.SPACE + wrapper.done().getWhere();
+
+			final SUA suapageCountSql = excludedDeletedHandler(entityClass, null, returnType, pageCountSqlT, null, zc);
+
 			final String pageCountSql2 = suapageCountSql.getSql();
 
-			final int offset = (page - 1) * size;
-			final int rows = size;
-
 			if (isShowSQL(dataSourceName)) {
-				if (fMap.isEmpty()) {
-					LOG.info("page分页查询-[{}]-[{},{}]", pageSqlFinal2, rows, offset);
-					LOG.info("page总条数查询-[{}]", pageCountSql2);
-				} else {
-					LOG.info("page分页查询-[{}]-[{}]-[{},{}]", pageSqlFinal2, fMap.values(), rows, offset);
-					LOG.info("page总条数查询-[{}]-[{}]", pageCountSql2, fMap.values());
-				}
+				LOG.info("page分页查询-[{}]", pageSqlFinal2);
+				LOG.info("page总条数查询-[{}]", pageCountSql2);
 			}
 
 			ps = connection.prepareStatement(pageSqlFinal2);
-			int index = 1;
-			final Field[] fs = entityClass.getDeclaredFields();
-			for (final Field field : fs) {
-				if (field.isAnnotationPresent(ZTransient.class)) {
-					continue;
-				}
-				field.setAccessible(true);
-				final Object fv = field.get(t);
-				if (fv == null) {
-					continue;
-				}
-				addPS(zc.getZConnection().getDbEnum(), t, ps, index, field, SUMode.SAVE);
-				index++;
-			}
-
-			ps.setInt((index - 1) + 1, rows);
-			ps.setInt((index - 1) + 2, offset);
 
 			rs = ps.executeQuery();
 			final ResultSetMetaData metaData = rs.getMetaData();
@@ -203,20 +151,6 @@ public class SU {
 			}
 
 			psc = connection.prepareStatement(pageCountSql2);
-			int indexPSC = 1;
-			for (final Field field : fs) {
-				if (field.isAnnotationPresent(ZTransient.class)) {
-					continue;
-				}
-				field.setAccessible(true);
-				final Object fv = field.get(t);
-				if (fv == null) {
-					continue;
-				}
-				addPS(zc.getZConnection().getDbEnum(), t, psc, indexPSC, field, SUMode.SAVE);
-				indexPSC++;
-			}
-
 			pscRS = psc.executeQuery();
 			pscRS.next();
 
@@ -226,7 +160,7 @@ public class SU {
 			return new Page(size, Long.valueOf(String.valueOf(page)), pages, countR,
 					ImmutableList.copyOf(rL));
 
-		} catch (final SQLException | IllegalArgumentException | IllegalAccessException  e1) {
+		} catch (final SQLException | IllegalArgumentException  e1) {
 			e1.printStackTrace();
 			try {
 				connection.rollback();
@@ -1030,6 +964,7 @@ public class SU {
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Class<T> entityClass,final Class<T> returnType, final String sql, final Object wrapper) {
 
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
@@ -1040,7 +975,7 @@ public class SU {
 		try {
 
 			final String select = gSelectFromReturnType(entityClass, entityClass);
-			final String where = wrapper == null ? ZRWrapper.ALWAYS_TRUE : ((ZRWrapper) wrapper).done();
+			final String where = wrapper == null ? ZRWrapper.ALWAYS_TRUE : ((ZRWrapper) wrapper).done().getFullWhere();
 			final String x = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select) + " "
 					+ MethodRegex.WHERE + " " + where;
 
@@ -1514,7 +1449,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
+	public static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
 		final Supplier<String> supplier = () -> gSelectFromReturnType0(entityClass, returnType);
 		return ZRC.computeIfAbsent(entityClass, supplier);
 	}

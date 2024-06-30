@@ -762,8 +762,8 @@ public class ZRepositoryMain {
 			+ modeString + "," + ", classType," + entityTName + ",t,sql);";
 
 		case "page":
-			return "return " + SU.class.getCanonicalName() + ".page(" + className1 + "," + methodName1 + "," + modeString + ", classType," + entityTName
-					+ ",t,sort,sql,size,page);";
+			return "return " + SU.class.getCanonicalName() + ".page(" + className1 + "," + methodName1 + ","
+					+ modeString + ", classType," + entityTName + ",wrapper,size,page);";
 
 		case "existByIdIn":
 			return "return " + SU.class.getCanonicalName() + ".existByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
@@ -1787,7 +1787,7 @@ public class ZRepositoryMain {
 		if (method.getParameterAnnotations().length <= 0) {
 			return null;
 		}
-		
+
 		final String k = method.getName() + "@" + sqlTemplate;
 		return ZRC.computeIfAbsent(k, () -> checkZQuerySelect0(myZRClass, method, sqlTemplate, k));
 	}

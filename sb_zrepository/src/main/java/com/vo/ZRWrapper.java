@@ -7,8 +7,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -160,6 +158,8 @@ public class ZRWrapper<T> {
 	 */
 	private final List<String> where = Lists.newArrayList();
 	private final List<String> orderBy = Lists.newArrayList(Sort.ORDER_BY);
+
+	@Getter
 	private final List<String> limit = Lists.newArrayList();
 
 	@Getter
@@ -1111,14 +1111,14 @@ public class ZRWrapper<T> {
 
 	@Override
 	public String toString() {
-		final String x = this.done();
+		final String x = this.done().getFullWhere();
 		return x;
 	}
 
 	/**
 	 * 按当前的条件，组合出WHERE条件
 	 */
-	public String done() {
+	public WR done() {
 
 		final String wH = this.where.isEmpty() ? ALWAYS_TRUE
 				: "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")";
@@ -1126,8 +1126,27 @@ public class ZRWrapper<T> {
 		final String oH = this.orderBy.size() == 1 ? wH : wH + this.orderBy.stream().collect(Collectors.joining(SPACE)) + Sort.SPACE;
 
 		final String lH = this.limit.isEmpty() ? oH : oH + this.limit.stream().collect(Collectors.joining(SPACE));
+		final WR wr = new WR();
 
-		return lH;
+		wr.setFullWhere(lH);
+
+		wr.setWhere(this.where.isEmpty() ? ALWAYS_TRUE : "(" + this.where.stream().collect(Collectors.joining(SPACE)) + ")" );
+		wr.setOrderBy(this.orderBy.size()==1 ? null : this.orderBy.stream().collect(Collectors.joining(SPACE)));
+		wr.setLimit(this.limit.isEmpty() ? null : this.limit.stream().collect(Collectors.joining(SPACE)));
+
+
+		final String sql =
+				"SELECT "
+						+ SU.gSelectFromReturnType(this.entityClass, this.entityClass)
+						+ " FROM "
+						+ this.entityClass.getAnnotation(ZEntity.class).tableName()
+						+ " WHERE "
+						+ wr.getFullWhere()
+						;
+
+		wr.setSql(sql);
+
+		return wr;
 	}
 
 	private ZRWrapper<T> addValue0(final SerializableFunction<T, Object> function, final Object value,
