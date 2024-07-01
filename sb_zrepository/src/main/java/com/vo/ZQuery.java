@@ -9,18 +9,56 @@ import java.lang.annotation.Target;
 /**
  *
  * 自定义SQL，用在ZRepository的子接口的方法上，方法上有本注解，则优先按自定义SQL来查询，不按[声明式方法]来查询
+ *
+ * 如果不设置sql属性，则默认为从resources/mapper目录读取和ZRepository子接口同名的xml文件中的Method.name的select标签
+ * 如：
+ *
+ * 	public interface BlobRepository extends ZRepository<BlobEntity, Integer> {
+		@ZQuery
+		List<BlobEntity> selectMapperById(Integer id);
+	}
 
-  　select：返回List<T> 如：
-  		@ZQuery(sql = "select name from blobt limit ?;")
-		List<NameEntity> selectNameLimitN(Integer n);
+	上面的[selectMapperById]方法没有声明sql属性，
+	则表示读取 resources/mapper目录下的xml文件中id=selectMapperById的select标签
 
-		NameLengthEntity 中必须有 SQL的字段，如上的name属性
+	声明xml文件书写内容如下：
 
-	update : 返回Integer，update的行数 如：
- 		@ZQuery(sql = "update blobt set name = ? where id = ?")
-		Integer updateNameById(String name,Integer id);
+	BlobRepository.xml
 
+	<?xml version="1.0" encoding="UTF-8"?>
+	<mapper>
+		<select id="selectMapperById">
+			SELECT 	*
+			FROM
+				blobt
+			WHERE
+				id = ?1;
+		</select>
+	</mapper>
 
+	或者直接声明sql属性，如下：
+
+	public interface BlobRepository extends ZRepository<BlobEntity, Integer> {
+		@ZQuery(sql="SELECT * FROM	blobt WHERE	id = ?1;")
+		List<BlobEntity> selectMapperById(Integer id);
+	}
+
+	则会优先使用使用上面这种注解中直接声明的SQL
+
+ *
+ *
+ * select：返回List<T> 如：
+ *
+ * @ZQuery(sql = "select name from blobt limit ?;")
+ * List<NameEntity> selectNameLimitN(Integer n);
+ *
+ * NameLengthEntity 中必须有 SQL的字段，如上的name属性
+ *
+ * update : 返回Integer，update的行数 如：
+ * @ZQuery(sql = "update blobt set name = ? where id = ?") Integer
+ *             updateNameById(String name,Integer id);
+ *
+ *
  * @author zhangzhen
  * @date 2023年6月16日
  *
@@ -34,32 +72,37 @@ import java.lang.annotation.Target;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD })
+@Target({ ElementType.METHOD })
 // FIXME 2024年5月18日 上午1:06:03 zhangzhen: pgsql遇到的问题2：
 // @ZQuery(sql = "select length(name) as nameLength from blobt limit ?;")
 // nameLength 会在jdbc中取到namelength,导致java class.getDField时获取不到，而mysqljdbc获取到的就是 nameLength
 
-
 // FIXME 2024年5月24日 下午7:33:13 zhangzhen: 而是发现问题：
-/*	如下两个方法同名，会导致生成的代理类里的sql混乱 ，要debug找出原因，或者为了业务逻辑清晰直接不允许方法同名?
+/*
+ * 如下两个方法同名，会导致生成的代理类里的sql混乱 ，要debug找出原因，或者为了业务逻辑清晰直接不允许方法同名?
  *
- * 	@ZQuery(sql = "insert into blobt(name,date) values(?,?);")
-	Integer insertBlobt(String name,Date date);
-
-	@ZQuery(sql = "insert into blobt(name) values(?);")
-	Integer insertBlobt(String name);
+ * @ZQuery(sql = "insert into blobt(name,date) values(?,?);") Integer
+ * insertBlobt(String name,Date date);
+ *
+ * @ZQuery(sql = "insert into blobt(name) values(?);") Integer
+ * insertBlobt(String name);
  *
  */
 
 public @interface ZQuery {
 
-	// FIXME 2023年6月16日 下午8:03:51 zhanghen: 解析这个
+	public static final String MAPPER = "ZRMAPPER";
+
 	/**
 	 * 自定义SQL
+	 * 不指定此值:则表示从resources/mapper下和ZRepository子接口同名的xml文件
+	 * 中寻找对应本注解标记的Method的名称同名的<select>标签中取SQL。
+	 * 指定了此值:则直接用此值作为SQL。
+	 *
+	 * 注意：上面两者同时存在，则优先使用代码中本注解的此值作为SQL
 	 *
 	 * @return
 	 */
-	// FIXME 2024年5月5日 下午10:22:47 zhangzhen: 先支持完整的原生sql
-	String sql();
+	String sql() default MAPPER;
 
 }

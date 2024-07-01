@@ -24,7 +24,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -763,7 +762,7 @@ public class ZRepositoryMain {
 
 		case "page":
 			return "return " + SU.class.getCanonicalName() + ".page(" + className1 + "," + methodName1 + ","
-					+ modeString + ", classType," + entityTName + ",wrapper,size,page);";
+			+ modeString + ", classType," + entityTName + ",wrapper,size,page);";
 
 		case "existByIdIn":
 			return "return " + SU.class.getCanonicalName() + ".existByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
@@ -1688,11 +1687,20 @@ public class ZRepositoryMain {
 
 	private static String zQuery(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
 
-		final String u = sqlTemplate.trim().toUpperCase();
-		String subClassMethodName = null ;
+
+		final AtomicReference<String> sa = new AtomicReference<>(sqlTemplate);
 
 		final Class<?> returnType = method.getReturnType();
-		if (u.startsWith(MethodRegex.SELECT)) {
+
+		if (ZQuery.MAPPER.toUpperCase().equals(sqlTemplate.trim().toUpperCase())) {
+			final String sqlM = ZXML.read("mapper/" + myZRClass.getSimpleName( ) + ".xml", method.getName());
+			sa.set(sqlM);
+		}
+
+		final String sql = sa.get().trim().toUpperCase();
+		String subClassMethodName = null ;
+
+		if (sql.startsWith(MethodRegex.SELECT)) {
 			if (!List.class.equals(returnType)) {
 				final String m =
 						"\r\n\t"
@@ -1725,14 +1733,14 @@ public class ZRepositoryMain {
 			}
 
 			subClassMethodName = "zQuerySelect";
-			checkZQuerySelect(myZRClass, method, sqlTemplate);
-		} else if (u.startsWith("UPDATE")) {
+			checkZQuerySelect(myZRClass, method, sa.get());
+		} else if (sql.startsWith("UPDATE")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryUpdate";
-		} else if (u.startsWith("DELETE")) {
+		} else if (sql.startsWith("DELETE")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryDelete";
-		} else if (u.startsWith("INSERT")) {
+		} else if (sql.startsWith("INSERT")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryInsert";
 		} else {
@@ -1754,7 +1762,8 @@ public class ZRepositoryMain {
 		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
-				+ returnType2.getCanonicalName() + ",sql," + joiner.toString() + ");";
+				+ returnType2.getCanonicalName() + ",\""+sa.get()+"\"," + joiner.toString() + ");";
+		//				+ returnType2.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static void checkZQueryUpdateDeleteInsert(final Class<?> myZRClass, final Method method,
