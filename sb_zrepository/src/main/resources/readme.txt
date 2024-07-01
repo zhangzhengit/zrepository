@@ -123,6 +123,10 @@
 		2、setXX			修改了部分数据
 		3、update 		会自动给update语句加入  [version = 5]的条件
 		
+	9 使用代码外的xml文件来配置SQL：
+	
+		@ZQuery 放在ZR子接口的方法上，不设置sql属性，即默认为读取resources/mapper下和ZRepository子接口同名的的xml文件
+		中Method同名的<select>标签内容作为SQL
 	
 # 二 其他使用,调用  ZRepositoryStarter.startZRepository(扫描的包名)， 
 	得到Map<Class,ZClass> 为Map<ZRepository子接口的Class，其代理类的ZClass>。自行处理
