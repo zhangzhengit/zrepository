@@ -53,6 +53,7 @@ import com.vo.transaction.ZTransactionAOP;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -2594,7 +2595,11 @@ public class SU {
 			final String s2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}],[{}]", s2, Arrays.toString(arg));
+				if (ArrayUtil.isEmpty(arg)) {
+					LOG.info("[{}]", s2);
+				} else {
+					LOG.info("[{}],[{}]", s2, Arrays.toString(arg));
+				}
 			}
 
 			ps = connection.prepareStatement(s2);
