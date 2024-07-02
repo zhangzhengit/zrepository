@@ -145,6 +145,7 @@ import lombok.Getter;
 // 目前就只支持自定义 where / order by / limit
 public class ZRWrapper<T> {
 
+	private static final int ONE = 1;
 	private static final int ZERO = 0;
 	public static final String ALWAYS_TRUE = " 1 = 1 ";
 	public static final String SPACE = " ";
@@ -918,7 +919,8 @@ public class ZRWrapper<T> {
 	}
 
 	/**
-	 * 构造 LIMIT 条件，多次调用本方法，会以最后一次为准，每次调用本方法，如果已经有了 LIMIT 条件，则本次的覆盖掉上次的
+	 * 构造 LIMIT 条件，多次调用本方法，会以最后一次为准，每次调用本方法，
+	 * 如果已经有了 LIMIT 条件，则本次的覆盖掉上次的
 	 *
 	 * @param limit
 	 * @param offset
@@ -947,6 +949,15 @@ public class ZRWrapper<T> {
 	}
 
 	/**
+	 * 只取符合条件的第一条，只取1条
+	 *
+	 * @return
+	 */
+	public synchronized ZRWrapper<T> fetchFirst() {
+		return this.limit(ONE, ZERO);
+	}
+
+	/**
 	 * 分页，本方法是不查询总条数的分页，只需要展示每页数据的需求，可以使用本方法。
 	 * 如需总数(select count(*) from TABLE)的分页，需要展示[总条数]的分页请使用 ZRepository.page 方法
 	 *
@@ -960,8 +971,10 @@ public class ZRWrapper<T> {
 	 * 		LIMIT 20 OFFSET 0
 	 *
 	 * 本方法和
-	 * 		limit(final Integer limit, final Integer offset)、fetchFirstNRows(final Integer n)
-	 * 	三者都会互相覆盖
+	 * 		limit(final Integer limit, final Integer offset)
+	 * 		fetchFirstNRows(final Integer n)
+	 * 		fetchFirst()
+	 * 	四者都会互相覆盖
 	 *
 	 * @param page 页数，表示当前要取第几页，从1开始
 	 * @param size 每页显示的条数，不能小于0
