@@ -2561,6 +2561,7 @@ public class SU {
 		return column.toString();
 	}
 
+	// FIXME 2024年7月2日 下午3:07:28 zhangzhen : where xx in 这种形式还不支持
 	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName,final Mode mode,final Object entityTName,final Object object, final String sqlT, final Object... arg)
 			throws InstantiationException {
 
