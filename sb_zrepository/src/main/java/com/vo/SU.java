@@ -49,6 +49,7 @@ import com.vo.core.Sort;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.exception.ZRepositoryException;
+import com.vo.transaction.ZIsolationEnum;
 import com.vo.transaction.ZTransactionAOP;
 
 import cn.hutool.core.collection.CollUtil;
@@ -946,6 +947,16 @@ public class SU {
 		final ZC2 zcT = ZTransactionAOP.getCurrentZConnection();
 		if (zcT != null) {
 			try {
+				final ZIsolationEnum isolationEnum = zcT.getIsolationEnum();
+				if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
+					zcT.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
+				} else {
+					// 在此pgslq 报错：org.postgresql.util.PSQLException: 不能在事务交易过程中改变事物交易隔绝等级。
+					// 所以在 在AOP类里 rollback/commit之后再重置为默认隔离级别
+					// 之前遇到过pgsql的5 6 个问题，都是mysql可以测试通过而pgsql没法通过
+					//	zcT.getZConnection().getConnection().setTransactionIsolation(zcT.getZConnection().getDefaultTransactionIsolation());
+				}
+
 				zcT.getZConnection().getConnection().setAutoCommit(false);
 			} catch (final SQLException e) {
 				e.printStackTrace();
@@ -959,6 +970,7 @@ public class SU {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
+
 		return new ZC2(zc, ZCSourceEnum.ZCPOOL, null);
 	}
 
@@ -1260,14 +1272,10 @@ public class SU {
 	}
 
 	private static int getTransactionIsolation(final ZC2 zc2) {
-		try {
-			final int transactionIsolation = zc2.getZConnection().getConnection().getTransactionIsolation();
-			return transactionIsolation;
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		final ZIsolationEnum isolationEnum = zc2.getIsolationEnum();
 
-		return Connection.TRANSACTION_NONE;
+		final int isolation = isolationEnum == null ? ZIsolationEnum.DEFAULT.getIsolation() : isolationEnum.getIsolation();
+		return isolation;
 	}
 
 	// FIXME 2024年7月2日 下午11:01:31 zhangzhen : 当前只有本方法支持了事务内缓存，其他select操作的方法继续加
@@ -1277,6 +1285,7 @@ public class SU {
 		if (id == null) {
 			return null;
 		}
+
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);

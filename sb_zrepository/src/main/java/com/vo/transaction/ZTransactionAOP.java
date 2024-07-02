@@ -90,6 +90,12 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
 		final ZConnection zConnection = c.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
+
+		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
+		final ZIsolationEnum isolationEnum = zTransaction == null ? ZIsolationEnum.DEFAULT :
+			zTransaction.isolation();
+		zc2.setIsolationEnum(isolationEnum);
+
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
@@ -97,25 +103,34 @@ public class ZTransactionAOP implements ZIAOP {
 			final Object v = proceedingJoinPoint.proceed();
 			return v;
 		} catch (final Throwable e) {
-			try {
-				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
 			e.printStackTrace();
+
+			rollback();
+
+			resetToDefaultTransactionIsolation();
+
 		} finally {
-			try {
-				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+			commit();
+
+			resetToDefaultTransactionIsolation();
+
+			ZCPool.getInstance(defaultDatsourceName)
+			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
 			clear();
 			ZRC.clear(zc2.getKeyList());
 		}
 
 		return null;
+	}
+
+	private static void resetToDefaultTransactionIsolation() {
+		try {
+			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setTransactionIsolation(
+					ZCONNECTION_THREADLOCAL.get().getZConnection().getDefaultTransactionIsolation());
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Pointcut("@annotation(com.vo.transaction.ZTransaction)")
@@ -145,6 +160,10 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZConnection zConnection = c
 				.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
+		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
+		final ZIsolationEnum isolationEnum = zTransaction == null ? ZIsolationEnum.DEFAULT :
+			zTransaction.isolation();
+		zc2.setIsolationEnum(isolationEnum);
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
@@ -152,18 +171,16 @@ public class ZTransactionAOP implements ZIAOP {
 			final Object v = aopParameter.invoke();
 			return v;
 		} catch (final Throwable e) {
-			try {
-				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
 			e.printStackTrace();
+
+			rollback();
+			resetToDefaultTransactionIsolation();
+
 		} finally {
-			try {
-				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
+			commit();
+
+			resetToDefaultTransactionIsolation();
+
 			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
 			clear();

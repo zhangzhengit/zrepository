@@ -739,7 +739,6 @@ public class ZRepositoryMain {
 
 		final String className1 = "\"" + myZRClass.getCanonicalName() + "\"";
 		final String methodName1 = "\"" + method.getName() + "\"";
-
 		switch (method.getName()) {
 		case "findById":
 			return "return " + SU.class.getCanonicalName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";

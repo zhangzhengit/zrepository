@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.vo.conn.ZConnection;
+import com.vo.transaction.ZIsolationEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +23,8 @@ public class ZC2 {
 	private final ZConnection zConnection;
 
 	private final ZCSourceEnum sourceEnum;
+
+	private ZIsolationEnum isolationEnum;
 
 	/**
 	 * 事务ID，只有在 sourceEnum == ZTRANSACTION 时，才给本字段赋值，表示一个事务，给本字段初始化一个唯一的值

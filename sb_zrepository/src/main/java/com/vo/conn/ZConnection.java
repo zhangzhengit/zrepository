@@ -38,6 +38,11 @@ public class ZConnection {
 	private Connection connection;
 
 	/**
+	 * 数据库默认隔离级别
+	 */
+	private int defaultTransactionIsolation;
+
+	/**
 	 * 回滚事务
 	 */
 	public synchronized void rollback() {
@@ -81,6 +86,9 @@ public class ZConnection {
 			zc.setUrl(p.getDatasourceUrl());
 			zc.setUserName(p.getDatasourceUsername());
 			zc.setPwd(p.getDatasourcePassword());
+
+			final int defaultTransactionIsolation = connection.getMetaData().getDefaultTransactionIsolation();
+			zc.setDefaultTransactionIsolation(defaultTransactionIsolation);
 
 			final DataSourceDTO dataSourceDTO = ZRepositoryMain.findCatalog(p.getDatasourceUrl());
 			zc.setDbEnum(dataSourceDTO.getDbEnum());
