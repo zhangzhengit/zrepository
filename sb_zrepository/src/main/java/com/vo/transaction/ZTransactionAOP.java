@@ -1,6 +1,7 @@
 package com.vo.transaction;
 
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,6 +10,10 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
+import com.vo.ZC2;
+import com.vo.ZCSourceEnum;
+import com.vo.ZIDG;
+import com.vo.ZRC;
 import com.vo.anno.ZRead;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
@@ -28,16 +33,14 @@ import com.vo.conn.ZDatasourcePropertiesLoader;
  */
 @Aspect
 @Component
-
 @ZAOP(interceptType = ZTransaction.class)
 public class ZTransactionAOP implements ZIAOP {
-	//public class ZTransactionAspect implements ZIAOP {
 
 	/**
 	 * 	@ZTransaction 方法执行前把Connection放在这，具体的方法从这里拿到Connection,
 	 *  即使@ZTransaction 方法里嵌套@ZTransaction 方法，也是用的同一个Connection来执行
 	 */
-	private static final ThreadLocal<ZConnection> ZCONNECTION_THREADLOCAL = new ThreadLocal<>();
+	private static final ThreadLocal<ZC2> ZCONNECTION_THREADLOCAL = new ThreadLocal<>();
 
 	/**
 	 * 获取当前 ZConnection 独对象
@@ -46,7 +49,7 @@ public class ZTransactionAOP implements ZIAOP {
 	 *
 	 * @return
 	 */
-	public static ZConnection getCurrentZConnection() {
+	public static ZC2 getCurrentZConnection() {
 		return ZCONNECTION_THREADLOCAL.get();
 	}
 
@@ -54,14 +57,26 @@ public class ZTransactionAOP implements ZIAOP {
 	 * 回滚当前事务
 	 */
 	public static void rollback() {
-		ZCONNECTION_THREADLOCAL.get().rollback();
+		try {
+			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
 	 * 提交当前事务
 	 */
 	public static void commit() {
-		ZCONNECTION_THREADLOCAL.get().commit();
+		try {
+			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void clear() {
+		ZCONNECTION_THREADLOCAL.set(null);
 	}
 
 	@Around(value = "pointcut()")
@@ -74,18 +89,30 @@ public class ZTransactionAOP implements ZIAOP {
 		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
 		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
 		final ZConnection zConnection = c.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
-		ZCONNECTION_THREADLOCAL.set(zConnection);
+		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
+		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
 			zConnection.getConnection().setAutoCommit(false);
 			final Object v = proceedingJoinPoint.proceed();
 			return v;
 		} catch (final Throwable e) {
-			ZCONNECTION_THREADLOCAL.get().rollback();
+			try {
+				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
 			e.printStackTrace();
 		} finally {
-			ZCONNECTION_THREADLOCAL.get().commit();
-			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get());
+			try {
+				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+
+			clear();
+			ZRC.clear(zc2.getKeyList());
 		}
 
 		return null;
@@ -117,18 +144,30 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
 		final ZConnection zConnection = c
 				.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
-		ZCONNECTION_THREADLOCAL.set(zConnection);
+		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
+		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
 			zConnection.getConnection().setAutoCommit(false);
 			final Object v = aopParameter.invoke();
 			return v;
 		} catch (final Throwable e) {
-			ZCONNECTION_THREADLOCAL.get().rollback();
+			try {
+				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
 			e.printStackTrace();
 		} finally {
-			ZCONNECTION_THREADLOCAL.get().commit();
-			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get());
+			try {
+				ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+
+			clear();
+			ZRC.clear(zc2.getKeyList());
 		}
 
 		return null;

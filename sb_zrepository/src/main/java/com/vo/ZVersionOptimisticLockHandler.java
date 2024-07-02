@@ -21,7 +21,7 @@ public class ZVersionOptimisticLockHandler extends ZUpdateHandler {
 
 		final ZC2 zc = sua.getZc2();
 
-		if (zc.getSourceEnum() == ZCSourceEnum.SPRING_AOP) {
+		if (zc.getSourceEnum() == ZCSourceEnum.ZTRANSACTION) {
 
 			final Field[] fs = sua.getEntityClass().getDeclaredFields();
 			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();

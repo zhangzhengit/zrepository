@@ -943,14 +943,14 @@ public class SU {
 	}
 
 	private static ZC2 getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
-		final ZConnection zcT = ZTransactionAOP.getCurrentZConnection();
+		final ZC2 zcT = ZTransactionAOP.getCurrentZConnection();
 		if (zcT != null) {
 			try {
-				zcT.getConnection().setAutoCommit(false);
+				zcT.getZConnection().getConnection().setAutoCommit(false);
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
-			return new ZC2(zcT, ZCSourceEnum.SPRING_AOP);
+			return zcT;
 		}
 
 		final ZConnection zc = ZCPool.getInstance(dataSourceName).getZConnection(mode);
@@ -959,7 +959,7 @@ public class SU {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
-		return new ZC2(zc, ZCSourceEnum.ZCPOOL);
+		return new ZC2(zc, ZCSourceEnum.ZCPOOL, null);
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -1212,28 +1212,92 @@ public class SU {
 		return null;
 	}
 
+	/**
+	 * 如果本[SELECT]操作的连接对象是由 @ZTransaction 控制的，
+	 * 则优先根据事务ID从缓存取，取不到再执行目标方法并且把结果放入缓存。
+	 * 即：实现事务内[SELECT]操作的缓存
+	 * @param cachekey
+	 * @param zc2
+	 * @param supplier
+	 *
+	 * @return
+	 */
+	private static Object selectFromCacheIfZT(final String cachekey, final ZC2 zc2, final Supplier supplier) {
+		if (zc2.getSourceEnum() != ZCSourceEnum.ZTRANSACTION) {
+			return supplier.get();
+		}
+
+		final DBEnum dbEnum = zc2.getZConnection().getDbEnum();
+
+		// SQLITE 不管什么隔离级别都不使用事务内缓存
+		if (dbEnum == DBEnum.SQLITE) {
+			return supplier.get();
+		}
+
+		final int transactionIsolation = getTransactionIsolation(zc2);
+
+		// MYSQL和PGSQL在 读未提交/读已提交 的隔离级别下，不使用事务内缓存
+		// 只有在 可重复读/串行化 的级别时才使用
+		if (((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.POSTGRESQL))
+				&& ((transactionIsolation == Connection.TRANSACTION_NONE)
+						|| (transactionIsolation == Connection.TRANSACTION_READ_UNCOMMITTED)
+						|| (transactionIsolation == Connection.TRANSACTION_READ_COMMITTED))) {
+
+			return supplier.get();
+		}
+
+		final String transactionId = zc2.getTransactionId();
+		final String key = zc2.getSourceEnum() + "@" + zc2.getZConnection().getConnection().hashCode() + "@"
+				+ transactionId + "@" + cachekey;
+
+		zc2.addKey(key);
+
+		synchronized (key.intern()) {
+			// FIXME 2024年7月2日 下午10:38:40 zhangzhen : 是否要重写一个类?因为 ZRC 类是用 WeakHashMap实现的，可能会丢数据
+			final Object v = ZRC.computeIfAbsent(key, supplier, true);
+			return v;
+		}
+	}
+
+	private static int getTransactionIsolation(final ZC2 zc2) {
+		try {
+			final int transactionIsolation = zc2.getZConnection().getConnection().getTransactionIsolation();
+			return transactionIsolation;
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+
+		return Connection.TRANSACTION_NONE;
+	}
+
 	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Object id, final Class<T> entityClass, final String sql) {
 
 		if (id == null) {
 			return null;
 		}
-
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final ZCSourceEnum sourceEnum = zc.getSourceEnum();
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
-		final String sql2 = sua.getSql();
+		final Supplier supplier = () -> {
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
+			final String sql2 = sua.getSql();
 
-		try {
-			final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2, zc.getZConnection());
-			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql, entityClass.getAnnotation(ZEntity.class).tableName());
-			return t;
-		} finally {
-			returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
-		}
+			try {
+				final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2,
+						zc.getZConnection());
+				saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
+						entityClass.getAnnotation(ZEntity.class).tableName());
+				return t;
+			} finally {
+				returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
+			}
+		};
 
+		final String cachekey = mode + "@" + entityClass.getCanonicalName() + "@" + sql + "@" + id;
+		return (T) selectFromCacheIfZT(cachekey, zc, supplier);
 	}
 
 	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,

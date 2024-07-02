@@ -18,4 +18,6 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 public @interface ZTransaction {
 
+	// FIXME 2024年7月2日 下午10:34:27 zhangzhen : 加一个 隔离级别属性 @see java.sql.Connection中的几个隔离级别
+	// 然后在connection.setAutoCommit(false)之前，设置一下此隔离级别
 }
