@@ -1251,9 +1251,8 @@ public class SU {
 		// MYSQL和PGSQL在 读未提交/读已提交 的隔离级别下，不使用事务内缓存
 		// 只有在 可重复读/串行化 的级别时才使用
 		if (((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.POSTGRESQL))
-				&& ((transactionIsolation == Connection.TRANSACTION_NONE)
-						|| (transactionIsolation == Connection.TRANSACTION_READ_UNCOMMITTED)
-						|| (transactionIsolation == Connection.TRANSACTION_READ_COMMITTED))) {
+				&& ((transactionIsolation != Connection.TRANSACTION_SERIALIZABLE)
+				&& (transactionIsolation != Connection.TRANSACTION_REPEATABLE_READ))) {
 
 			return supplier.get();
 		}
