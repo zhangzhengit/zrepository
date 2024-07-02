@@ -1270,6 +1270,7 @@ public class SU {
 		return Connection.TRANSACTION_NONE;
 	}
 
+	// FIXME 2024年7月2日 下午11:01:31 zhangzhen : 当前只有本方法支持了事务内缓存，其他select操作的方法继续加
 	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Object id, final Class<T> entityClass, final String sql) {
 
