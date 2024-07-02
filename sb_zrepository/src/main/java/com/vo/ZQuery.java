@@ -49,15 +49,20 @@ import java.lang.annotation.Target;
  *
  * select：返回List<T> 如：
  *
- * @ZQuery(sql = "select name from blobt limit ?;")
- * List<NameEntity> selectNameLimitN(Integer n);
- *
- * NameLengthEntity 中必须有 SQL的字段，如上的name属性
+ * 		@ZQuery(sql = "select name from blobt limit ?;")
+ * 		List<NameEntity> selectNameLimitN(Integer n);
+ *		NameLengthEntity 中必须有 SQL的字段，如上的name属性，否则查出数据Field值为null
  *
  * update : 返回Integer，update的行数 如：
- * @ZQuery(sql = "update blobt set name = ? where id = ?") Integer
+ *		@ZQuery(sql = "update blobt set name = ? where id = ?") Integer
  *             updateNameById(String name,Integer id);
  *
+ * 自定义SQL需要AS时，为兼容PGSQL，AS后面请使用下划线命名法，否则可能导致SQL匹配
+ * 不到returnType中的Field，如：
+ * 		SELECT MAX(id) AS max_id
+ *
+ * 或者 Max_ID / max_ID / max_Id / MAX_id / MAX_ID 等等形式都可以
+ * 只要是下划线命名法就可以，代码中已经处理为toLowerCase然后才匹配returnType中的Field(本例中为maxId)了
  *
  * @author zhangzhen
  * @date 2023年6月16日
@@ -70,25 +75,16 @@ import java.lang.annotation.Target;
 
 // FIXME 2024年5月12日 下午8:43:07 zhangzhen: 自定义 select where xx in (?) 即上面createArrayOf的的问题。还有问题
 
+/**
+ *
+ *
+ * @author zhangzhen
+ * @date 2024年7月2日 下午3:21:29
+ *
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
-// FIXME 2024年5月18日 上午1:06:03 zhangzhen: pgsql遇到的问题2：
-// @ZQuery(sql = "select length(name) as nameLength from blobt limit ?;")
-// nameLength 会在jdbc中取到namelength,导致java class.getDField时获取不到，而mysqljdbc获取到的就是 nameLength
-
-// FIXME 2024年5月24日 下午7:33:13 zhangzhen: 而是发现问题：
-/*
- * 如下两个方法同名，会导致生成的代理类里的sql混乱 ，要debug找出原因，或者为了业务逻辑清晰直接不允许方法同名?
- *
- * @ZQuery(sql = "insert into blobt(name,date) values(?,?);") Integer
- * insertBlobt(String name,Date date);
- *
- * @ZQuery(sql = "insert into blobt(name) values(?);") Integer
- * insertBlobt(String name);
- *
- */
-
 public @interface ZQuery {
 
 	public static final String MAPPER = "ZRMAPPER";

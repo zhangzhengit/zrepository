@@ -1246,11 +1246,11 @@ public class SU {
 		return sua;
 	}
 
-	private static <T> T newT(final DBEnum dbEnum, final Class<T> cls, final ResultSet rs,
+	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int count) {
 		T object = null;
 		try {
-			object = cls.newInstance();
+			object = returnType.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
@@ -1264,7 +1264,11 @@ public class SU {
 			}
 			String columnName = null;
 			try {
-				columnName = metaData.getColumnLabel(i + 1);
+				// pgsql 对于 select max(id) as maxId
+				// 读取到的 columnName 会是maxid ，导致匹配 returnType 中的字段时匹配不到，
+				// 所以统一自定义SQL AS 后面的写法使用下划线命名法.只要是下划线命名法就行了，不关心大小写，
+				// 在此统一为小写了
+				columnName = metaData.getColumnLabel(i + 1).toLowerCase();
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
@@ -1272,18 +1276,17 @@ public class SU {
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 			Field field = null;
 			try {
-				field = cls.getDeclaredField(javaFieldName);
+				field = returnType.getDeclaredField(javaFieldName);
 				field.setAccessible(true);
 			} catch (NoSuchFieldException | SecurityException e) {
-				// 到此就继续，因为cls可能不是@ZEntity 类，而是自定义的类，所以可能column不存在此类中
-				// FIXME 2024年5月19日 下午6:33:27 zhangzhen: 继续支持了根据返回类型T来生成select的字段后，上面这行的问题就不存在了。
+				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
+				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
+				// 有可能是手误多写了一个column，或者少写了一个Field等等情况
+				// 前者会导致多一点流量，后者导致逻辑不通会自己发现的
 				continue;
 			}
 
-			// FIXME 2024年6月14日 下午8:54:51 zhangzhen : 下面2行恢复，debug mysql datetime类型的
-			final Object value = columValue;
-			//			final Object value = handValue(object, columValue, field);
-			if (value == null) {
+			if (columValue == null) {
 				continue;
 			}
 
@@ -1291,60 +1294,60 @@ public class SU {
 			try {
 
 				if (cn.equals(Byte.class.getCanonicalName())) {
-					field.set(object, Byte.valueOf(String.valueOf(value)));
+					field.set(object, Byte.valueOf(String.valueOf(columValue)));
 				} else if (cn.equals(Short.class.getCanonicalName())) {
-					field.set(object, Short.valueOf(String.valueOf(value)));
+					field.set(object, Short.valueOf(String.valueOf(columValue)));
 				} else if (cn.equals(Integer.class.getCanonicalName())) {
-					field.set(object, Integer.valueOf(String.valueOf(value)));
+					field.set(object, Integer.valueOf(String.valueOf(columValue)));
 				} else if (cn.equals(Long.class.getCanonicalName())) {
-					field.set(object, Long.valueOf(String.valueOf(value)));
+					field.set(object, Long.valueOf(String.valueOf(columValue)));
 				} else if (cn.equals(Double.class.getCanonicalName())) {
-					field.set(object, Double.valueOf(String.valueOf(value)));
+					field.set(object, Double.valueOf(String.valueOf(columValue)));
 				} else if (cn.equals(BigDecimal.class.getCanonicalName())) {
-					field.set(object, new BigDecimal(String.valueOf(value)));
+					field.set(object, new BigDecimal(String.valueOf(columValue)));
 				} else if (cn.equals(Boolean.class.getCanonicalName())) {
 					field.set(object,
-							value == null ? null : (Integer.valueOf(1).equals(value) ? Boolean.TRUE : Boolean.FALSE));
+							columValue == null ? null : (Integer.valueOf(1).equals(columValue) ? Boolean.TRUE : Boolean.FALSE));
 				} else if (cn.equals(Character.class.getCanonicalName())) {
-					field.set(object, Character.valueOf(String.valueOf(value).charAt(0)));
+					field.set(object, Character.valueOf(String.valueOf(columValue).charAt(0)));
 				} else if (cn.equals(String.class.getCanonicalName())) {
-					field.set(object, String.valueOf(value));
+					field.set(object, String.valueOf(columValue));
 				} else if (cn.equals(java.util.Date.class.getCanonicalName())) {
-					if ((dbEnum == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
+					if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
-						final java.util.Date date = new Date((long) value);
+						final java.util.Date date = new Date((long) columValue);
 						field.set(object, date);
 					} else {
 						// FIXME 2024年6月14日 下午8:58:41 zhangzhen : mysql datetime 对应java LocalDateTime
-						final boolean equals = value.getClass().equals(LocalDateTime.class);
+						final boolean equals = columValue.getClass().equals(LocalDateTime.class);
 						if (equals) {
 							final Date newDate = Date
-									.from(((LocalDateTime) (value)).atZone(ZoneId.systemDefault()).toInstant());
+									.from(((LocalDateTime) (columValue)).atZone(ZoneId.systemDefault()).toInstant());
 							field.set(object, newDate);
 						} else {
-							field.set(object, value);
+							field.set(object, columValue);
 						}
 					}
 				} else if (cn.equals(java.sql.Date.class.getCanonicalName())) {
-					if ((dbEnum == DBEnum.SQLITE) && (value.getClass() == Long.class)) {
+					if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
-						final java.sql.Date date = new java.sql.Date((long) value);
+						final java.sql.Date date = new java.sql.Date((long) columValue);
 						field.set(object, date);
 					} else {
-						field.set(object, value);
+						field.set(object, columValue);
 					}
 				} else if (cn.equals(java.sql.Timestamp.class.getCanonicalName())) {
 					final DBEnum db = dbEnum;
-					if (value.getClass().equals(Timestamp.class)) {
-						field.set(object, value);
-					} else if (value.getClass() == Long.class) {
+					if (columValue.getClass().equals(Timestamp.class)) {
+						field.set(object, columValue);
+					} else if (columValue.getClass() == Long.class) {
 						// sqlite 中此值为long类型
-						final Timestamp time = new Timestamp((long) value);
+						final Timestamp time = new Timestamp((long) columValue);
 						field.set(object, time);
 					}
 				}  else if (cn.equals(LocalTime.class.getCanonicalName())) {
-					if (value.getClass().equals(Time.class)) {
-						final Time t1 = (Time) value;
+					if (columValue.getClass().equals(Time.class)) {
+						final Time t1 = (Time) columValue;
 						final Calendar c = Calendar.getInstance();
 						c.clear();
 						c.setTimeInMillis(t1.getTime());
@@ -1352,11 +1355,11 @@ public class SU {
 						final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
 								c.get(Calendar.SECOND));
 						field.set(object, of);
-					} else if (value.getClass() == LocalTime.class) {
-						field.set(object, value);
-					} else if (value.getClass() == Integer.class) {
+					} else if (columValue.getClass() == LocalTime.class) {
+						field.set(object, columValue);
+					} else if (columValue.getClass() == Integer.class) {
 
-						final Time time = new Time((int) value);
+						final Time time = new Time((int) columValue);
 						final Calendar c = Calendar.getInstance();
 						c.clear();
 						c.setTimeInMillis(time.getTime());
@@ -1365,27 +1368,27 @@ public class SU {
 								c.get(Calendar.SECOND));
 						field.set(object, of);
 
-					} else if (value.getClass() == Long.class) {
+					} else if (columValue.getClass() == Long.class) {
 						// sqlite 中此值为long类型
-						final Time time = new Time((long) value);
+						final Time time = new Time((long) columValue);
 						field.set(object, time);
 					}
 
 				} else if (cn.equals(java.sql.Time.class.getCanonicalName())) {
 					final DBEnum db = dbEnum;
-					if (value.getClass().equals(Time.class)) {
-						field.set(object, value);
-					} else if (value.getClass() == Integer.class) {
-						final Time time = new Time((int) value);
+					if (columValue.getClass().equals(Time.class)) {
+						field.set(object, columValue);
+					} else if (columValue.getClass() == Integer.class) {
+						final Time time = new Time((int) columValue);
 						field.set(object, time);
-					} else if (value.getClass() == Long.class) {
+					} else if (columValue.getClass() == Long.class) {
 						// sqlite 中此值为long类型
-						final Time time = new Time((long) value);
+						final Time time = new Time((long) columValue);
 						field.set(object, time);
 					}
 				} else if (field.getClass().isArray()) {
 				} else {
-					field.set(object, value);
+					field.set(object, columValue);
 				}
 			} catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
