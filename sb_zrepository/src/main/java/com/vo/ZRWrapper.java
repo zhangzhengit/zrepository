@@ -918,6 +918,9 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, new Object[] { value1, value2 }, SQLOperatorEnum.NOT_BETWEEN);
 	}
 
+	// ----------- 以下方法都是相同语句，即生成[LIMIT]部分：LIMIT M OFFSET N
+	// 调用这些方法中的多个，则以最后调用的为准，即按最后调用的来生成 [LIMIT]部分
+
 	/**
 	 * 构造 LIMIT 条件，多次调用本方法，会以最后一次为准，每次调用本方法，
 	 * 如果已经有了 LIMIT 条件，则本次的覆盖掉上次的
@@ -1002,6 +1005,25 @@ public class ZRWrapper<T> {
 
 		return this.limit(limit, offset);
 	}
+
+	/**
+	 * 	语义同方法：
+	 * 		fetchPage(final Integer page, final Integer size)
+	 *		fetchFirstNRows(final Integer n)
+	 *
+	 * 	区别是，本方法是只取第一页，本方法写死为只取第一页。
+	 * 	如果只需要第一页数据(只取符合条件的前N条)，使用本方法即可，
+	 * 	或者使用 fetchFirstNRows(final Integer n) 都是相同语义
+	 *
+	 * @param size
+	 * @return
+	 */
+	public ZRWrapper<T> fetchFistPage(final Integer size) {
+		return this.fetchPage(ONE, size);
+	}
+
+	// ----------- 以上方法都是相同语义，即生成[LIMIT]部分：LIMIT M OFFSET N
+	// 调用这些方法中的多个，则以最后调用的为准，即按最后调用的来生成 [LIMIT]部分
 
 	/**
 	 * 添加一个升序排序条件
