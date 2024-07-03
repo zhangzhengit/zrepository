@@ -1238,13 +1238,13 @@ public class SU {
 			return supplier.get();
 		}
 
-		final int transactionIsolation = getTransactionIsolation(zc2);
+		final ZIsolationEnum isolationEnum = zc2.getIsolationEnum();
 
 		// MYSQL和PGSQL在 读未提交/读已提交 的隔离级别下，不使用事务内缓存
 		// 只有在 可重复读/串行化 的级别时才使用
 		if (((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.POSTGRESQL))
-				&& ((transactionIsolation != Connection.TRANSACTION_SERIALIZABLE)
-						&& (transactionIsolation != Connection.TRANSACTION_REPEATABLE_READ))) {
+				&& ((isolationEnum != ZIsolationEnum.SERIALIZABLE)
+						&& (isolationEnum != ZIsolationEnum.REPEATABLE_READ))) {
 
 			return supplier.get();
 		}
@@ -1260,13 +1260,6 @@ public class SU {
 			final Object v = ZRC.computeIfAbsent(key, supplier, true);
 			return v;
 		}
-	}
-
-	private static int getTransactionIsolation(final ZC2 zc2) {
-		final ZIsolationEnum isolationEnum = zc2.getIsolationEnum();
-
-		final int isolation = isolationEnum == null ? ZIsolationEnum.DEFAULT.getIsolation() : isolationEnum.getIsolation();
-		return isolation;
 	}
 
 	// FIXME 2024年7月2日 下午11:01:31 zhangzhen : 当前只有本方法支持了事务内缓存，其他select操作的方法继续加

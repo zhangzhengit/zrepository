@@ -118,8 +118,9 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
 
 		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
-		final ZIsolationEnum isolationEnum = zTransaction == null ? ZIsolationEnum.DEFAULT :
-			zTransaction.isolation();
+		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
+				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getDefaultTransactionIsolation()) :
+					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
@@ -191,9 +192,11 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZConnection zConnection = c
 				.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
+
 		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
-		final ZIsolationEnum isolationEnum = zTransaction == null ? ZIsolationEnum.DEFAULT :
-			zTransaction.isolation();
+		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
+				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getDefaultTransactionIsolation()) :
+					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
