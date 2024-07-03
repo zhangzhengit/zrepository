@@ -589,7 +589,7 @@ public class SU {
 		return false;
 	}
 
-	public static <T> List<Object> saveAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sqlParam,
+	public static <T> List<Object> saveAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql,
 			final List<T> tList) {
 
 		if (CollUtil.isEmpty(tList)) {
@@ -614,7 +614,7 @@ public class SU {
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tl2.size());
 			for (final T t : tl2) {
 				try {
-					final Object[] a = save0(zc.getDbEnum(), cls, t, sqlParam, connection, null);
+					final Object[] a = save0(zc.getDbEnum(), cls, t, sql, connection, null);
 					final ResultSet rs = (ResultSet) a[0];
 					if (rs.next()) {
 						final Object id = rs.getObject(1);
@@ -631,7 +631,7 @@ public class SU {
 
 		case MYSQL:
 		case POSTGRESQL:
-			return saveAllMysqlAndPGSQL(mode, cls, sqlParam, tl2);
+			return saveAllMysqlAndPGSQL(mode, cls, sql, tl2);
 
 		default:
 			break;
@@ -753,19 +753,26 @@ public class SU {
 	}
 
 	private static <T> String generateSaveAllSQL(final Class<T> cls, final String sql) {
-		final StringJoiner arg = new StringJoiner(",");
-		final StringJoiner v = new StringJoiner(",");
-		for (final Field field : cls.getDeclaredFields()) {
-			if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
-				continue;
+
+		final Supplier<String> supplier = () -> {
+			final StringJoiner arg = new StringJoiner(",");
+			final StringJoiner v = new StringJoiner(",");
+			for (final Field field : cls.getDeclaredFields()) {
+				if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
+					continue;
+				}
+
+				final String dbFieldname = ZFieldConverter.toDbField(field.getName());
+				arg.add(dbFieldname);
+				v.add("?");
 			}
 
-			final String dbFieldname = ZFieldConverter.toDbField(field.getName());
-			arg.add(dbFieldname);
-			v.add("?");
-		}
+			return sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES, v.toString());
+		};
 
-		return sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES, v.toString());
+		final String key = cls.getCanonicalName() + "@" + sql;
+
+		return ZRC.computeIfAbsent(key, supplier);
 	}
 
 	public static <T> T save(final String zrSubClassName, final String callerMethodName,
