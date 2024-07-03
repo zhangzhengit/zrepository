@@ -119,7 +119,7 @@ public class ZTransactionAOP implements ZIAOP {
 
 		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
 		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
-				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getDefaultTransactionIsolation()) :
+				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getTransactionIsolation()) :
 					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
@@ -159,7 +159,7 @@ public class ZTransactionAOP implements ZIAOP {
 	private static void resetToDefaultTransactionIsolation() {
 		try {
 			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setTransactionIsolation(
-					ZCONNECTION_THREADLOCAL.get().getZConnection().getDefaultTransactionIsolation());
+					ZCONNECTION_THREADLOCAL.get().getZConnection().getTransactionIsolation());
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
@@ -195,7 +195,7 @@ public class ZTransactionAOP implements ZIAOP {
 
 		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
 		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
-				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getDefaultTransactionIsolation()) :
+				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getTransactionIsolation()) :
 					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 

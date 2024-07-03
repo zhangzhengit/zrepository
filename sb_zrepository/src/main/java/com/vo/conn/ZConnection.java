@@ -38,9 +38,9 @@ public class ZConnection {
 	private Connection connection;
 
 	/**
-	 * 数据库默认隔离级别
+	 * java.sql.Connnection对象创建时，此对象的默认隔离级别
 	 */
-	private int defaultTransactionIsolation;
+	private int transactionIsolation;
 
 	/**
 	 * 回滚事务
@@ -87,8 +87,8 @@ public class ZConnection {
 			zc.setUserName(p.getDatasourceUsername());
 			zc.setPwd(p.getDatasourcePassword());
 
-			final int defaultTransactionIsolation = connection.getMetaData().getDefaultTransactionIsolation();
-			zc.setDefaultTransactionIsolation(defaultTransactionIsolation);
+			final int transactionIsolation = connection.getTransactionIsolation();
+			zc.setTransactionIsolation(transactionIsolation);
 
 			final DataSourceDTO dataSourceDTO = ZRepositoryMain.findCatalog(p.getDatasourceUrl());
 			zc.setDbEnum(dataSourceDTO.getDbEnum());
