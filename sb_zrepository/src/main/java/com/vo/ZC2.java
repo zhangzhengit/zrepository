@@ -37,6 +37,10 @@ public class ZC2 {
 		this.keyList.add(key);
 	}
 
+	public ZC2(final ZConnection zConnection, final ZCSourceEnum sourceEnum) {
+		this(zConnection, sourceEnum, null);
+	}
+
 	public ZC2(final ZConnection zConnection, final ZCSourceEnum sourceEnum, final String transactionId) {
 		this.zConnection = zConnection;
 		this.sourceEnum = sourceEnum;

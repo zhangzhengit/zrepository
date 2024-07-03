@@ -946,21 +946,6 @@ public class SU {
 	private static ZC2 getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
 		final ZC2 zcT = ZTransactionAOP.getCurrentZConnection();
 		if (zcT != null) {
-			try {
-				final ZIsolationEnum isolationEnum = zcT.getIsolationEnum();
-				if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
-					zcT.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
-				} else {
-					// 在此pgslq 报错：org.postgresql.util.PSQLException: 不能在事务交易过程中改变事物交易隔绝等级。
-					// 所以在 在AOP类里 rollback/commit之后再重置为默认隔离级别
-					// 之前遇到过pgsql的5 6 个问题，都是mysql可以测试通过而pgsql没法通过
-					//	zcT.getZConnection().getConnection().setTransactionIsolation(zcT.getZConnection().getDefaultTransactionIsolation());
-				}
-
-				zcT.getZConnection().getConnection().setAutoCommit(false);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
 			return zcT;
 		}
 
@@ -971,7 +956,7 @@ public class SU {
 			e.printStackTrace();
 		}
 
-		return new ZC2(zc, ZCSourceEnum.ZCPOOL, null);
+		return new ZC2(zc, ZCSourceEnum.ZCPOOL);
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -1252,7 +1237,7 @@ public class SU {
 		// 只有在 可重复读/串行化 的级别时才使用
 		if (((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.POSTGRESQL))
 				&& ((transactionIsolation != Connection.TRANSACTION_SERIALIZABLE)
-				&& (transactionIsolation != Connection.TRANSACTION_REPEATABLE_READ))) {
+						&& (transactionIsolation != Connection.TRANSACTION_REPEATABLE_READ))) {
 
 			return supplier.get();
 		}

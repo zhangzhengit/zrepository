@@ -25,7 +25,33 @@ import com.vo.conn.ZDatasourcePropertiesLoader;
 
 
 /**
- * 拦截 @ZTransaction 标记的方法,执行成功后提交事务，出现异常则回滚事务
+ * 拦截 @ZTransaction 标记的方法,
+ * 执行成功后提交事务，出现异常则回滚事务
+ *
+ * 整体流程：
+ * 1、在目标方法执行前，取一个java.sql.Connection对象，
+ *
+ * 2、在try里执行：
+ * 	  根据 @ZTransaction.isolation 配置本事务的隔离级别
+ * 	  设置非自动提交，放在ThreadLocal里，开始执行目标方法
+ *
+ * 3、各个目标方法(SU中的各个方法)都优先从本类[getCurrentZConnection]方法取连接对象:
+ * 		1、取到了则说明当前方法(目标方法)是事务控制，则目标方法下的每个
+	  	   ZRepository 里的操作取的都是同一个连接对象。所有操作都用这
+	  	   同一个连接对象来执行。
+	  	2、没取到连接，则继续从连接池中取然后执行后面流程。没取到则说明模板方法不是由 @ZTransaction 控制，则
+ 	  	   在目标方法执行的整个过程中，本类的[around]方法都不会执行，即本类不参与目标
+    	   方法的Connection对象管理过程，getCurrentZConnection 只作为一个普通的静态方法来使用，本文档的
+    	   5个步骤都不会执行，也就没有前面的配置事务隔离级别和后面的回滚/提交事务等等
+ *
+ * 4、第3步执行正常结束，则在try代码块末尾执行 connection.commit() 来提交事务
+ * 	  第3步执行出现异常(代码自动抛出异常/手动抛出异常/ZTransactionAOP.rollback())，
+ * 			则try代码块剩下代码不再执行，直接跳往catch代码块里
+ *    		执行 connection.rollback() 来回滚事务
+ *
+ * 5、最后执行finally代码块：重置连接隔离级别为默认值、归还连接对象、
+ * 	  清除 ThreadLocal 的值、清除事务内缓存值 等等
+ * 	  到此，本类的 @ZTransaction 事务控制流程结束
  *
  * @author zhangzhen
  * @date 2023年6月17日
@@ -96,21 +122,26 @@ public class ZTransactionAOP implements ZIAOP {
 			zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
+		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
+			try {
+				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
 			zConnection.getConnection().setAutoCommit(false);
 			final Object v = proceedingJoinPoint.proceed();
+			commit();
 			return v;
 		} catch (final Throwable e) {
 			e.printStackTrace();
-
 			rollback();
 
-			resetToDefaultTransactionIsolation();
-
 		} finally {
-			commit();
 
 			resetToDefaultTransactionIsolation();
 
@@ -164,24 +195,33 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZIsolationEnum isolationEnum = zTransaction == null ? ZIsolationEnum.DEFAULT :
 			zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
+
+		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
+			try {
+				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
 			zConnection.getConnection().setAutoCommit(false);
 			final Object v = aopParameter.invoke();
+			commit();
 			return v;
 		} catch (final Throwable e) {
 			e.printStackTrace();
 
 			rollback();
-			resetToDefaultTransactionIsolation();
 
 		} finally {
-			commit();
 
 			resetToDefaultTransactionIsolation();
 
-			ZCPool.getInstance(defaultDatsourceName).returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+			ZCPool.getInstance(defaultDatsourceName)
+			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
 			clear();
 			ZRC.clear(zc2.getKeyList());
