@@ -129,6 +129,12 @@ public class ZTransactionAOP implements ZIAOP {
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
+
+			// 加入 connection.setAutoCommit(true);
+			// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
+			// 不能在事务交易过程中改变事物交易隔绝等级。
+			connection.setAutoCommit(true);
+
 			if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 					&& (connection.getTransactionIsolation() != isolationEnum.getIsolation())) {
 				connection.setTransactionIsolation(isolationEnum.getIsolation());
@@ -200,9 +206,14 @@ public class ZTransactionAOP implements ZIAOP {
 					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
+
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
 			try {
+				// 加入 connection.setAutoCommit(true);
+				// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
+				// 不能在事务交易过程中改变事物交易隔绝等级。
+				zc2.getZConnection().getConnection().setAutoCommit(true);
 				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
 			} catch (final SQLException e) {
 				e.printStackTrace();
