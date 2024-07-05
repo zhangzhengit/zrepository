@@ -1,7 +1,6 @@
 package com.vo.transaction;
 
 import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -110,37 +109,10 @@ public class ZTransactionAOP implements ZIAOP {
 	public final Object around(final ProceedingJoinPoint proceedingJoinPoint) {
 		final Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 
-		// FIXME 2024年5月31日 下午5:24:42 zhangzhen :
-		// 考虑好，如果依赖的数据源名称不是zdatasource.properties要怎么办？
-		// 提前把Method和dataSourceName存起来，在此根据Method取出？
-		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
-		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
-		final ZConnection zConnection = c.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
-		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
-
-		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
-		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
-				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getTransactionIsolation()) :
-					zTransaction.isolation();
-		zc2.setIsolationEnum(isolationEnum);
-
-		final Connection connection = zc2.getZConnection().getConnection();
-
-		ZCONNECTION_THREADLOCAL.set(zc2);
+		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
 		try {
-
-			// 加入 connection.setAutoCommit(true);
-			// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
-			// 不能在事务交易过程中改变事物交易隔绝等级。
-			connection.setAutoCommit(true);
-
-			if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
-					&& (connection.getTransactionIsolation() != isolationEnum.getIsolation())) {
-				connection.setTransactionIsolation(isolationEnum.getIsolation());
-			}
-
-			connection.setAutoCommit(false);
+			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setAutoCommit(false);
 
 			final Object v = proceedingJoinPoint.proceed();
 			commit();
@@ -156,11 +128,50 @@ public class ZTransactionAOP implements ZIAOP {
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
+			ZRC.clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
+
 			clear();
-			ZRC.clear(zc2.getKeyList());
 		}
 
 		return null;
+	}
+
+	private static String before(final Method method) {
+		// FIXME 2024年5月31日 下午5:24:42 zhangzhen :
+		// 考虑好，如果依赖的数据源名称不是zdatasource.properties要怎么办？
+		// 提前把Method和dataSourceName存起来，在此根据Method取出？
+		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
+		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
+		final ZConnection zConnection = c.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
+		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
+
+		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
+		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
+				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getTransactionIsolation()) :
+					zTransaction.isolation();
+		zc2.setIsolationEnum(isolationEnum);
+
+		// 加入 connection.setAutoCommit(true);
+		// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
+		// 不能在事务交易过程中改变事物交易隔绝等级。
+		try {
+			zc2.getZConnection().getConnection().setAutoCommit(true);
+		} catch (final SQLException e1) {
+			e1.printStackTrace();
+		}
+
+		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
+				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
+			try {
+				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		ZCONNECTION_THREADLOCAL.set(zc2);
+
+		return defaultDatsourceName;
 	}
 
 	private static void resetToDefaultTransactionIsolation() {
@@ -193,43 +204,17 @@ public class ZTransactionAOP implements ZIAOP {
 	public Object around(final AOPParameter aopParameter) {
 
 		final Method method = aopParameter.getMethod();
-
-		final String defaultDatsourceName = ZDatasourcePropertiesLoader.DEFAULT_DATSOURCE_NAME;
-		final ZCPool c = ZCPool.getInstance(defaultDatsourceName);
-		final ZConnection zConnection = c
-				.getZConnection(method.isAnnotationPresent(ZRead.class) ? Mode.READ : Mode.WRITE);
-		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
-
-		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
-		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
-				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getTransactionIsolation()) :
-					zTransaction.isolation();
-		zc2.setIsolationEnum(isolationEnum);
-
-
-		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
-				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
-			try {
-				// 加入 connection.setAutoCommit(true);
-				// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
-				// 不能在事务交易过程中改变事物交易隔绝等级。
-				zc2.getZConnection().getConnection().setAutoCommit(true);
-				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-		}
-
-		ZCONNECTION_THREADLOCAL.set(zc2);
+		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
 		try {
-			zConnection.getConnection().setAutoCommit(false);
+
+			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setAutoCommit(false);
+
 			final Object v = aopParameter.invoke();
 			commit();
 			return v;
 		} catch (final Throwable e) {
 			e.printStackTrace();
-
 			rollback();
 
 		} finally {
@@ -239,8 +224,9 @@ public class ZTransactionAOP implements ZIAOP {
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
+			ZRC.clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
+
 			clear();
-			ZRC.clear(zc2.getKeyList());
 		}
 
 		return null;
