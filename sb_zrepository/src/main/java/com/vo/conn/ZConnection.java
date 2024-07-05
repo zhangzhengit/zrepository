@@ -80,23 +80,23 @@ public class ZConnection {
 			final Connection connection =
 					StrUtil.isEmpty(userName) ? DriverManager.getConnection(url)
 							: DriverManager.getConnection(url, userName, pwd);
-			final ZConnection zc = new ZConnection();
+			final ZConnection zConnection = new ZConnection();
 
-			zc.setDriverClass(p.getDatasourceDriverClass());
-			zc.setUrl(p.getDatasourceUrl());
-			zc.setUserName(p.getDatasourceUsername());
-			zc.setPwd(p.getDatasourcePassword());
+			zConnection.setDriverClass(p.getDatasourceDriverClass());
+			zConnection.setUrl(p.getDatasourceUrl());
+			zConnection.setUserName(p.getDatasourceUsername());
+			zConnection.setPwd(p.getDatasourcePassword());
 
 			final int transactionIsolation = connection.getTransactionIsolation();
-			zc.setTransactionIsolation(transactionIsolation);
+			zConnection.setTransactionIsolation(transactionIsolation);
 
 			final DataSourceDTO dataSourceDTO = ZRepositoryMain.findCatalog(p.getDatasourceUrl());
-			zc.setDbEnum(dataSourceDTO.getDbEnum());
+			zConnection.setDbEnum(dataSourceDTO.getDbEnum());
 
-			zc.setBusy(false);
-			zc.setConnection(connection);
+			zConnection.setBusy(false);
+			zConnection.setConnection(connection);
 
-			return zc;
+			return zConnection;
 
 		} catch (final SQLException e) {
 			final String exceptionMessage = gExceptionMessage(e);

@@ -1,6 +1,7 @@
 package com.vo.transaction;
 
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -123,18 +124,18 @@ public class ZTransactionAOP implements ZIAOP {
 					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
-		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
-			try {
-				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-		}
+		final Connection connection = zc2.getZConnection().getConnection();
 
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
 		try {
-			zConnection.getConnection().setAutoCommit(false);
+			if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
+					&& (connection.getTransactionIsolation() != isolationEnum.getIsolation())) {
+				connection.setTransactionIsolation(isolationEnum.getIsolation());
+			}
+
+			connection.setAutoCommit(false);
+
 			final Object v = proceedingJoinPoint.proceed();
 			commit();
 			return v;
@@ -199,7 +200,8 @@ public class ZTransactionAOP implements ZIAOP {
 					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
-		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)) {
+		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
+				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
 			try {
 				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
 			} catch (final SQLException e) {

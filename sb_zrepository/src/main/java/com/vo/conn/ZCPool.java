@@ -284,13 +284,13 @@ public class ZCPool {
 				.filter(zc -> zc.getConnection() == zConnection.getConnection()).findAny();
 		if (findAnyWRITE.isPresent()) {
 			this.writeVector.remove(findAnyWRITE.get());
-			LOG.warn("成功删除一个[写]连接ZConnection={}", zConnection);
+			LOG.info("成功删除一个[写]连接ZConnection={}", zConnection);
 		} else {
 			final Optional<ZConnection> findAnyREAD = this.readVector.stream()
 					.filter(zc -> zc.getConnection() == zConnection.getConnection()).findAny();
 			if (findAnyREAD.isPresent()) {
 				this.readVector.remove(findAnyREAD.get());
-				LOG.warn("成功删除一个[读]连接ZConnection={}", zConnection);
+				LOG.info("成功删除一个[读]连接ZConnection={}", zConnection);
 			}
 		}
 	}
