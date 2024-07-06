@@ -1,5 +1,6 @@
 package com.vo;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -373,9 +374,15 @@ public class ZRepositoryMain {
 			final DatabaseMetaData metaData = connection.getMetaData();
 			rs = metaData.getTables(null, null, tableName, null);
 			if (!rs.next()) {
-				throw new IllegalArgumentException(
-						ZEntity.class.getSimpleName() + " 指定的tableName不存在，tableName = " + tableName);
+				throw new ZRepositoryException(
+						"\r\n\t"
+								+  ZEntity.class.getSimpleName() + " 指定的tableName不存在，tableName = " + tableName
+								+  "\r\n\t"
+								+ "dataSourceName = " + dataSourceName
+								+  "\r\n\t"
+						);
 			}
+
 		} catch (final SQLException e) {
 			e.printStackTrace();
 			try {
@@ -2527,14 +2534,12 @@ public class ZRepositoryMain {
 		}
 
 		if (url.toLowerCase().contains("sqlite")) {
-			final String keyword = "/";
 			final String k = ".db";
 			final int i = url.lastIndexOf(k);
 			if (i > -1) {
-				final int is = url.lastIndexOf("\\", i);
+				final int is = url.lastIndexOf(File.separator, i);
 				if (is > -1) {
 					final String name = url.substring(is + 1, i);
-					final int x = 1;
 					return new DataSourceDTO(name, DBEnum.SQLITE);
 				}
 			}

@@ -169,8 +169,7 @@ public class ZDatasourcePropertiesLoader {
 		write.setDatasourceUrl(url);
 
 		final String userName = propertiesConfiguration.getString("datasource.write.username");
-		if(StrUtil.isEmpty(userName) && !notNeedUserNameAndPassword) {
-
+		if (StrUtil.isEmpty(userName) && !notNeedUserNameAndPassword) {
 			LOG.error("datasource.write.username 不存在");
 			System.exit(0);
 		}
