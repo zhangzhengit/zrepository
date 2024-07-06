@@ -311,6 +311,8 @@ public class ZCPool {
 		LOG.info("开始初始化数据源,properties文件名称=[{}]", dataSourceName);
 		final ZDatasourceProperties zdp = ZDatasourcePropertiesLoader.getInstance(dataSourceName);
 
+		// FIXME 2024年7月6日 下午5:07:26 zhangzhen : 发现问题：并行测试 事务问题时，返现max设为1，@Test会一直卡着没反应，
+		// 还没查找原因，要不要 mysql/pgsql下max限制为最小为2？
 		final P write = zdp.getWrite();
 		this.newWriteConnection(write);
 
