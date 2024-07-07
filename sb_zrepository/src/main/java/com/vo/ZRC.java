@@ -34,6 +34,15 @@ public class ZRC {
 		}
 
 		synchronized (k.intern()) {
+
+			final Object vF1 = CACHE.get(k);
+			if (vF1 != null) {
+				if (NULL_VALUE.equals(vF1)) {
+					return null;
+				}
+				return (T) vF1;
+			}
+
 			final Object v2 = supplier.get();
 			final Object vStore = v2 != null ? v2 : (storeNull ? NULL_VALUE : null);
 			CACHE.put(k, vStore);
