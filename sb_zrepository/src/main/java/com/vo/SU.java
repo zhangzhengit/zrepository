@@ -1305,7 +1305,7 @@ public class SU {
 						entityClass.getAnnotation(ZEntity.class).tableName());
 				return t;
 			} finally {
-				returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
+				returnZConnectionIfZCPool(dataSourceName, zc);
 			}
 		};
 
@@ -2460,8 +2460,8 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionAndCommit(getDataSourceNameFromClassType(entityClass), zc);
 			close(rs, ps);
+			returnZConnectionIfZCPool(dataSourceName, zc2);
 		}
 
 		return 0L;
