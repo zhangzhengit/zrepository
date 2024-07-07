@@ -1091,7 +1091,15 @@ public class SU {
 		}
 
 		// idList 应该还可以进一步处理，比如排序
-		final String cachekey = mode + "@" + entityClass.getCanonicalName() + "@" + sql + "@" + idList;
+		final String cachekey =
+				zrSubClassName + "@"
+						+ callerMethodName + "@"
+						+ mode + "@"
+						+ entityClass.getCanonicalName() + "@"
+						+ sql + "@"
+						+ idList.get(0).getClass().getCanonicalName() + "@"
+						+ idList;
+
 		final ZC2 zc2 = getZCAndSetAutoCommitFALSE(mode, getDataSourceNameFromClassType(entityClass));
 
 		final Supplier<List<T>> supplier = () -> findByIdIn0(zrSubClassName, callerMethodName, mode, idList, entityClass, sql, zc2);
@@ -1301,7 +1309,16 @@ public class SU {
 			}
 		};
 
-		final String cachekey = mode + "@" + entityClass.getCanonicalName() + "@" + sql + "@" + id;
+
+		final String cachekey =
+				zrSubClassName + "@"
+						+ callerMethodName + "@"
+						+ mode + "@"
+						+ entityClass.getCanonicalName() + "@"
+						+ sql + "@"
+						+ id.getClass().getCanonicalName() + "@"
+						+ id;
+
 		return (T) selectFromCacheIfZT(cachekey, zc, supplier);
 	}
 
@@ -1551,10 +1568,33 @@ public class SU {
 		return joiner.toString();
 	}
 
-	public static <T> List<T> findByXX(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass,final Class<T> returnType, final String sql, final Object fieldValue) {
+	public static <T> List<T> findByXX(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Class<T> entityClass, final Class<T> returnType, final String sql, final Object fieldValue) {
 
-		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
-		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final ZC2 zc2 = getZCAndSetAutoCommitFALSE(mode, getDataSourceNameFromClassType(entityClass));
+
+		// fieldValue 为null，没法使用缓存，因为不确定其类型，因为这个XX可以是任何字段任何类型
+		if (fieldValue == null) {
+			return findByXX0(entityClass, returnType, sql, fieldValue, zc2);
+		}
+
+		final Supplier<List<T>> supplier = () -> findByXX0(entityClass, returnType, sql, fieldValue, zc2);
+
+		final String cachekey =
+				zrSubClassName + "@"
+						+ callerMethodName + "@"
+						+ mode + "@"
+						+ entityClass.getCanonicalName() + "@"
+						+ returnType.getCanonicalName() + "@"
+						+ sql + "@"
+						+ fieldValue.getClass().getCanonicalName() + "@"
+						+ fieldValue;
+
+		return (List<T>) selectFromCacheIfZT(cachekey, zc2, supplier);
+	}
+
+	private static <T> List<T> findByXX0(final Class<T> entityClass, final Class<T> returnType, final String sql,
+			final Object fieldValue, final ZC2 zc) {
 		final Connection connection = zc.getZConnection().getConnection();
 
 		PreparedStatement ps = null;
@@ -1567,7 +1607,7 @@ public class SU {
 			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, x, null, zc);
 			final String s = sua.getSql();
 
-			if (isShowSQL(dataSourceName)) {
+			if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
@@ -1597,7 +1637,7 @@ public class SU {
 			e.printStackTrace();
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionIfZCPool(getDataSourceNameFromClassType(entityClass), zc);
 		}
 
 		return Collections.emptyList();
