@@ -100,8 +100,10 @@ public class ZConnection {
 
 		} catch (final SQLException e) {
 			final String exceptionMessage = gExceptionMessage(e);
-			LOG.error("获取新连接失败,exceptionMessage={}", exceptionMessage);
+			LOG.error("创建数据库连接失败,exceptionMessage={}", exceptionMessage);
 			e.printStackTrace();
+			LOG.error("创建数据库连接失败,已关闭程序.请看上面的异常信息");
+			System.exit(0);
 		}
 
 		return null;
