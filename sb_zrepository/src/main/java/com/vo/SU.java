@@ -1090,20 +1090,31 @@ public class SU {
 			return Collections.emptyList();
 		}
 
+		// idList 应该还可以进一步处理，比如排序
+		final String cachekey = mode + "@" + entityClass.getCanonicalName() + "@" + sql + "@" + idList;
+		final ZC2 zc2 = getZCAndSetAutoCommitFALSE(mode, getDataSourceNameFromClassType(entityClass));
+
+		final Supplier<List<T>> supplier = () -> findByIdIn0(zrSubClassName, callerMethodName, mode, idList, entityClass, sql, zc2);
+
+		return (List<T>) selectFromCacheIfZT(cachekey, zc2, supplier);
+	}
+
+	private static <T> List<T> findByIdIn0(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final List<Object> idList, final Class<T> entityClass, final String sql, final ZC2 zc2) {
+
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final HashSet<Object> idSet = Sets.newHashSet(idList);
 
 		final Date invokeTime = new Date();
 
-		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
-		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final Connection connection = zc.getZConnection().getConnection();
+		final Connection connection = zc2.getZConnection().getConnection();
 
 		final long start = System.currentTimeMillis();
 
 		final String select = gSelectFromReturnType(entityClass, entityClass);
 		final String sql2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
-		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql2, null, zc);
+		final SUA sua = excludedDeletedHandler(entityClass, null, entityClass, sql2, null, zc2);
 		final String s = sua.getSql();
 
 		PreparedStatement ps = null;
@@ -1130,7 +1141,7 @@ public class SU {
 			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idSet.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
+				final T t = newT(zc2.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				rList.add(t);
 			}
 
@@ -1147,7 +1158,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionIfZCPool(dataSourceName, zc2);
 		}
 
 		return Collections.emptyList();
