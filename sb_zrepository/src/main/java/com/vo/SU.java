@@ -1289,37 +1289,55 @@ public class SU {
 			return null;
 		}
 
-		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
-		final Date invokeTime = new Date();
-		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-		final ZCSourceEnum sourceEnum = zc.getSourceEnum();
-
-		final Supplier supplier = () -> {
-			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
-			final String sql2 = sua.getSql();
-
-			try {
-				final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2,
-						zc.getZConnection());
-				saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
-						entityClass.getAnnotation(ZEntity.class).tableName());
-				return t;
-			} finally {
-				returnZConnectionIfZCPool(dataSourceName, zc);
-			}
-		};
+		// FIXME 2024年7月9日 上午1:15:32 zhangzhen : @Test发现的严重bug：
+		// 在 saveAll 拿到idList然后并行测试 allMatch (id -> findById(id).getId().equals(id)) 中
+		// findById(id) 偶尔返回null。
+		// 实在本方法加入了ZRC事务内缓存后执行@Test发现的的，但是现在问题是：
+		// 1、即使改回ZRC之前的代码，仍然偶尔返回null
+		// 2、只有连接池配置为1个连接时，才不会出现null，因为所有的执行对象都要排队执行。大于1个就会偶现null
+		// 3、想了方法，比如：在一个method内取Connection，都返回同一个对象，似乎不行，因为上面的@Test是并行的，似乎没法准确判断Thread执行
+		// 堆栈信息
+		// 4、问了chatgpt，说尝试saveAll 后sleep一下，还是不行。
+		// 5、只有使用下面方法： synchronized (entityClass.getCanonicalName().intern()) 暂时解决了问题
+		// 但是这样就限制了一个TABLE的findById方法只能排队执行了。太差了
 
 
-		final String cachekey =
-				zrSubClassName + "@"
-						+ callerMethodName + "@"
-						+ mode + "@"
-						+ entityClass.getCanonicalName() + "@"
-						+ sql + "@"
-						+ id.getClass().getCanonicalName() + "@"
-						+ id;
+		synchronized (entityClass.getCanonicalName().intern()) {
 
-		return (T) selectFromCacheIfZT(cachekey, zc, supplier);
+			final String dataSourceName = getDataSourceNameFromClassType(entityClass);
+			final Date invokeTime = new Date();
+			final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+			final ZCSourceEnum sourceEnum = zc.getSourceEnum();
+
+			final Supplier supplier = () -> {
+				final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
+				final String sql2 = sua.getSql();
+
+				try {
+					final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2,
+							zc.getZConnection());
+					saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
+							entityClass.getAnnotation(ZEntity.class).tableName());
+					return t;
+				} finally {
+					returnZConnectionIfZCPool(dataSourceName, zc);
+				}
+			};
+
+
+			final String cachekey =
+					zrSubClassName + "@"
+							+ callerMethodName + "@"
+							+ mode + "@"
+							+ entityClass.getCanonicalName() + "@"
+							+ sql + "@"
+							+ id.getClass().getCanonicalName() + "@"
+							+ id;
+
+			return (T) selectFromCacheIfZT(cachekey, zc, supplier);
+
+		}
+
 	}
 
 	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,
