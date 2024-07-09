@@ -1301,43 +1301,55 @@ public class SU {
 		// 5、只有使用下面方法： synchronized (entityClass.getCanonicalName().intern()) 暂时解决了问题
 		// 但是这样就限制了一个TABLE的findById方法只能排队执行了。太差了
 
+		// FIXME 2024年7月9日 下午8:25:55 zhangzhen : ubuntu docker 1071324756/postgresql-11-with-zhparser
+		// 和win10 安装的pgsql12(从官网下载的)。都会出现上述问题，只有加入这样sync来解决了。
+		// ubuntu docker  1071324756/percona-mysql-5.7和win10安装的mysql-9.0 都没问题。sqlite也没问题(sqlite暂时所有测试都是用的单连接)
 
-		synchronized (entityClass.getCanonicalName().intern()) {
-
-			final String dataSourceName = getDataSourceNameFromClassType(entityClass);
-			final Date invokeTime = new Date();
-			final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
-			final ZCSourceEnum sourceEnum = zc.getSourceEnum();
-
-			final Supplier supplier = () -> {
-				final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
-				final String sql2 = sua.getSql();
-
-				try {
-					final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2,
-							zc.getZConnection());
-					saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
-							entityClass.getAnnotation(ZEntity.class).tableName());
-					return t;
-				} finally {
-					returnZConnectionIfZCPool(dataSourceName, zc);
-				}
-			};
-
-
-			final String cachekey =
-					zrSubClassName + "@"
-							+ callerMethodName + "@"
-							+ mode + "@"
-							+ entityClass.getCanonicalName() + "@"
-							+ sql + "@"
-							+ id.getClass().getCanonicalName() + "@"
-							+ id;
-
-			return (T) selectFromCacheIfZT(cachekey, zc, supplier);
-
+		final DBEnum db = ZRepositoryMain.getDB(entityClass.getAnnotation(ZEntity.class).dataSourceName());
+		if (db == DBEnum.POSTGRESQL) {
+			synchronized (entityClass.getCanonicalName().intern()) {
+				return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
+			}
+		} else if ((db == DBEnum.MYSQL) || (db == DBEnum.SQLITE)) {
+			return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
 		}
 
+		return null;
+	}
+
+	private static <T> T findById1(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Object id, final Class<T> entityClass, final String sql) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
+		final Date invokeTime = new Date();
+		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+		final ZCSourceEnum sourceEnum = zc.getSourceEnum();
+
+		final Supplier supplier = () -> {
+			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
+			final String sql2 = sua.getSql();
+
+			try {
+				final T t = findById0(zc.getZConnection().getDbEnum(), mode, id, entityClass, sql2,
+						zc.getZConnection());
+				saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
+						entityClass.getAnnotation(ZEntity.class).tableName());
+				return t;
+			} finally {
+				returnZConnectionIfZCPool(dataSourceName, zc);
+			}
+		};
+
+
+		final String cachekey =
+				zrSubClassName + "@"
+						+ callerMethodName + "@"
+						+ mode + "@"
+						+ entityClass.getCanonicalName() + "@"
+						+ sql + "@"
+						+ id.getClass().getCanonicalName() + "@"
+						+ id;
+
+		return (T) selectFromCacheIfZT(cachekey, zc, supplier);
 	}
 
 	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,
