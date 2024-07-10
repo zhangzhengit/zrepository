@@ -1090,7 +1090,22 @@ public class SU {
 			return Collections.emptyList();
 		}
 
-		// idList 应该还可以进一步处理，比如排序
+		// 本方法也是findById 一样，又saveAll并行执行 finById/findByIdIn偶尔返回null的问题，也暂时如下处理加入sync
+		final DBEnum db = ZRepositoryMain.getDB(entityClass.getAnnotation(ZEntity.class).dataSourceName());
+		if ((db == DBEnum.POSTGRESQL)) {
+			synchronized (entityClass.getCanonicalName().intern()) {
+				return findByIdIn1(zrSubClassName, callerMethodName, mode, idList, entityClass, sql);
+			}
+		} else if ((db == DBEnum.MYSQL) || (db == DBEnum.SQLITE)) {
+			// idList 应该还可以进一步处理，比如排序
+			return findByIdIn1(zrSubClassName, callerMethodName, mode, idList, entityClass, sql);
+		}
+		
+		return Collections.emptyList();
+	}
+
+	private static <T> List<T> findByIdIn1(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final List<Object> idList, final Class<T> entityClass, final String sql) {
 		final String cachekey =
 				zrSubClassName + "@"
 						+ callerMethodName + "@"
@@ -1102,7 +1117,7 @@ public class SU {
 
 		final ZC2 zc2 = getZCAndSetAutoCommitFALSE(mode, getDataSourceNameFromClassType(entityClass));
 
-		final Supplier<List<T>> supplier = () -> findByIdIn0(zrSubClassName, callerMethodName, mode, idList, entityClass, sql, zc2);
+		final Supplier<List<T>> supplier = (Supplier<List<T>>) () -> findByIdIn0(zrSubClassName, callerMethodName, mode, idList, entityClass, sql, zc2);
 
 		return (List<T>) selectFromCacheIfZT(cachekey, zc2, supplier);
 	}
@@ -1306,15 +1321,28 @@ public class SU {
 		// ubuntu docker  1071324756/percona-mysql-5.7和win10安装的mysql-9.0 都没问题。sqlite也没问题(sqlite暂时所有测试都是用的单连接)
 
 		final DBEnum db = ZRepositoryMain.getDB(entityClass.getAnnotation(ZEntity.class).dataSourceName());
-		if (db == DBEnum.POSTGRESQL) {
+		if ((db == DBEnum.POSTGRESQL)) {
 			synchronized (entityClass.getCanonicalName().intern()) {
 				return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
 			}
-		} else if ((db == DBEnum.MYSQL) || (db == DBEnum.SQLITE)) {
+		} else if (((db == DBEnum.MYSQL) || (db == DBEnum.SQLITE))) {
 			return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
 		}
 
 		return null;
+
+
+		// FIXME 2024年7月10日 上午12:58:38 zhangzhen : 把获取/归还连接改为队列模式试试
+
+		// FIXME 2024年7月10日 上午12:16:48 zhangzhen : 上面的pgssql加sync还是不太好，findByIdIn 没问题，想复用in算了。但试了下面代码复用in还是不行
+		//还是偶尔返回null
+		//				final String s2 = sql.replaceFirst("= \\?", "IN (?)");
+		//				final List<T> findByIdIn = findByIdIn(zrSubClassName, callerMethodName, mode, Lists.newArrayList(id), entityClass,
+		//						s2);
+		//				if (CollUtil.isEmpty(findByIdIn)) {
+		//					return null;
+		//				}
+		//				return findByIdIn.get(0);
 	}
 
 	private static <T> T findById1(final String zrSubClassName, final String callerMethodName, final Mode mode,
