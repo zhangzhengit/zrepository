@@ -1,0 +1,13 @@
+# 测试发现的问题：
+
+1、pgsql在saveAll后把id.parallelStream.forEach(id -> findById(id)) 
+	这个findById偶尔返回null。
+	问了chatgpt说可能是其他线程用了非saveAll的连接，并且比saveAll的commit事件更早执行，
+	所以导致查不到。
+	
+	也已验证：使用id.stream串行执行findById，或者连接池配置为1，就不会出现返回null。
+	
+	当前测试出问题的有：findById findByIdIn findByXXAndXX ，SU中方法都去掉了
+	pgsql时 synchronized (entityClass.getCanonicalName().intern())
+	已有的都去掉了，其他的findBy不打算测试了，也不加上面这行了，已有的都也都删了。 
+		
