@@ -1,15 +1,15 @@
 
 # 使用说明：
-# 一  springboot 项目引入maven依赖后可以直接使用，已封装为starter形式
-	 sb_zframework 项目引入maven依赖后可以直接使用，已封装为starter形式
+# 一  springboot 项目和 sb_zframework
+	直接引入 repository_starter 的maven依赖即可使用本工程的功能。
 	
 	1 新springboot项目 A ，引入
 		
-			<dependency>
-				<groupId>com.vo</groupId>
-				<artifactId>sb_zrepository</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
-			</dependency>
+		<dependency>
+			<groupId>com.vo</groupId>
+			<artifactId>repository_starter</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
 	
 	2 resources目录下新建 zdatasource.properties 
 	  配置详见文件 zdatasource.properties
