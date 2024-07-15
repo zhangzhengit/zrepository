@@ -1100,23 +1100,7 @@ public class SU {
 			return Collections.emptyList();
 		}
 
-		// XXX 2024年7月11日 下午9:02:59 zhangzhen :pgsql 下saveAll后并行findById/findByInId/findByXXAndXX(暂时只测了这三个，也许其他find都会有问题)
-		// 偶尔返回null的问题，问了chatgpt说，可能是并行的线程用了不同的Connection，可能是非saveAll的Connection比saveall
-		// 的commit事件先执行，所以导致查不到。并且测试也验证了，使用串行findBy或连接池配置为1，就不会返回null(本质上还是串行执行CRUD)
 		return findByIdIn1(zrSubClassName, callerMethodName, mode, idList, entityClass, sql);
-
-		// 本方法也是findById 一样，又saveAll并行执行 finById/findByIdIn偶尔返回null的问题，也暂时如下处理加入sync
-		//		final DBEnum db = ZRepositoryMain.getDB(entityClass.getAnnotation(ZEntity.class).dataSourceName());
-		//		if ((db == DBEnum.POSTGRESQL)) {
-		//			synchronized (entityClass.getCanonicalName().intern()) {
-		//				return findByIdIn1(zrSubClassName, callerMethodName, mode, idList, entityClass, sql);
-		//			}
-		//		} else if ((db == DBEnum.MYSQL) || (db == DBEnum.SQLITE)) {
-		//			// idList 应该还可以进一步处理，比如排序
-		//			return findByIdIn1(zrSubClassName, callerMethodName, mode, idList, entityClass, sql);
-		//		}
-		//
-		//		return Collections.emptyList();
 	}
 
 	private static <T> List<T> findByIdIn1(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -1319,47 +1303,7 @@ public class SU {
 			return null;
 		}
 
-		// FIXME 2024年7月9日 上午1:15:32 zhangzhen : @Test发现的严重bug：
-		// 在 saveAll 拿到idList然后并行测试 allMatch (id -> findById(id).getId().equals(id)) 中
-		// findById(id) 偶尔返回null。
-		// 实在本方法加入了ZRC事务内缓存后执行@Test发现的的，但是现在问题是：
-		// 1、即使改回ZRC之前的代码，仍然偶尔返回null
-		// 2、只有连接池配置为1个连接时，才不会出现null，因为所有的执行对象都要排队执行。大于1个就会偶现null
-		// 3、想了方法，比如：在一个method内取Connection，都返回同一个对象，似乎不行，因为上面的@Test是并行的，似乎没法准确判断Thread执行
-		// 堆栈信息
-		// 4、问了chatgpt，说尝试saveAll 后sleep一下，还是不行。
-		// 5、只有使用下面方法： synchronized (entityClass.getCanonicalName().intern()) 暂时解决了问题
-		// 但是这样就限制了一个TABLE的findById方法只能排队执行了。太差了
-
-		// FIXME 2024年7月9日 下午8:25:55 zhangzhen : ubuntu docker 1071324756/postgresql-11-with-zhparser
-		// 和win10 安装的pgsql12(从官网下载的)。都会出现上述问题，只有加入这样sync来解决了。
-		// ubuntu docker  1071324756/percona-mysql-5.7和win10安装的mysql-9.0 都没问题。sqlite也没问题(sqlite暂时所有测试都是用的单连接)
-
-		// XXX 2024年7月11日 下午9:06:21 zhangzhen : 和findByIdIn一样，就这么做，不加sync了
 		return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
-
-		//		final DBEnum db = ZRepositoryMain.getDB(entityClass.getAnnotation(ZEntity.class).dataSourceName());
-		//		if ((db == DBEnum.POSTGRESQL)) {
-		//			synchronized (entityClass.getCanonicalName().intern()) {
-		//				return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
-		//			}
-		//		} else if (((db == DBEnum.MYSQL) || (db == DBEnum.SQLITE))) {
-		//			return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
-		//		}
-		//		return null;
-
-
-		// FIXME 2024年7月10日 上午12:58:38 zhangzhen : 把获取/归还连接改为队列模式试试
-
-		// FIXME 2024年7月10日 上午12:16:48 zhangzhen : 上面的pgssql加sync还是不太好，findByIdIn 没问题，想复用in算了。但试了下面代码复用in还是不行
-		//还是偶尔返回null
-		//				final String s2 = sql.replaceFirst("= \\?", "IN (?)");
-		//				final List<T> findByIdIn = findByIdIn(zrSubClassName, callerMethodName, mode, Lists.newArrayList(id), entityClass,
-		//						s2);
-		//				if (CollUtil.isEmpty(findByIdIn)) {
-		//					return null;
-		//				}
-		//				return findByIdIn.get(0);
 	}
 
 	private static <T> T findById1(final String zrSubClassName, final String callerMethodName, final Mode mode,
