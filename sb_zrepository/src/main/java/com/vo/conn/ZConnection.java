@@ -40,7 +40,7 @@ public class ZConnection {
 	/**
 	 * java.sql.Connnection对象创建时，此对象的默认隔离级别
 	 */
-	private int transactionIsolation;
+	private final int transactionIsolation;
 
 	/**
 	 * 回滚事务
@@ -80,15 +80,14 @@ public class ZConnection {
 			final Connection connection =
 					StrUtil.isEmpty(userName) ? DriverManager.getConnection(url)
 							: DriverManager.getConnection(url, userName, pwd);
-			final ZConnection zConnection = new ZConnection();
+
+			final int transactionIsolation = connection.getTransactionIsolation();
+			final ZConnection zConnection = new ZConnection(transactionIsolation);
 
 			zConnection.setDriverClass(p.getDatasourceDriverClass());
 			zConnection.setUrl(p.getDatasourceUrl());
 			zConnection.setUserName(p.getDatasourceUsername());
 			zConnection.setPwd(p.getDatasourcePassword());
-
-			final int transactionIsolation = connection.getTransactionIsolation();
-			zConnection.setTransactionIsolation(transactionIsolation);
 
 			final DataSourceDTO dataSourceDTO = ZRepositoryMain.findCatalog(p.getDatasourceUrl());
 			zConnection.setDbEnum(dataSourceDTO.getDbEnum());
