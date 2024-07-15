@@ -107,6 +107,7 @@ public class ZTransactionAOP implements ZIAOP {
 
 	@Around(value = "pointcut()")
 	public final Object around(final ProceedingJoinPoint proceedingJoinPoint) {
+
 		final Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
@@ -120,8 +121,9 @@ public class ZTransactionAOP implements ZIAOP {
 		} catch (final Throwable e) {
 			e.printStackTrace();
 			rollback();
-
 		} finally {
+
+			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -144,6 +146,7 @@ public class ZTransactionAOP implements ZIAOP {
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZTRANSACTION, ZIDG.g());
 
 		final ZTransaction zTransaction = method.getAnnotation(ZTransaction.class);
+
 		final ZIsolationEnum isolationEnum = ((zTransaction == null)  || (zTransaction.isolation() == ZIsolationEnum.DEFAULT))?
 				ZIsolationEnum.valueOfIsolation(zc2.getZConnection().getTransactionIsolation()) :
 					zTransaction.isolation();
@@ -174,10 +177,11 @@ public class ZTransactionAOP implements ZIAOP {
 		return defaultDatsourceName;
 	}
 
-	private static void resetToDefaultTransactionIsolation(final ZC2 zc2) {
+	public static void resetToDefaultTransactionIsolation(final ZC2 zc2) {
 		try {
 			zc2.getZConnection().getConnection().setTransactionIsolation(
 					zc2.getZConnection().getTransactionIsolation());
+			zc2.getZConnection().getConnection().setAutoCommit(false);
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
@@ -218,6 +222,8 @@ public class ZTransactionAOP implements ZIAOP {
 			rollback();
 
 		} finally {
+
+			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
