@@ -956,14 +956,26 @@ public class SU {
 			return zcT;
 		}
 
-		final ZConnection zc = ZCPool.getInstance(dataSourceName).getZConnection(mode);
-		try {
-			zc.getConnection().setAutoCommit(false);
-		} catch (final SQLException e) {
-			e.printStackTrace();
+		final String k = "getconnection" + dataSourceName;
+		synchronized (k.intern()) {
+			final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
+			try {
+				final Connection connection = zConnection.getConnection();
+				connection.setAutoCommit(true);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+
+			final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
+			ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
+			try {
+				zc2.getZConnection().getConnection().setAutoCommit(false);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+			return zc2;
 		}
 
-		return new ZC2(zc, ZCSourceEnum.ZCPOOL);
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -1004,7 +1016,6 @@ public class SU {
 				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
-			returnZConnectionIfZCPool(dataSourceName, zc);
 			return r;
 
 		} catch (SQLException
@@ -1019,7 +1030,6 @@ public class SU {
 			close(rs, ps);
 			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
-
 
 		return Collections.emptyList();
 	}
@@ -1266,7 +1276,7 @@ public class SU {
 	 * @return
 	 */
 	private static Object selectFromCacheIfZT(final String cachekey, final ZC2 zc2, final Supplier supplier) {
-		if (zc2.getSourceEnum() != ZCSourceEnum.ZTRANSACTION) {
+		if(zc2.getSourceEnum() != ZCSourceEnum.ZTRANSACTION) {
 			return supplier.get();
 		}
 
@@ -1357,6 +1367,7 @@ public class SU {
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
+
 		final ZCSourceEnum sourceEnum = zc.getSourceEnum();
 
 		final Supplier supplier = () -> {
@@ -1373,7 +1384,6 @@ public class SU {
 				returnZConnectionIfZCPool(dataSourceName, zc);
 			}
 		};
-
 
 		final String cachekey =
 				zrSubClassName + "@"
