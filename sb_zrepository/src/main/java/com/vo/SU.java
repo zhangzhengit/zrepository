@@ -1560,7 +1560,8 @@ public class SU {
 
 	public static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
 		final Supplier<String> supplier = () -> gSelectFromReturnType0(entityClass, returnType);
-		return ZRC.computeIfAbsent(entityClass, supplier);
+		final String key = "gSelectFromReturnType" + entityClass.getComponentType() +"@" + returnType.getCanonicalName();
+		return ZRC.computeIfAbsent(key, supplier);
 	}
 
 	private static String gSelectFromReturnType0(final Class entityClass, final Class returnType) {
@@ -1694,6 +1695,7 @@ public class SU {
 			return Collections.emptyList();
 		}
 
+		// FIXME 2024年7月16日 下午7:22:05 zhangzhen : 这个判断要待定，是否就是查询null的
 		final Set set = (Set) (Lists.newArrayList((Iterable) value)).stream().filter(e -> e != null)
 				.collect(Collectors.toSet());
 		if (set.isEmpty()) {
@@ -1704,86 +1706,48 @@ public class SU {
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 		final Connection connection = zc.getZConnection().getConnection();
 
+		final StringJoiner w = new StringJoiner(",");
+		for (int i = 1; i <= set.size(); i++) {
+			w.add("?");
+		}
+
+		final String select = gSelectFromReturnType(entityClass, returnType);
+		final String sqlN = sql.replace("?", w.toString());
+
+
+		final String sqlColumn = sqlN.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+		final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null, zc);
+		final String sF = sua.getSql();
+
 		final DBEnum dbEnum = ZRepositoryMain.getDB(dataSourceName);
 
-		Statement statement = null;
+		if (isShowSQL(dataSourceName)) {
+			LOG.info("[{}],{}", sF, set);
+		}
+
+		PreparedStatement ps  = null;
 		ResultSet rs = null;
 		try {
-
-			String s = sql;
-			final StringJoiner joiner = new StringJoiner(",");
+			ps = connection.prepareStatement(sF);
+			int index = 1;
 			for (final Object v : set) {
-
-				if ((v instanceof String) || (v instanceof Character)) {
-					joiner.add("'" + v + "'");
-				} else if ((v.getClass() == java.sql.Time.class) || (v.getClass() == java.sql.Date.class)
-						|| (v.getClass() == Timestamp.class) || (v.getClass() == java.util.Date.class)) {
-					if (dbEnum == DBEnum.SQLITE) {
-						if (v.getClass() == java.sql.Time.class) {
-							joiner.add(String.valueOf(((java.sql.Time) v).getTime()));
-						} else if (v.getClass() == java.sql.Date.class) {
-							joiner.add(String.valueOf(((java.sql.Date) v).getTime()));
-						} else if (v.getClass() == Timestamp.class) {
-							joiner.add(String.valueOf(((Timestamp) v).getTime()));
-						} else if (v.getClass() == java.util.Date.class) {
-							joiner.add(String.valueOf(((java.util.Date) v).getTime()));
-						}
-					} else {
-						if (v.getClass() == java.util.Date.class) {
-							final Optional<Field> findAny = Arrays.stream(entityClass.getDeclaredFields())
-									.filter(f -> ZFieldConverter.toJavaField(ZFieldConverter.toDbField(f.getName()))
-											.equals(ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName))))
-									.findAny();
-
-							if (findAny.isPresent()) {
-								final Field ef = findAny.get();
-								final ZDateFormatEnum format = ef.getAnnotation(ZDateFormat.class).format();
-								if (format != null) {
-									final String vDate = DateUtil.format(((Date) v), format.getFormat());
-									joiner.add("'" + String.valueOf(vDate) + "'");
-								} else {
-									joiner.add("'" + v + "'");
-								}
-							} else {
-								joiner.add("'" + v + "'");
-							}
-						} else {
-							joiner.add("'" + v + "'");
-						}
-					}
-				} else {
-					joiner.add(String.valueOf(v));
-				}
+				setXX_fieldValue(v, ps, index);
+				index++;
 			}
-
-			final String sss = joiner.toString().replace("[", "").replace("]", "");
-			// ? 是 sql目标中的参数值占位符
-			s = s.replaceFirst("\\?", sss);
-
-			final String select = gSelectFromReturnType(entityClass, returnType);
-			final String sqlColumn = s.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
-
-			final SUA sua = excludedDeletedHandler(entityClass, select, returnType, sqlColumn, null, zc);
-			final String sF = sua.getSql();
-
-			if (isShowSQL(dataSourceName)) {
-				LOG.info("[{}]", sF);
-			}
-			statement = connection.createStatement();
-			rs = statement.executeQuery(sF);
+			rs = ps.executeQuery();
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
 
 			return r;
-		} catch (SQLException
-				| SecurityException e) {
+		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 			try {
 				connection.rollback();
@@ -1791,11 +1755,11 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			close(rs, statement);
+			close(rs, ps);
 			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
-
 		return Collections.emptyList();
+
 	}
 
 	public static <T> List<T> findByIdLessThan(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> entityClass, final Class<T> returnType, final String sql, final Object field) {
