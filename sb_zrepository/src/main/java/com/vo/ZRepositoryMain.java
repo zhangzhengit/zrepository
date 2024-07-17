@@ -1703,10 +1703,28 @@ public class ZRepositoryMain {
 			sa.set(sqlM);
 		}
 
-		final String sql = sa.get().trim().toUpperCase();
+		final String sqlUpperCase = sa.get().trim().toUpperCase();
 		String subClassMethodName = null ;
 
-		if (sql.startsWith(MethodRegex.SELECT)) {
+		if (sqlUpperCase.startsWith(MethodRegex.SELECT)) {
+			if (!sa.get().startsWith(MethodRegex.SELECT)) {
+				// XXX 知道不好，不要强制SELECT必须大写，但暂时先这样，方便SU中的zQuery方法替换为returnType中的字段
+				final String m =
+						"\r\n\t"
+								+ "@" + ZQuery.class.getSimpleName()
+								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]"
+								+ " 自定义SQL 格式不支持："
+								+ "\r\n\t"
+								+ sa.get()
+								+ "\r\n\t"
+								+ "[SELECT]关键字请使用大写形式"
+								+ "\r\n\t"
+								+ "请修改代码:把自定义SQL中的[SELECT]关键字改为大写形式[SELECT]"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m);
+			}
+
 			if (!List.class.equals(returnType)) {
 				final String m =
 						"\r\n\t"
@@ -1740,13 +1758,13 @@ public class ZRepositoryMain {
 
 			subClassMethodName = "zQuerySelect";
 			checkZQuerySelect(myZRClass, method, sa.get());
-		} else if (sql.startsWith("UPDATE")) {
+		} else if (sqlUpperCase.startsWith("UPDATE")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryUpdate";
-		} else if (sql.startsWith("DELETE")) {
+		} else if (sqlUpperCase.startsWith("DELETE")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryDelete";
-		} else if (sql.startsWith("INSERT")) {
+		} else if (sqlUpperCase.startsWith("INSERT")) {
 			checkZQueryUpdateDeleteInsert(myZRClass, method, returnType);
 			subClassMethodName = "zQueryInsert";
 		} else {

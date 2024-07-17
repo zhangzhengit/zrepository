@@ -2657,12 +2657,12 @@ public class SU {
 	}
 
 	// FIXME 2024年7月2日 下午3:07:28 zhangzhen : where xx in 这种形式还不支持
-	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName,final Mode mode,final Object entityTName,final Object object, final String sqlT, final Object... arg)
-			throws InstantiationException {
+	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Object entityTClassName, final Object returnTypeClassName, final String sqlT, final Object... arg)
+					throws InstantiationException {
 
-		final Class entityClass = (Class) object;
 
-		final ZEntity ze = (ZEntity) ((Class)entityTName).getAnnotation(ZEntity.class);
+		final ZEntity ze = (ZEntity) ((Class)entityTClassName).getAnnotation(ZEntity.class);
 		final String dataSourceName = ze.dataSourceName();
 
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
@@ -2687,7 +2687,8 @@ public class SU {
 			// 应该时用户写什么，就select什么。或者提供一个特殊占位符，比如 select @T from ，这个 @T就作为占位符
 			// 如果select语句中出现了这个@T，才处理为 select 字段，否则就是用户写了select什么就select什么。
 
-			final String select = gSelectFromReturnType(entityClass, entityClass);
+			final Class returnClass = (Class) returnTypeClassName;
+			final String select = gSelectFromReturnType((Class) entityTClassName, returnClass);
 			final String s2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
 
 			if (isShowSQL(dataSourceName)) {
@@ -2726,7 +2727,7 @@ public class SU {
 			final List<T> ra = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = (T) newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
+				final T t = (T) newT(zc.getZConnection().getDbEnum(), returnClass, rs, metaData, count);
 				ra.add(t);
 			}
 
