@@ -1786,8 +1786,7 @@ public class ZRepositoryMain {
 		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
-				+ returnType2.getCanonicalName() + ",\""+sa.get()+"\"," + joiner.toString() + ");";
-		//				+ returnType2.getCanonicalName() + ",sql," + joiner.toString() + ");";
+				+ returnType2.getCanonicalName() + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ joiner.toString() + ");";
 	}
 
 	private static void checkZQueryUpdateDeleteInsert(final Class<?> myZRClass, final Method method,

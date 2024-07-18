@@ -2658,9 +2658,11 @@ public class SU {
 
 	// FIXME 2024年7月2日 下午3:07:28 zhangzhen : where xx in 这种形式还不支持
 	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Object entityTClassName, final Object returnTypeClassName, final String sqlT, final Object... arg)
-					throws InstantiationException {
+			final Object entityTClassName, final Object returnTypeClassName, final String sqleModeName, final String sqlT, final Object... arg) {
 
+		if (StrUtil.isEmpty(sqlT)) {
+			throw new ZRepositoryException(zrSubClassName + "." + callerMethodName + " " + "SQL不能为空");
+		}
 
 		final ZEntity ze = (ZEntity) ((Class)entityTClassName).getAnnotation(ZEntity.class);
 		final String dataSourceName = ze.dataSourceName();
@@ -2689,7 +2691,10 @@ public class SU {
 
 			final Class returnClass = (Class) returnTypeClassName;
 			final String select = gSelectFromReturnType((Class) entityTClassName, returnClass);
-			final String s2 = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+			final String s2 =
+					SQLEMode.GENERATE.name().equals(sqleModeName)
+					? sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select)
+							: sql;
 
 			if (isShowSQL(dataSourceName)) {
 				if (ArrayUtil.isEmpty(arg)) {
@@ -2747,8 +2752,8 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	public static Integer zQueryUpdate(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName ,final Object object, final String sql,
-			final Object... arg) throws IllegalAccessException {
+	public static Integer zQueryUpdate(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName ,final Object object, final String sqleModeName,
+			final String sql, final Object... arg) throws IllegalAccessException {
 
 		return (Integer) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.UPDATE, arg);
 	}
@@ -2800,13 +2805,13 @@ public class SU {
 	}
 
 	public static <T> Integer zQueryDelete(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName, final Object object,
-			final String sql, final Object... arg) {
+			final String sqleModeName, final String sql, final Object... arg) {
 
 		return (Integer) updateOrDeleteOrInsert(mode, entityTName, object, sql, SUEnum.DELETE, arg);
 	}
 
 	public static <T> Object zQueryInsert(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Object entityTName, final Class<T> cls, final String sql, final Object... arg) {
+			final Object entityTName, final Class<T> cls, final String sqleModeName, final String sql, final Object... arg) {
 		return updateOrDeleteOrInsert(mode, entityTName, cls, sql, SUEnum.INSERT, arg);
 	}
 
