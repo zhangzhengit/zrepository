@@ -15,9 +15,6 @@ import com.vo.conn.Mode;
  * @date 2024年7月18日 下午9:26:41
  *
  */
-// FIXME 2024年7月18日 下午10:31:44 zhangzhen : TODO  把本类提供的方法放到
-//  ZRepository 里面，这样就可以直接调用。而不是额外注入本类，或者再自定义一个Mapper/DAO类然后同时注入
-// 本类和 ZRepository子接口来实现功能。
 public final class ZJdbcTemplate<T> {
 
 	private static final Mode DEFAULT_MODE = Mode.WRITE;
