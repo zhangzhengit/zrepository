@@ -342,7 +342,7 @@ public class ZRepositoryMain {
 					final String tableName = zEntity.tableName();
 					final String sqlTemplateTemp = sqlTemplate.replace(TABLE_NAME, tableName);
 
-					final String sqlFinal = checkMethodName(typeClass, methodName, sqlTemplateTemp, methodSQL, zrSubClass);
+					final String sqlFinal = checkMethodName(typeClass, m, methodName, sqlTemplateTemp, methodSQL, zrSubClass);
 
 					final SqlResult result = new SqlResult(zrSubClassName, methodName, sqlFinal);
 
@@ -400,6 +400,7 @@ public class ZRepositoryMain {
 	 * 校验一下方法声明是否正确，是否符合命名规则，见MethodRegex.GROUP_ 开头的常量正则表达式
 	 *
 	 * @param entityClass  @ZEntity标记的类
+	 * @param method TODO
 	 * @param methodName ZRepository 子类中的自定义的findByXX的方法名称,如findByUserId
 	 * @param sql        sql模板，如：select * from user where @ = ?
 	 * @param methodSQL TODO
@@ -408,8 +409,8 @@ public class ZRepositoryMain {
 	 *         id = ?
 	 *
 	 */
-	private static String checkMethodName(final Class<?> entityClass, final String methodName, final String sql,
-			final MethodSQL methodSQL, final Class zrClass) {
+	private static String checkMethodName(final Class<?> entityClass, final Method methodArg, final String methodName,
+			final String sql, final MethodSQL methodSQL, final Class zrClass) {
 		if (methodSQL.isZQuery()) {
 			return methodSQL.getSqlTemplate();
 		}
@@ -483,7 +484,10 @@ public class ZRepositoryMain {
 			}
 		}
 
-		final List<Method> ml = Arrays.stream(zrClass.getMethods()).filter(m -> m.getName().equals(methodName))
+		final List<Method> ml = Arrays.stream(zrClass.getMethods())
+				.filter(m -> m.getName().equals(methodName))
+				.filter(m -> m.getParameterCount() == (methodArg.getParameterCount()))
+				.filter(m -> Arrays.asList(m.getParameters()).equals(Arrays.asList(methodArg.getParameters())))
 				.collect(Collectors.toList());
 		if (ml.size() > 1) {
 			throw new IllegalArgumentException(
@@ -790,6 +794,9 @@ public class ZRepositoryMain {
 
 		case "find":
 			return find(myZRClass, entityClass, modeString, className1, methodName1, method);
+
+		case "query":
+			return query(myZRClass, entityClass, className1, method, "SQL112", entityTName);
 
 		default:
 
@@ -1689,6 +1696,23 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
 		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ","+fieldName+");";
+	}
+
+	private static String query(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
+
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
+		final String modeString = modeString(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getCanonicalName()
+				+ ".zQuerySelect(" + className1 + "," + methodName1 + "," + modeString + ","
+				+ entityTName + ","
+				// ZRepository.query 方法就是要用 ORIGIN 模式
+				+ entityClass.getCanonicalName() + ",\""+SQLEMode.ORIGIN.name()+"\","+ joiner.toString() + ");";
 	}
 
 	private static String zQuery(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {

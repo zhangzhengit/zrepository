@@ -175,4 +175,23 @@ public interface ZRepository<T, ID> {
 	 *
 	 */
 	Page<T> page(ZRWrapper<T> wrapper, Integer page, Integer size);
+
+	/**
+	 * 执行无参数的原始SQL SELECT语句
+	 *
+	 * @param select 如：SELECT id,name from blobt where limit 20;
+	 * @return
+	 */
+	List<T> query(final String select);
+
+	/**
+	 * 执行带参数的原始SQL SELECT语句
+	 *
+	 * @param select 如：SELECT id,name from blobt where id =?1
+	 * @param args   参数数组，如：[123]
+	 * @return
+	 */
+	// FIXME 2024年7月19日 下午9:08:10 zhangzhen : 这个带参数的query方法自定义select，还不支持in操作
+	// 如需in操作，可以使用拼接sql的方式。暂不支持?1占位符然后传参的方式
+	List<T> query(final String select, Object... args);
 }

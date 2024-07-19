@@ -53,7 +53,6 @@ import com.vo.transaction.ZIsolationEnum;
 import com.vo.transaction.ZTransactionAOP;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -1676,13 +1675,7 @@ public class SU {
 			ps.setTimestamp(index, new java.sql.Timestamp(((Date) fieldValue).getTime()));
 		} else if(fieldValue.getClass().equals(java.sql.Date.class)){
 			ps.setDate(index, (java.sql.Date)fieldValue);
-		}
-		//		else if(fieldValue.getClass().isArray()){
-		//			final int x = 20;
-		//			final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[]) fieldValue);
-		//			ps.setBlob(index, inputStream);
-		//		}
-		else {
+		} else {
 			ps.setObject(index, fieldValue);
 		}
 	}
@@ -2658,10 +2651,15 @@ public class SU {
 
 	// FIXME 2024年7月2日 下午3:07:28 zhangzhen : where xx in 这种形式还不支持
 	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Object entityTClassName, final Object returnTypeClassName, final String sqleModeName, final String sqlT, final Object... arg) {
+			final Object entityTClassName, final Object returnTypeClassName, final String sqleModeName,
+			final String sqlT, final Object... arg) {
 
 		if (StrUtil.isEmpty(sqlT)) {
-			throw new ZRepositoryException(zrSubClassName + "." + callerMethodName + " " + "SQL不能为空");
+			throw new ZRepositoryException(zrSubClassName + "." + callerMethodName + " " + " SQL不能为空");
+		}
+
+		if (!sqlT.trim().toUpperCase().startsWith(MethodRegex.SELECT)) {
+			throw new ZRepositoryException(zrSubClassName + "." + callerMethodName + " " + " 只允许SELECT语句");
 		}
 
 		final ZEntity ze = (ZEntity) ((Class)entityTClassName).getAnnotation(ZEntity.class);
@@ -2719,10 +2717,18 @@ public class SU {
 			}
 
 			if (arg != null) {
-				int n = 1;
+				int index = 1;
 				for (final int element : argOrderArray) {
-					ps.setObject(n, arg[element-1]);
-					n++;
+					// 要判断a0的类型
+					// 1
+					//					Object a0 = arg[element-1];
+					//					ps.setObject(index, a0);
+
+					// 2
+					// FIXME 2024年7月19日 下午9:11:24 zhangzhen : 暂不支持in操作,connection.createArrayOf测试有问题
+					setXX_fieldValue(arg[element-1], ps, index);
+
+					index++;
 				}
 			}
 			rs = ps.executeQuery();
@@ -2844,4 +2850,5 @@ public class SU {
 		}
 
 	}
+	
 }

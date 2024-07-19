@@ -39,7 +39,7 @@ public class SqlPattern {
 			if ((i + 1) >= ca.length) {
 				final String s2 = P.get();
 				pl.add(s2);
-//				System.out.println("一个关键词 = " + s2);
+				//				System.out.println("一个关键词 = " + s2);
 			}
 			i++;
 
@@ -55,7 +55,7 @@ public class SqlPattern {
 	public static final HashSet<String> SQL_KEYWORD = Sets.newHashSet();
 
 	public static HashSet<String> inOrLikeAnd = Sets.newHashSet("And", "In", "Or", "Like");
-	public static HashSet<String> keyword = Sets.newHashSet("find", "delete", "update", "save", "exist", "page", "By",
+	public static HashSet<String> keyword = Sets.newHashSet("query", "find", "delete", "update", "save", "exist", "page", "By",
 			"In", "Or", "Like");
 	public static final HashSet<String> methodPrefix = Sets.newHashSet("find", "delete", "save", "exist", "page");
 

@@ -66,6 +66,7 @@ public class MethodRegex {
 	public static final String GROUP_DeleteByIdIn = "deleteByIdIn";
 	public static final String GROUP_SAVEALL = "saveAll";
 	public static final String GROUP_SAVE = "save";
+	public static final String GROUP_QUERY = "query";
 	public static final String GROUP_FIND = "find";
 
 	public static final String GROUP_UPDATE = "update";
@@ -189,6 +190,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_DELETEBYID = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_SAVEALL = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FIND = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_QUERY = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_SAVE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_UPDATE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
@@ -280,6 +282,8 @@ public class MethodRegex {
 
 		// saveAll
 		REGEX_MAP_SAVEALL.put(saveAll, "INSERT INTO TABLE_NAME (" + COLUMNS + ") VALUES (" + COLUMN_VALUES + ")");
+		// query
+		REGEX_MAP_QUERY.put(GROUP_QUERY, "QUERY");
 		// save
 		REGEX_MAP_SAVE.put(save, "INSERT INTO TABLE_NAME (" + COLUMNS + ") VALUES (" + COLUMN_VALUES + ")");
 		// find
@@ -380,6 +384,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXX, REGEX_MAP_FINDBYXX);
 		R_M.put(GROUP_FINDALL, REGEX_MAP_FINDALL);
 		R_M.put(GROUP_SAVEALL, REGEX_MAP_SAVEALL);
+		R_M.put(GROUP_QUERY, REGEX_MAP_QUERY);
 		R_M.put(GROUP_SAVE, REGEX_MAP_SAVE);
 		R_M.put(GROUP_FIND, REGEX_MAP_FIND);
 		R_M.put(GROUP_UPDATE, REGEX_MAP_UPDATE);
