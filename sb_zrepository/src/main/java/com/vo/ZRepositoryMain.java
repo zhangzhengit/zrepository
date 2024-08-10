@@ -513,8 +513,8 @@ public class ZRepositoryMain {
 			}
 		} else if (MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
 			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
-			if (filedNameMethodNameOrder.size() != ps.length) {
 
+			if (filedNameMethodNameOrder.size() > ps.length) {
 				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
 
 				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
@@ -530,9 +530,32 @@ public class ZRepositoryMain {
 								+ "\r\n\t"
 								+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
 								+ "\r\n\t"
-								+ "实际方法参数为[" + ps.length + "]个,名称为" + pnl
+								+ (ps.length == 0 ? "实际无参数"
+										: ("实际方法有[" + ps.length + "]个参数,名称为" + pnl))
 								+ "\r\n\t"
-								+ "请检查代码:去掉多余的参数"
+								+ "请检查代码:给方法添加上述的参数"
+								+ "\r\n\t"
+								;
+				throw new ParameterCountDeclarationException(x1);
+			}else if (filedNameMethodNameOrder.size() < ps.length) {
+				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
+
+				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
+					final Field declaredField = getDeclaredField(entityClass,
+							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+				}).collect(Collectors.joining(DELIMITER));
+
+				final String x1 =
+						"[" + zrClass.getSimpleName() + "." + methodName + "]"
+								+ "\r\n\t"
+								+ "必须有且只有[" +filedNameMethodNameOrder.size() + "]个参数"
+								+ "\r\n\t"
+								+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
+								+ "\r\n\t"
+								+ "实际方法有[" + ps.length + "]个参数,名称为" + pnl
+								+ "\r\n\t"
+								+ "请检查代码:去除多余的参数，只保留上述代码中必要的参数"
 								+ "\r\n\t"
 								;
 				throw new ParameterCountDeclarationException(x1);
