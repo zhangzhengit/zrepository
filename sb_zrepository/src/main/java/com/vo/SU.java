@@ -1627,6 +1627,8 @@ public class SU {
 			final String s = sua.getSql();
 
 			if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
+				// FIXME 2024年11月26日 上午1:30:22 zhangzhen : 所有的日志信息，都要先判断是否byte[]，如下这个就没判断
+				// 是否只显示"二进制内容"？因为打印它可能特别长，记得所有的T t参数的方法都要改
 				LOG.info("[{}],[{}]", s, fieldValue);
 			}
 
@@ -2850,5 +2852,5 @@ public class SU {
 		}
 
 	}
-	
+
 }
