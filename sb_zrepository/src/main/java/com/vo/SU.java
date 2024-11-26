@@ -71,6 +71,8 @@ import cn.hutool.core.util.StrUtil;
 //	1、Date类型，要统一格式输出yyyy-MM-dd HH:mm:ss
 //	2、数组类型，要Arrays.toString输出 等等
 
+// FIXME 2024年11月26日 下午7:16:14 zhangzhen : TODO : 仔细考虑，每个方法对于byte[]怎么处理，
+
 public class SU {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
