@@ -838,7 +838,7 @@ public class SU {
 
 		final StringJoiner joiner = new StringJoiner(",");
 		for (int i = 1; i <= fieldCount; i++) {
-			final StringJoiner add = joiner.add("?");
+			joiner.add("?");
 		}
 
 		final String sql2 = sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES,
@@ -851,7 +851,10 @@ public class SU {
 
 		PreparedStatement ps;
 		if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
-			LOG.info("[{}],[{}]", sql2, t);
+			// FIXME 2024年11月26日 下午7:07:04 zhangzhen : SU.save 已处理了byte[]的log了，其他的也记得改掉
+			final Object hTBlob = hTBlob(entityClass, t);
+			LOG.info("[{}],[{}]", sql2, hTBlob);
+			//			LOG.info("[{}],[{}]", sql2, t);
 		}
 
 		ps = connection.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
@@ -2852,5 +2855,75 @@ public class SU {
 		}
 
 	}
+
+	/**
+	 * 把T中的byte[]字段写死为[二进制内容](考虑是否改为配置项)
+	 * 因为其可能很大，导致日志特别长
+	 *
+	 * @param <T>
+	 * @param entityClass
+	 * @param t
+	 * @return
+	 */
+	private static <T> Object hTBlob(final Class<T> entityClass, final T t) {
+		final boolean e = entityClass.isAnnotationPresent(ZEntity.class);
+		if (!e) {
+			return t;
+		}
+
+		final Field[] fs = entityClass.getDeclaredFields();
+		final StringJoiner joiner = new StringJoiner("");
+		for (int i = 0; i < fs.length; i++) {
+			final Field field = fs[i];
+			joiner.add(field.getName()).add("=");
+
+			final boolean array = field.getType().isArray();
+			if (array) {
+				//				System.out.println("isArray - " + field.getName() + "\t" + entityClass.getCanonicalName());
+				//				System.out.println("t.class = " + t.getClass().getCanonicalName());
+
+				joiner.add("[二进制内容]");
+
+			} else {
+
+				try {
+
+					field.setAccessible(true);
+					final Object v = field.get(t);
+					joiner.add(String.valueOf(v));
+				} catch (IllegalArgumentException | IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+			}
+
+			if (i < (fs.length - 1)) {
+				joiner.add(",");
+			}
+
+		}
+
+		return joiner.toString();
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
