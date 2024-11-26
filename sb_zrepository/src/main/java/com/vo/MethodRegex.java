@@ -401,8 +401,6 @@ public class MethodRegex {
 
 	public static MethodSQL check(final String methodName, final Method method) {
 
-		// FIXME 2024年5月5日 下午10:09:22 zhangzhen: 优先看是否有@ZQuery注解，有则执行自定义SQL，否则再按命名规则来解析
-		// FIXME 2023年6月16日 下午8:03:40 zhanghen: 写这里，处理 @ZQuery
 		final ZQuery zQuery = method.getAnnotation(ZQuery.class);
 		if (zQuery != null) {
 			final String sql = zQuery.sql();
@@ -415,12 +413,6 @@ public class MethodRegex {
 				throw new IllegalArgumentException(m);
 			}
 
-
-			final int x = 20;
-
-			//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
-			//			throw new IllegalArgumentException(ZRepository.class.getCanonicalName() + " 不支持的方法声明 [" + methodName + "]");
-
 			return new MethodSQL(true,methodName, zQuery.sql());
 		}
 
@@ -431,10 +423,6 @@ public class MethodRegex {
 			final Set<Entry<String, String>> es = hashMap.entrySet();
 			for (final Entry<String, String> entry : es) {
 				if (methodName.matches(entry.getKey())) {
-					// FIXME 2024年5月27日 下午8:10:15 zhangzhen: debug 代码，记得删除
-					if("findByOrderCOUNTOrNAME".equals(methodName)) {
-						final int x = 1;
-					}
 					return new MethodSQL(false,entry.getKey(), entry.getValue());
 				}
 			}
