@@ -734,14 +734,7 @@ public class ZRepositoryMain {
 
 			zm.setgReturn(false);
 			zm.setMethodArgList(argLIst);
-			// FIXME 2023年9月6日 下午3:16:13 zhanghen: Save 方法加入sync关键字，因为它有save和findBYid两个方法组成
-
-
 			zmSet.add(zm);
-			// FIXME 2024年6月7日 下午6:23:13 zhangzhen : debug 代码，记得删除
-			if("findByIdNotLike".equals(zm.getName())) {
-				final int xx2 = 1;
-			}
 
 			final String sql = ZRSqlMap.get(myZRClass.getCanonicalName(), zm.getName());
 
