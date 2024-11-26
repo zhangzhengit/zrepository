@@ -501,10 +501,6 @@ public class ZRepositoryMain {
 
 		String sqlA = sql;
 
-		// FIXME 2024年5月18日 上午10:02:04 zhangzhen: debug 代码，记得删除
-		if("findByTimestampNotLike".equals(method.getName())) {
-			final int x2 = 1;
-		}
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
 			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
 			for (final String fieldName : filedNameMethodNameOrder) {
