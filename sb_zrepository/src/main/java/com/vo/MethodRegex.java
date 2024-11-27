@@ -61,6 +61,7 @@ public class MethodRegex {
 	public static final String GROUP_pageByXXAndXXAndXXAndXX_orderByXXDesc = "pageBy.+(?=And.).+(?=And.).+(?=And.).+(?=OrderBy.).+Desc";
 
 	public static final String GROUP_CountingByXXX = "countingBy.+";
+	public static final String GROUP_CountingByXXXNot = "countingBy.+Not";
 	public static final String GROUP_EXISTBYId = "existById";
 	public static final String GROUP_DeleteById = "deleteById";
 	public static final String GROUP_DeleteByIdIn = "deleteByIdIn";
@@ -163,6 +164,12 @@ public class MethodRegex {
 	public static final String countingByXXXAndXX = "countingBy.+And.+";
 	public static final String countingByXXXAndXXAndXX = "countingBy.+And.+And.+";
 	public static final String countingByXXXAndXXAndXXAndXX = "countingBy.+And.+And.+And.+";
+
+	public static final String countingByXXXNot = GROUP_CountingByXXXNot;
+	public static final String countingByXXXNotAndXXXNot = "countingBy.+NotAnd.+Not";
+	public static final String countingByXXXNotAndXXXNotAndXXXNot = "countingBy.+NotAnd.+NotAnd.+Not";
+	public static final String countingByXXXNotAndXXXNotAndXXXNotAndXXXNot = "countingBy.+NotAnd.+NotAnd.+NotAnd.+Not";
+
 	public static final String existById = GROUP_EXISTBYId;
 	public static final String existByIdIn = "existByIdIn";
 	public static final String deleteById = GROUP_DeleteById;
@@ -182,6 +189,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_GROUP_pageByXX_orderByXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_PAGE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_CountingByXXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_CountingByXXXNot = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXNotBetween = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXBetween = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrYY = new LinkedHashMap<>();
@@ -249,6 +257,12 @@ public class MethodRegex {
 		REGEX_MAP_findByXXNotBetween.put(findByXXNotBetween, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ NOT BETWEEN ? AND ?)");
 		// findByXXBetween
 		REGEX_MAP_findByXXBetween.put(findByXXBetween, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ BETWEEN ? AND ?)");
+
+		// countingByXXXNot
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNotAndXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ? AND @ <> ? AND @ <> ? AND @ <> ?");
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ? AND @ <> ? AND @ <> ?");
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ? AND @ <> ?");
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ?");
 
 		// countingByXXX
 		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ?");
@@ -391,6 +405,7 @@ public class MethodRegex {
 		R_M.put(GROUP_DeleteById, REGEX_MAP_DELETEBYID);
 		R_M.put(existByIdIn, REGEX_MAP_EXISTBYIDIN);
 		R_M.put(GROUP_EXISTBYId, REGEX_MAP_EXISTBYID);
+		R_M.put(GROUP_CountingByXXXNot, REGEX_MAP_CountingByXXXNot);
 		R_M.put(GROUP_CountingByXXX, REGEX_MAP_CountingByXXX);
 		R_M.put(GROUP_count, REGEX_MAP_Count);
 
@@ -417,6 +432,8 @@ public class MethodRegex {
 		}
 
 		final Collection<HashMap<String, String>> values = R_M.values();
+
+
 
 		for (final HashMap<String, String> hashMap : values) {
 
@@ -497,6 +514,12 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXX);
+
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXNotAndXXXNotAndXXXNotAndXXXNot);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXNotAndXXXNotAndXXXNot);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXNotAndXXXNot);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXNot);
+
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXXAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXX);

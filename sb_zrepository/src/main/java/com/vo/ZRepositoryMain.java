@@ -859,6 +859,20 @@ public class ZRepositoryMain {
 				return findByXXIn(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByxx_in);
 			}
 
+			// countingByXXNot 放在 countingByXX之前
+			if (methodName.matches(MethodRegex.countingByXXXNotAndXXXNotAndXXXNotAndXXXNot)) {
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNotAndXXXNotAndXXXNotAndXXXNot);
+			}
+			if (methodName.matches(MethodRegex.countingByXXXNotAndXXXNotAndXXXNot)) {
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNotAndXXXNotAndXXXNot);
+			}
+			if (methodName.matches(MethodRegex.countingByXXXNotAndXXXNot)) {
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNotAndXXXNot);
+			}
+			if (methodName.matches(MethodRegex.countingByXXXNot)) {
+				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNot);
+			}
+
 			if (methodName.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXXAndXX);
 			}
