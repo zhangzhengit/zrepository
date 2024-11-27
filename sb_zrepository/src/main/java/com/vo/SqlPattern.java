@@ -78,6 +78,7 @@ public class SqlPattern {
 
 		SQL_KEYWORD.add("is");
 		SQL_KEYWORD.add("Is");
+		SQL_KEYWORD.add("Empty");
 		SQL_KEYWORD.add("Null");
 		SQL_KEYWORD.add("counting");
 		SQL_KEYWORD.add("count");

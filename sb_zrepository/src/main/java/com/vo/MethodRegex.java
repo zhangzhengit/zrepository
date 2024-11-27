@@ -72,7 +72,23 @@ public class MethodRegex {
 
 	public static final String GROUP_findByXXLike = "findBy.+Like";
 
+
+	// FIXME 2024年11月27日 下午9:46:29 zhangzhen : 开始支持findByXXLikeAndXX这种形式
+	// FIXME 2024年11月27日 下午11:41:00 zhangzhen : 记得判断第一个参数必须是char/string
+	public static final String GROUP_findByXXLikeAndXX = "findBy.+LikeAnd.+";
+	public static final String GROUP_findByXXLikeAndXXAndXX = "findBy.+LikeAnd.+And.+";
+
+
 	public static final String GROUP_findByXXNotLike = "findBy.+NotLike";
+
+	// FIXME 2024年11月27日 下午10:59:35 zhangzhen : 写findByXXLikeAndXX时遇到了传值null/""的问题，
+	// 此时我在考虑是否提供出对于String/char的isEmpty方法，并且所有方法都按方法名理解，用户如需兼顾
+	// null/""/正常值，则自己组合这些方法来实现？
+
+	// FIXME 2024年11月27日 下午11:41:19 zhangzhen : 记得所有isEmpty的参数都判断必须是char/string
+	public static final String GROUP_findByXXIsEmptyAndXXAndXX = "findBy.+IsEmptyAnd.+And.+";
+	public static final String GROUP_findByXXIsEmptyAndXX = "findBy.+IsEmptyAnd.+";
+	public static final String GROUP_findByXXIsEmpty = "findBy.+IsEmpty";
 
 	public static final String GROUP_findByXXIsNull = "findBy.+IsNull";
 	public static final String GROUP_findByXXIsNullAndXX = "findBy.+IsNullAnd.+";
@@ -184,6 +200,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_UPDATE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXIsEmpty = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNull = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX = new LinkedHashMap<>();
@@ -191,6 +208,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXNotLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXLikeAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXEndingWith = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_StartingWith = new LinkedHashMap<>();
@@ -297,11 +315,19 @@ public class MethodRegex {
 		REGEX_MAP_findByXXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ = ? AND @ = ?)");
 		// findByXXIsNullAndXX
 		REGEX_MAP_findByXXXIsNullAndXX.put(GROUP_findByXXIsNullAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ = ?)");
+		// findByXXIsEmpty
+		REGEX_MAP_findByXXXIsEmpty.put(GROUP_findByXXIsEmptyAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = '' AND @ = ? AND @ = ?)");
+		REGEX_MAP_findByXXXIsEmpty.put(GROUP_findByXXIsEmptyAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = '' AND @ = ?)");
+		REGEX_MAP_findByXXXIsEmpty.put(GROUP_findByXXIsEmpty, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ''");
 		// findByXXIsNull
 		REGEX_MAP_findByXXXIsNull.put(findByXXIsNull, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL");
 
 		// findByXXXNotLike
 		REGEX_MAP_findByXXXNotLike.put(GROUP_findByXXNotLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ NOT LIKE ?)");
+		// findByXXXLikeAndXX
+		REGEX_MAP_findByXXXLikeAndXX.put(GROUP_findByXXLikeAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ LIKE ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_findByXXXLikeAndXX.put(GROUP_findByXXLikeAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ LIKE ? AND @ = ?)");
+
 		// findByXXXLike
 		REGEX_MAP_findByXXXLike.put(findByXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ LIKE ?");
 
@@ -361,9 +387,11 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXIsNullAndXXAndXXAndXX, REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX);
 		R_M.put(GROUP_findByXXIsNullAndXXAndXX, REGEX_MAP_findByXXXIsNullAndXXAndXX);
 		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
-		R_M.put(GROUP_findByXXIsNull, REGEX_MAP_findByXXXIsNull);
+		R_M.put(GROUP_findByXXIsEmpty, REGEX_MAP_findByXXXIsEmpty);
 		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
+		R_M.put(GROUP_findByXXIsNull, REGEX_MAP_findByXXXIsNull);
 		R_M.put(GROUP_findByXXNotLike, REGEX_MAP_findByXXXNotLike);
+		R_M.put(GROUP_findByXXLikeAndXX, REGEX_MAP_findByXXXLikeAndXX);
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
 		R_M.put(GROUP_findByxx_in, REGEX_MAP_FINDBYXXIN);
@@ -502,6 +530,8 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXXAndXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThanEquals);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXStartingWith);
@@ -540,6 +570,10 @@ public class MethodRegex {
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByxx_in);
+
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsEmptyAndXXAndXX);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsEmptyAndXX);
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsEmpty);
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXIsNull);
 
