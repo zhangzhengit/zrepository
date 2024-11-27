@@ -228,19 +228,19 @@ public class MethodRegex {
 
 		// findByXXOrderByXXLimit
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM
-				+ " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? ORDER BY @ ASC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? ORDER BY @ ASC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ? ORDER BY @ ASC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? ORDER BY @ ASC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? ORDER BY @ ASC LIMIT ? OFFSET ?");
+				+ " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?) ORDER BY @ ASC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?) ORDER BY @ ASC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ?) ORDER BY @ ASC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ?) ORDER BY @ ASC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ?) ORDER BY @ ASC LIMIT ? OFFSET ?");
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? ORDER BY @ ASC LIMIT ? OFFSET ?");
 
 		// findByXXOrderByXXDescLimit
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? ORDER BY @ DESC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? ORDER BY @ DESC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ? ORDER BY @ DESC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? ORDER BY @ DESC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? ORDER BY @ DESC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?) ORDER BY @ DESC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?) ORDER BY @ DESC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ?) ORDER BY @ DESC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ?) ORDER BY @ DESC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ?) ORDER BY @ DESC LIMIT ? OFFSET ?");
 		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? ORDER BY @ DESC LIMIT ? OFFSET ?");
 
 		// page
@@ -259,15 +259,15 @@ public class MethodRegex {
 		REGEX_MAP_findByXXBetween.put(findByXXBetween, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ BETWEEN ? AND ?)");
 
 		// countingByXXXNot
-		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNotAndXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ? AND @ <> ? AND @ <> ? AND @ <> ?");
-		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ? AND @ <> ? AND @ <> ?");
-		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ? AND @ <> ?");
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNotAndXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@ <> ? AND @ <> ? AND @ <> ? AND @ <> ?)");
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@ <> ? AND @ <> ? AND @ <> ?)");
+		REGEX_MAP_CountingByXXXNot.put(countingByXXXNotAndXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@ <> ? AND @ <> ?)");
 		REGEX_MAP_CountingByXXXNot.put(countingByXXXNot, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ <> ?");
 
 		// countingByXXX
-		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ? AND @ = ?");
-		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ? AND @ = ?");
-		REGEX_MAP_CountingByXXX.put(countingByXXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?");
+		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_CountingByXXX.put(countingByXXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ?)");
 		REGEX_MAP_CountingByXXX.put(countingByXXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @ = ?");
 		// findByXXOrXX 支持2个到11个条件的
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ? OR @ = ?)");
@@ -310,34 +310,34 @@ public class MethodRegex {
 		REGEX_MAP_FINDALL.put(findAll, SELECT + " * " + FROM + " TABLE_NAME" + " " + WHERE  + ZRWrapper.ALWAYS_TRUE);
 
 		// findByXXIsNullAndXXIsNullAndXXAndXX
-		REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXIsNullAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL AND @ IS NULL AND @ = ? AND @ = ?");
+		REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXIsNullAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ IS NULL AND @ = ? AND @ = ?)");
 		// findByXXIsNullAndXXIsNullAndXX
-		REGEX_MAP_findByXXIsNullAndXXIsNullAndXX.put(GROUP_findByXXIsNullAndXXIsNullAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL AND @ IS NULL AND @ = ?");
+		REGEX_MAP_findByXXIsNullAndXXIsNullAndXX.put(GROUP_findByXXIsNullAndXXIsNullAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ IS NULL AND @ = ?)");
 		// findByXXIsNullAndXXAndXXAndXX
-		REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL AND @ = ? AND @ = ? AND @ = ?");
+		REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ = ? AND @ = ? AND @ = ?)");
 		// findByXXIsNullAndXXAndXX
-		REGEX_MAP_findByXXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL AND @ = ? AND @ = ?");
+		REGEX_MAP_findByXXXIsNullAndXXAndXX.put(GROUP_findByXXIsNullAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ = ? AND @ = ?)");
 		// findByXXIsNullAndXX
-		REGEX_MAP_findByXXXIsNullAndXX.put(GROUP_findByXXIsNullAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL AND @ = ?");
+		REGEX_MAP_findByXXXIsNullAndXX.put(GROUP_findByXXIsNullAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IS NULL AND @ = ?)");
 		// findByXXIsNull
 		REGEX_MAP_findByXXXIsNull.put(findByXXIsNull, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NULL");
 
 		// findByXXXNotLike
-		REGEX_MAP_findByXXXNotLike.put(GROUP_findByXXNotLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ NOT LIKE ?");
+		REGEX_MAP_findByXXXNotLike.put(GROUP_findByXXNotLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ NOT LIKE ?)");
 		// findByXXXLike
 		REGEX_MAP_findByXXXLike.put(findByXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ LIKE ?");
 
 		// finByXX
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?  AND @ = ? ");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?  AND @ = ?");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?  AND @ = ?");
-		REGEX_MAP_FINDBYXX.put(findByXXAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ? AND @ = ?");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ? AND @ = ?)");
+		REGEX_MAP_FINDBYXX.put(findByXXAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ = ? AND @ = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ = ?");
 		// findByXXXEndingWith
 		REGEX_MAP_findByXXXEndingWith.put(findByXXXEndingWith, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ LIKE ?");
@@ -352,9 +352,9 @@ public class MethodRegex {
 		REGEX_MAP_findByXXNotNull.put(GROUP_findByxxNotNull, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IS NOT NULL");
 
 		// findByXXIn
-		REGEX_MAP_FINDBYXXIN.put(findByXXInAndYYInAndYYInAndYYIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IN (?) AND @ IN (?) AND @ IN (?) AND @ IN (?)");
-		REGEX_MAP_FINDBYXXIN.put(findByXXInAndYYInAndYYIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IN (?) AND @ IN (?) AND @ IN (?)");
-		REGEX_MAP_FINDBYXXIN.put(findByXXInAndYYIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IN (?) AND @ IN (?)");
+		REGEX_MAP_FINDBYXXIN.put(findByXXInAndYYInAndYYInAndYYIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IN (?) AND @ IN (?) AND @ IN (?) AND @ IN (?))");
+		REGEX_MAP_FINDBYXXIN.put(findByXXInAndYYInAndYYIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IN (?) AND @ IN (?) AND @ IN (?))");
+		REGEX_MAP_FINDBYXXIN.put(findByXXInAndYYIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ IN (?) AND @ IN (?))");
 		REGEX_MAP_FINDBYXXIN.put(findByXXIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IN (?)");
 
 		//  findByXXGreaterThanEquals
