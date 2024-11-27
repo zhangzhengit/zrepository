@@ -358,13 +358,13 @@ public class MethodRegex {
 		REGEX_MAP_FINDBYXXIN.put(findByXXIn, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ IN (?)");
 
 		//  findByXXGreaterThanEquals
-		REGEX_MAP_GreaterThanEquals.put(findByXXGreaterThanEquals, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ >= (?)");
+		REGEX_MAP_GreaterThanEquals.put(findByXXGreaterThanEquals, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ >= ?)");
 		//  findByXXGreaterThan
-		REGEX_MAP_GreaterThan.put(findByXXGreaterThan, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ > (?)");
+		REGEX_MAP_GreaterThan.put(findByXXGreaterThan, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ > ?)");
 		//  findByXXLessThan
-		REGEX_MAP_LessThanEquals.put(findByXXLessThanEquals, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ <= (?)");
+		REGEX_MAP_LessThanEquals.put(findByXXLessThanEquals, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ <= ?)");
 		// lessThan
-		REGEX_MAP_LessThan.put(findByXXLessThan, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @ < (?)");
+		REGEX_MAP_LessThan.put(findByXXLessThan, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@ < ?)");
 
 		// Between
 		// FIXME 2023年6月16日 下午5:37:32 zhanghen: between先不做
