@@ -85,7 +85,6 @@ public class MethodRegex {
 	// 此时我在考虑是否提供出对于String/char的isEmpty方法，并且所有方法都按方法名理解，用户如需兼顾
 	// null/""/正常值，则自己组合这些方法来实现？
 
-	// FIXME 2024年11月27日 下午11:41:19 zhangzhen : 记得所有isEmpty的参数都判断必须是char/string
 	public static final String GROUP_findByXXIsEmptyAndXXAndXX = "findBy.+IsEmptyAnd.+And.+";
 	public static final String GROUP_findByXXIsEmptyAndXX = "findBy.+IsEmptyAnd.+";
 	public static final String GROUP_findByXXIsEmpty = "findBy.+IsEmpty";
