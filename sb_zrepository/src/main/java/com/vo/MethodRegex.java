@@ -89,6 +89,7 @@ public class MethodRegex {
 	public static final String GROUP_findByXXIsEmptyAndXX = "findBy.+IsEmptyAnd.+";
 	public static final String GROUP_findByXXIsEmpty = "findBy.+IsEmpty";
 
+	public static final String GROUP_findByXXIsNullOrEmptyAndXXAndXX = "findBy.+IsNullOrEmptyAnd.+And.+";
 	public static final String GROUP_findByXXIsNullOrEmptyAndXX = "findBy.+IsNullOrEmptyAnd.+";
 	public static final String GROUP_findByXXIsNullOrEmpty = "findBy.+IsNullOrEmpty";
 
@@ -326,7 +327,7 @@ public class MethodRegex {
 
 
 		// findByXXIsNullOrEmptyAndXX
-		// 注意：这个有两个参数，都是必须@1，不是笔误，就是两个都是@后面跟着第一个数字
+		REGEX_MAP_findByXXXIsNullOrEmptyAndXX.put(GROUP_findByXXIsNullOrEmptyAndXXAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " ((@1 IS NULL OR @1 = '') AND @2 = ? AND @3 = ?)");
 		REGEX_MAP_findByXXXIsNullOrEmptyAndXX.put(GROUP_findByXXIsNullOrEmptyAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 IS NULL OR @1 = '') AND @2 = ?");
 		// findByXXIsNullOrEmpty
 		// 注意：这个有两个参数，都是必须@1，不是笔误，就是两个都是@后面跟着第一个数字
@@ -563,6 +564,7 @@ public class MethodRegex {
 
 
 
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullOrEmptyAndXXAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullOrEmptyAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullOrEmpty);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThan);

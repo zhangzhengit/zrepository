@@ -80,6 +80,7 @@ public class ZRepositoryMain {
 	private static final int findByXXIsNull_PARAMETER_SIZE = 0;
 	private static final int findByXXIsNullOrEmpty_PARAMETER_SIZE = 0;
 	private static final int findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE = 1;
+	private static final int findByXXIsNullOrEmptyAndXXAndXX_PARAMETER_SIZE = 2;
 	private static final int findByXXIsEmpty_PARAMETER_SIZE = 0;
 	private static final int findByXXIsEmptyAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsEmptyAndXXAndXX_PARAMETER_SIZE = 2;
@@ -939,8 +940,11 @@ public class ZRepositoryMain {
 				return findByXXIsEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsEmpty);
 			}
 
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullOrEmptyAndXXAndXX)) {
+				return findByXXIsNullOrEmptyAndXX(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmptyAndXXAndXX, findByXXIsNullOrEmptyAndXXAndXX_PARAMETER_SIZE);
+			}
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullOrEmptyAndXX)) {
-				return findByXXIsNullOrEmptyAndXX(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmptyAndXX);
+				return findByXXIsNullOrEmptyAndXX(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmptyAndXX, findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE);
 			}
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullOrEmpty)) {
 				return findByXXIsNullOrEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmpty);
@@ -1206,18 +1210,18 @@ public class ZRepositoryMain {
 	}
 
 	private static String findByXXIsNullOrEmptyAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
-			final String modeString, final String className1, final String methodName1, final String methodRegex) {
+			final String modeString, final String className1, final String methodName1, final String methodRegex, final int needPS) {
 
 		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
 
-		if (method.getParameters().length != findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE) {
+		if (method.getParameters().length != needPS) {
 
 			final String xxx =
 					"\r\n\t"
 							+ methodRegex + "声明式方法"
 							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]"
 							+ "\r\n\t"
-							+ "必须有且只有[" + findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE + "]个参数"
+							+ "必须有且只有[" + needPS + "]个参数"
 							+ "\r\n\t"
 							+ "当前参数个数为[" + method.getParameters().length + "]"
 							+ "\r\n\t"
@@ -1230,8 +1234,13 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
+		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXX(" + className1 + "," + methodName1
+		final String suMethodName =
+				ac == 0 ? "findByXXIsNullAndXX" : "findByXXIsNullAndXXAndXX";
+
+
+		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + className1 + "," + methodName1
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner +  ");";
 	}
 
