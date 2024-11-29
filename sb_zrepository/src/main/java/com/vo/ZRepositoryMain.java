@@ -819,199 +819,206 @@ public class ZRepositoryMain {
 
 			// default  ZR的子类声明的方法
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
-			final String methodName = methodSQL.getMethodName();
+			final String methodNameRegex = methodSQL.getMethodName();
 
-			if (methodName.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXDescLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
-					|| methodName.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)
+			if (methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXDescLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXOrderByXXDescLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXOrderByXXDescLimit)
+					|| methodNameRegex.matches(MethodRegex.GROUP_findByXXOrderByXXDescLimit)
 					// 下面是OrderByXXAsc的了
-					||methodName.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
-					|| methodName.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
-					|| methodName.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
+					||methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
+					|| methodNameRegex.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
+					|| methodNameRegex.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
 				return findByXXOrderByXXDescLimit(myZRClass, entityClass, className1, method);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXXEndingWith)) {
 				return findByXXXEndingWith(myZRClass, entityClass, className1, method);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXXStartingWith)) {
 				return findByXXXStartingWith(myZRClass, entityClass, className1, method);
 			}
 
-			if (	methodName.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
-					|| methodName.matches(MethodRegex.GROUP_findByXXGreaterThan)
-					|| methodName.matches(MethodRegex.GROUP_findByXXLessThanEquals)
-					|| methodName.matches(MethodRegex.GROUP_findByXXLessThan)
+			if (	methodNameRegex.matches(MethodRegex.GROUP_findByXXGreaterThanEquals)
+					|| methodNameRegex.matches(MethodRegex.GROUP_findByXXGreaterThan)
+					|| methodNameRegex.matches(MethodRegex.GROUP_findByXXLessThanEquals)
+					|| methodNameRegex.matches(MethodRegex.GROUP_findByXXLessThan)
 					) {
 				return findByXXGreaterThanEquals(myZRClass, entityClass, className1, method);
 			}
 
-			if (methodName.matches(MethodRegex.findByXXNotBetween)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXNotBetween)) {
 				return findByXXNotBetween(myZRClass, entityClass, className1, method);
 			}
-			if (methodName.matches(MethodRegex.findByXXBetween)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXBetween)) {
 				return findByXXBetween(myZRClass, entityClass, className1, method);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByxx_in)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByxx_in)) {
 				return findByXXIn(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByxx_in);
 			}
 
 			// countingByXXNot 放在 countingByXX之前
-			if (methodName.matches(MethodRegex.countingByXXXNotAndXXXNotAndXXXNotAndXXXNot)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXNotAndXXXNotAndXXXNotAndXXXNot)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNotAndXXXNotAndXXXNotAndXXXNot);
 			}
-			if (methodName.matches(MethodRegex.countingByXXXNotAndXXXNotAndXXXNot)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXNotAndXXXNotAndXXXNot)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNotAndXXXNotAndXXXNot);
 			}
-			if (methodName.matches(MethodRegex.countingByXXXNotAndXXXNot)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXNotAndXXXNot)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNotAndXXXNot);
 			}
-			if (methodName.matches(MethodRegex.countingByXXXNot)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXNot)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXNot);
 			}
 
-			if (methodName.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXAndXXAndXXAndXX)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXXAndXX);
 			}
-			if (methodName.matches(MethodRegex.countingByXXXAndXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXAndXXAndXX)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXXAndXX);
 			}
-			if (methodName.matches(MethodRegex.countingByXXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.countingByXXXAndXX)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.countingByXXXAndXX);
 			}
-			if (methodName.matches(MethodRegex.GROUP_CountingByXXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_CountingByXXX)) {
 				return countingByXXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_CountingByXXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByxxNotNull)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByxxNotNull)) {
 				return findByXXNotNull(myZRClass, entityClass, className1, method);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX)) {
 				return findByXXIsNullAndXXIsNullAndXXAndXX(myZRClass, entityClass, className1,
 						method, MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXXAndXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX)) {
 				return findByXXIsNullAndXXIsNullAndXX(myZRClass, entityClass, className1,
 						method, MethodRegex.GROUP_findByXXIsNullAndXXIsNullAndXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX)) {
 				return findByXXIsNullAndXXAndXXAndXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXIsNullAndXXAndXXAndXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullAndXXAndXX)) {
 				return findByXXIsNullAndXXAndXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXIsNullAndXXAndXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsNullAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullAndXX)) {
 				return findByXXIsNullAndXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXIsNullAndXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsEmptyAndXXAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsEmptyAndXXAndXX)) {
 				return findByXXIsEmptyAndXXAndXX(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsEmptyAndXXAndXX);
 			}
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsEmptyAndXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsEmptyAndXX)) {
 				return findByXXIsEmptyAndXX(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsEmptyAndXX);
 			}
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsEmpty)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsEmpty)) {
 				return findByXXIsEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsEmpty);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXIsNull)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				return findByXXIsNull(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNull);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXNotLike)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXNotLikeAndXXAndXX)) {
+				return findByXXNotLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXNotLikeAndXXAndXX);
+			}
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXNotLikeAndXX)) {
+				return findByXXNotLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXNotLikeAndXX);
+			}
+
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXNotLike)) {
 				return findByXXNotLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXNotLike);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXLikeAndXXAndXX)) {
-				return findByXXLikeAndXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLikeAndXXAndXX);
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXXAndXX)) {
+				return findByXXLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXLikeAndXXAndXX);
 			}
-			if (methodName.matches(MethodRegex.GROUP_findByXXLikeAndXX)) {
-				return findByXXLikeAndXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLikeAndXX);
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXX)) {
+				return findByXXLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXLikeAndXX);
 			}
 
-			if (methodName.matches(MethodRegex.GROUP_findByXXLike)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLike)) {
 				return findByXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLike);
 			}
 
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1,
 						method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1,
 						method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1,
 						method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYYOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYYOrYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXOrYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1, method, MethodRegex.findByXXOrYY);
 			}
 
 			// 最短的排最后
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY) || methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY) || methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYYAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYY);
 			}
-			if (methodName.matches(MethodRegex.findByXXAndYY)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYY);
 			}
-			if (methodName.matches(MethodRegex.GROUP_findByXX)) {
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXX)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXX);
 			}
 
@@ -1718,9 +1725,9 @@ public class ZRepositoryMain {
 		return findByXXLike0(myZRClass, entityClass, className1, method, methodRegex);
 	}
 
-	private static String findByXXLikeAndXX(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
-		// FIXME 2024年11月27日 下午9:55:04 zhangzhen : 下面加入check，like必须是char/String ，第二个不限制
-		//		checkFindByXXLike(myZRClass, method, methodRegex);
+	private static String findByXXNotLikeAndXX(final Class<?> myZRClass, final Class entityClass, final String className1, final String methodName1, final Method method, final String methodRegex) {
+
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
 
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
@@ -1730,11 +1737,28 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
-		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getCanonicalName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
+
+	private static String findByXXLikeAndXX(final Class<?> myZRClass, final Class entityClass, final String className1, final String methodName1, final Method method, final String methodRegex) {
+
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
+
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+	}
+
 	private static String findByXXLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
 		return findByXXLike0(myZRClass, entityClass, className1, method, methodRegex);
 	}
