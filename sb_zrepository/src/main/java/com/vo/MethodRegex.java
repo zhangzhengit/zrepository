@@ -21,6 +21,8 @@ import cn.hutool.core.util.StrUtil;
  *
  */
 // FIXME 2023年6月15日 下午7:42:24 zhanghen: 参照 https://www.fcors.com/archives/1719 全完成
+// FIXME 2024年11月30日 上午7:02:59 zhangzhen : 因为替换@改为了repalceAll("@" + i，所以@10会被@1一起替换掉,
+// 所以暂时修改为最大支持9个字段。或者以后再考虑是否ABCDE的方式支持到26个或者其他编号方式支持更多？但似乎没多大必要
 public class MethodRegex {
 
 	public static final String SELECT = "SELECT";
@@ -87,6 +89,7 @@ public class MethodRegex {
 	public static final String GROUP_findByXXIsEmptyAndXX = "findBy.+IsEmptyAnd.+";
 	public static final String GROUP_findByXXIsEmpty = "findBy.+IsEmpty";
 
+	public static final String GROUP_findByXXIsNullOrEmptyAndXX = "findBy.+IsNullOrEmptyAnd.+";
 	public static final String GROUP_findByXXIsNullOrEmpty = "findBy.+IsNullOrEmpty";
 
 	public static final String GROUP_findByXXIsNull = "findBy.+IsNull";
@@ -200,6 +203,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsEmpty = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmptyAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmpty = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNull = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullAndXXAndXXAndXX = new LinkedHashMap<>();
@@ -267,9 +271,7 @@ public class MethodRegex {
 		REGEX_MAP_CountingByXXX.put(countingByXXXAndXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ?)");
 		REGEX_MAP_CountingByXXX.put(countingByXXXAndXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ?)");
 		REGEX_MAP_CountingByXXX.put(countingByXXX, SELECT + " count(*) " + FROM + " TABLE_NAME " + WHERE + " @1 = ?");
-		// findByXXOrXX 支持2个到11个条件的
-		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? OR @2 = ? OR @3 = ? OR @4 = ? OR @5 = ? OR @6 = ? OR @7 = ? OR @8 = ? OR @9 = ? OR @10 = ? OR @11 = ?)");
-		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? OR @2 = ? OR @3 = ? OR @4 = ? OR @5 = ? OR @6 = ? OR @7 = ? OR @8 = ? OR @9 = ? OR @10 = ?)");
+		// findByXXOrXX 支持2个到9个条件的
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? OR @2 = ? OR @3 = ? OR @4 = ? OR @5 = ? OR @6 = ? OR @7 = ? OR @8 = ? OR @9 = ?)");
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? OR @2 = ? OR @3 = ? OR @4 = ? OR @5 = ? OR @6 = ? OR @7 = ? OR @8 = ?)");
 		REGEX_MAP_findByXXOrYY.put(findByXXOrYYOrYYOrYYOrYYOrYYOrYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? OR @2 = ? OR @3 = ? OR @4 = ? OR @5 = ? OR @6 = ? OR @7 = ?)");
@@ -323,6 +325,9 @@ public class MethodRegex {
 		REGEX_MAP_findByXXXIsEmpty.put(GROUP_findByXXIsEmpty, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ''");
 
 
+		// findByXXIsNullOrEmptyAndXX
+		// 注意：这个有两个参数，都是必须@1，不是笔误，就是两个都是@后面跟着第一个数字
+		REGEX_MAP_findByXXXIsNullOrEmptyAndXX.put(GROUP_findByXXIsNullOrEmptyAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 IS NULL OR @1 = '') AND @2 = ?");
 		// findByXXIsNullOrEmpty
 		// 注意：这个有两个参数，都是必须@1，不是笔误，就是两个都是@后面跟着第一个数字
 		REGEX_MAP_findByXXXIsNullOrEmpty.put(GROUP_findByXXIsNullOrEmpty, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 IS NULL OR @1 = '')");
@@ -401,6 +406,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
 		R_M.put(GROUP_findByXXIsEmpty, REGEX_MAP_findByXXXIsEmpty);
 		R_M.put(GROUP_findByXXIsNullAndXX, REGEX_MAP_findByXXXIsNullAndXX);
+		R_M.put(GROUP_findByXXIsNullOrEmptyAndXX, REGEX_MAP_findByXXXIsNullOrEmptyAndXX);
 		R_M.put(GROUP_findByXXIsNullOrEmpty, REGEX_MAP_findByXXXIsNullOrEmpty);
 		R_M.put(GROUP_findByXXIsNull, REGEX_MAP_findByXXXIsNull);
 		R_M.put(GROUP_findByXXNotLikeAndXXAndXX, REGEX_MAP_findByXXXNotLikeAndXXAndXX);
@@ -557,8 +563,7 @@ public class MethodRegex {
 
 
 
-
-
+		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullOrEmptyAndXX);
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXIsNullOrEmpty);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXLessThan);
 

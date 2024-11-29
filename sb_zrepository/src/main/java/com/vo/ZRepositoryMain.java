@@ -79,6 +79,7 @@ public class ZRepositoryMain {
 	private static final int findByXXIsNullAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsNull_PARAMETER_SIZE = 0;
 	private static final int findByXXIsNullOrEmpty_PARAMETER_SIZE = 0;
+	private static final int findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsEmpty_PARAMETER_SIZE = 0;
 	private static final int findByXXIsEmptyAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsEmptyAndXXAndXX_PARAMETER_SIZE = 2;
@@ -516,78 +517,7 @@ public class ZRepositoryMain {
 				i++;
 			}
 		} else if (MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
-			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
-
-			if (filedNameMethodNameOrder.size() > ps.length) {
-				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
-
-				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
-					final Field declaredField = getDeclaredField(entityClass,
-							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
-					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
-				}).collect(Collectors.joining(DELIMITER));
-
-				final String x1 =
-						"[" + zrClass.getSimpleName() + "." + methodName + "]"
-								+ "\r\n\t"
-								+ "必须有且只有[" +filedNameMethodNameOrder.size() + "]个参数"
-								+ "\r\n\t"
-								+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
-								+ "\r\n\t"
-								+ (ps.length == 0 ? "实际无参数"
-										: ("实际方法有[" + ps.length + "]个参数,名称为" + pnl))
-								+ "\r\n\t"
-								+ "请检查代码:给方法添加上述的参数"
-								+ "\r\n\t"
-								;
-				throw new ParameterCountDeclarationException(x1);
-			}else if (filedNameMethodNameOrder.size() < ps.length) {
-				final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
-
-				final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
-					final Field declaredField = getDeclaredField(entityClass,
-							ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
-					return declaredField.getType().getSimpleName() + " " + declaredField.getName();
-				}).collect(Collectors.joining(DELIMITER));
-
-				final String x1 =
-						"[" + zrClass.getSimpleName() + "." + methodName + "]"
-								+ "\r\n\t"
-								+ "必须有且只有[" +filedNameMethodNameOrder.size() + "]个参数"
-								+ "\r\n\t"
-								+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
-								+ "\r\n\t"
-								+ "实际方法有[" + ps.length + "]个参数,名称为" + pnl
-								+ "\r\n\t"
-								+ "请检查代码:去除多余的参数，只保留上述代码中必要的参数"
-								+ "\r\n\t"
-								;
-				throw new ParameterCountDeclarationException(x1);
-			}
-
-			for (int i = 0; i < ps.length; i++) {
-				final Parameter p = ps[i];
-				final String dbColumnName = ZFieldConverter.toDbField(p.getName());
-				final String javaFiledName = filedNameMethodNameOrder.get(i);
-				final String dbColumnNameFromJavaFieldName = ZFieldConverter.toDbField(javaFiledName);
-				if (!Objects.equals(dbColumnNameFromJavaFieldName, dbColumnName)) {
-
-					final String jfn2 = String.valueOf(javaFiledName.charAt(0)).toLowerCase() + javaFiledName.substring(1);
-					final String m =
-							"[" + zrClass.getSimpleName() + "." + methodName + "]"
-									+ "\r\n\t"
-									+ "请检查代码:参数名称[" + p.getName() + "]"
-									+ "修改为方法名称中对应的Field的名称[" + jfn2 + "]一致."
-									+ "\r\n\t"
-									+ "把参数[" + p.getName() + "]名称修改为[" + jfn2 + "]"
-									+ "\r\n\t"
-									;
-
-					throw new ParameterNameDeclarationException(m);
-				}
-
-				sqlA = sqlA.replaceAll("@" + (i + 1), dbColumnName);
-			}
+			sqlA = extracted(entityClass, methodName, zrClass, d, ps, sqlA);
 		}
 
 		// 仍然包含 @，则说明参数和字段数目对不上
@@ -596,6 +526,85 @@ public class ZRepositoryMain {
 		}
 
 		return sqlA;
+	}
+
+	private static String extracted(final Class<?> entityClass, final String methodName, final Class zrClass, final D d,
+			final Parameter[] ps, final String sqlA) {
+
+		String sf = sqlA;
+		final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
+
+		if (filedNameMethodNameOrder.size() > ps.length) {
+			final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
+
+			final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
+				final Field declaredField = getDeclaredField(entityClass,
+						ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+				return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+			}).collect(Collectors.joining(DELIMITER));
+
+			final String x1 =
+					"[" + zrClass.getSimpleName() + "." + methodName + "]"
+							+ "\r\n\t"
+							+ "必须有且只有[" +filedNameMethodNameOrder.size() + "]个参数"
+							+ "\r\n\t"
+							+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
+							+ "\r\n\t"
+							+ (ps.length == 0 ? "实际无参数"
+									: ("实际方法有[" + ps.length + "]个参数,名称为" + pnl))
+							+ "\r\n\t"
+							+ "请检查代码:给方法添加上述的参数"
+							+ "\r\n\t"
+							;
+			throw new ParameterCountDeclarationException(x1);
+		}else if (filedNameMethodNameOrder.size() < ps.length) {
+			final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
+
+			final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
+				final Field declaredField = getDeclaredField(entityClass,
+						ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
+				return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+			}).collect(Collectors.joining(DELIMITER));
+
+			final String x1 =
+					"[" + zrClass.getSimpleName() + "." + methodName + "]"
+							+ "\r\n\t"
+							+ "必须有且只有[" +filedNameMethodNameOrder.size() + "]个参数"
+							+ "\r\n\t"
+							+ "如:" + zrClass.getSimpleName() + "." + methodName +"(" + collect + ")"
+							+ "\r\n\t"
+							+ "实际方法有[" + ps.length + "]个参数,名称为" + pnl
+							+ "\r\n\t"
+							+ "请检查代码:去除多余的参数，只保留上述代码中必要的参数"
+							+ "\r\n\t"
+							;
+			throw new ParameterCountDeclarationException(x1);
+		}
+
+		for (int i = 0; i < ps.length; i++) {
+			final Parameter p = ps[i];
+			final String dbColumnName = ZFieldConverter.toDbField(p.getName());
+			final String javaFiledName = filedNameMethodNameOrder.get(i);
+			final String dbColumnNameFromJavaFieldName = ZFieldConverter.toDbField(javaFiledName);
+			if (!Objects.equals(dbColumnNameFromJavaFieldName, dbColumnName)) {
+
+				final String jfn2 = String.valueOf(javaFiledName.charAt(0)).toLowerCase() + javaFiledName.substring(1);
+				final String m =
+						"[" + zrClass.getSimpleName() + "." + methodName + "]"
+								+ "\r\n\t"
+								+ "请检查代码:参数名称[" + p.getName() + "]"
+								+ "修改为方法名称中对应的Field的名称[" + jfn2 + "]一致."
+								+ "\r\n\t"
+								+ "把参数[" + p.getName() + "]名称修改为[" + jfn2 + "]"
+								+ "\r\n\t"
+								;
+
+				throw new ParameterNameDeclarationException(m);
+			}
+
+			sf = sf.replaceAll("@" + (i + 1), dbColumnName);
+		}
+		return sf;
 	}
 
 	private static boolean isZRClassMethod(final Method method) {
@@ -930,6 +939,9 @@ public class ZRepositoryMain {
 				return findByXXIsEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsEmpty);
 			}
 
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullOrEmptyAndXX)) {
+				return findByXXIsNullOrEmptyAndXX(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmptyAndXX);
+			}
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullOrEmpty)) {
 				return findByXXIsNullOrEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmpty);
 			}
@@ -1192,6 +1204,37 @@ public class ZRepositoryMain {
 			throw new IllegalArgumentException(m);
 		}
 	}
+
+	private static String findByXXIsNullOrEmptyAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
+			final String modeString, final String className1, final String methodName1, final String methodRegex) {
+
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
+
+		if (method.getParameters().length != findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE) {
+
+			final String xxx =
+					"\r\n\t"
+							+ methodRegex + "声明式方法"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须有且只有[" + findByXXIsNullOrEmptyAndXX_PARAMETER_SIZE + "]个参数"
+							+ "\r\n\t"
+							+ "当前参数个数为[" + method.getParameters().length + "]"
+							+ "\r\n\t"
+							+ "请修改方法声明:修改方法参数"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(xxx);
+		}
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXX(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner +  ");";
+	}
+
 
 	private static String findByXXIsNullOrEmpty(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
