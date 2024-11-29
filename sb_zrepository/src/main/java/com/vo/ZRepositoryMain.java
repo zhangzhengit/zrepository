@@ -78,6 +78,7 @@ public class ZRepositoryMain {
 	private static final int findByXXIsNullAndXXAndXX_PARAMETER_SIZE = 2;
 	private static final int findByXXIsNullAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsNull_PARAMETER_SIZE = 0;
+	private static final int findByXXIsNullOrEmpty_PARAMETER_SIZE = 0;
 	private static final int findByXXIsEmpty_PARAMETER_SIZE = 0;
 	private static final int findByXXIsEmptyAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsEmptyAndXXAndXX_PARAMETER_SIZE = 2;
@@ -508,9 +509,11 @@ public class ZRepositoryMain {
 
 		if (isZRClassMethod(method) || MethodRegex.isMethod_ANALYSIS_BY_ZENTITY_FIELD(method)) {
 			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
+			int i = 1;
 			for (final String fieldName : filedNameMethodNameOrder) {
 				final String dbColumnName = ZFieldConverter.toDbField(fieldName);
-				sqlA = sqlA.replaceFirst("@", dbColumnName);
+				sqlA = sqlA.replaceAll("@" + i, dbColumnName);
+				i++;
 			}
 		} else if (MethodRegex.isMethod_ANALYSIS_BY_METHOD_PARAMETERS(method)) {
 			final List<String> filedNameMethodNameOrder = d.getFiledNameMethodNameOrder();
@@ -583,7 +586,7 @@ public class ZRepositoryMain {
 					throw new ParameterNameDeclarationException(m);
 				}
 
-				sqlA = sqlA.replaceFirst("@", dbColumnName);
+				sqlA = sqlA.replaceAll("@" + (i + 1), dbColumnName);
 			}
 		}
 
@@ -927,6 +930,9 @@ public class ZRepositoryMain {
 				return findByXXIsEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsEmpty);
 			}
 
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNullOrEmpty)) {
+				return findByXXIsNullOrEmpty(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNullOrEmpty);
+			}
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXIsNull)) {
 				return findByXXIsNull(myZRClass, entityClass, method, modeString, className1, methodName1, MethodRegex.GROUP_findByXXIsNull);
 			}
@@ -1187,6 +1193,31 @@ public class ZRepositoryMain {
 		}
 	}
 
+	private static String findByXXIsNullOrEmpty(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
+			final String modeString, final String className1, final String methodName1, final String methodRegex) {
+
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
+
+		if (method.getParameters().length != findByXXIsNullOrEmpty_PARAMETER_SIZE) {
+
+			final String xxx =
+					"\r\n\t"
+							+ methodRegex + "声明式方法"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]"
+							+ "\r\n\t"
+							+ "无需参数,当前参数个数为[" + method.getParameters().length + "]"
+							+ "\r\n\t"
+							+ "请修改方法声明:去掉所有参数"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(xxx);
+		}
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
+	}
 	private static String findByXXIsNull(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
 
