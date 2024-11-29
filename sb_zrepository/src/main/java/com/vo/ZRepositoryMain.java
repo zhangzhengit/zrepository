@@ -68,6 +68,8 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月15日
  *
  */
+// FIXME 2024年11月29日 下午11:23:17 zhangzhen : 所有声明式方法都要考虑是否支持类似形式：
+// findByNameIsEmtpyAndName 即：字段重复，这个例子是特殊情况，显然不可能查出来值，是否启动时提示来避免这种情况？
 public class ZRepositoryMain {
 
 	private static final int findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE = 2;
@@ -1039,6 +1041,8 @@ public class ZRepositoryMain {
 	private static String findByXXIsEmptyAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
 
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
+
 		final Parameter[] parameters = method.getParameters();
 		if (parameters.length != findByXXIsEmptyAndXXAndXX_PARAMETER_SIZE) {
 
@@ -1070,6 +1074,8 @@ public class ZRepositoryMain {
 	private static String findByXXIsEmptyAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
 
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
+
 		final Parameter[] parameters = method.getParameters();
 		if (parameters.length != findByXXIsEmptyAndXX_PARAMETER_SIZE) {
 
@@ -1100,6 +1106,8 @@ public class ZRepositoryMain {
 	private static String findByXXIsEmpty(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
 
+		checkFindByXXIsEmptyType(myZRClass, entityClass, method, methodName1, methodRegex);
+
 		final Parameter[] parameters = method.getParameters();
 		if (parameters.length != findByXXIsEmpty_PARAMETER_SIZE) {
 
@@ -1121,6 +1129,57 @@ public class ZRepositoryMain {
 		return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
 				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
 	}
+
+
+	private static void checkFindByXXIsEmptyType(final Class<?> myZRClass, final Class<?> entityClass,
+			final Method method, final String methodName1, final String methodRegex) {
+		final String omn = methodName1.replace("\"", "");
+
+		final D findFieldName = findFieldName(entityClass, omn);
+
+		final String fN = findFieldName.getFiledNameMethodNameOrder().get(0);
+		final String javaField = String.valueOf(fN.charAt(0)).toLowerCase() + fN.substring(1);
+
+		final Field[] fs = entityClass.getDeclaredFields();
+		final Optional<Field> findAny = Arrays.stream(fs).filter(f -> f.getName().equals(javaField)).findAny();
+
+		if (!findAny.get().getType().getCanonicalName().equals(String.class.getCanonicalName())
+				&& !findAny.get().getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+
+			final List<String> sln = Arrays.stream(fs)
+					.filter(f -> f.getType().getCanonicalName().equals(String.class.getCanonicalName())
+							|| f.getType().getCanonicalName().equals(Character.class.getCanonicalName())
+							).map(Field::getName)
+					.collect(Collectors.toList());
+
+			final String m =
+
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName()
+							+ "] 字段类型必须为["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName()
+							+ "]"
+							+ "\r\n\t"
+							+ "当前参数[" + findAny.get().getName() + "]"
+							+ "的类型是[" + findAny.get().getType().getCanonicalName() + "]"
+							+ "\r\n\t"
+							+ "请检查代码:"
+							+ "\r\n\t"
+							+ "修改为类型是["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName() + "]"
+							+ " 的其他字段："
+							+ sln
+							+ "\r\n\t"
+							;
+
+			throw new IllegalArgumentException(m);
+		}
+	}
+
 	private static String findByXXIsNull(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
 
