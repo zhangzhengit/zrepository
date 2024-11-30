@@ -88,6 +88,7 @@ public class ZRepositoryMain {
 	private static final int FIND_BY_XX_NOT_NULL_PARAMETER_SIZE = 0;
 
 	private static final int FIND_BY_XX_BETWEEN_PARAMETERS_SIZE = 2;
+	private static final int FIND_BY_XX_BETWEENANDXX_PARAMETERS_SIZE = 3;
 
 	private static final int findByXXOrderByXXDescLimit_Basic_PSIZE = 2;
 
@@ -869,7 +870,10 @@ public class ZRepositoryMain {
 			if (methodNameRegex.matches(MethodRegex.findByXXNotBetween)) {
 				return findByXXNotBetween(myZRClass, entityClass, className1, method);
 			}
-			if (methodNameRegex.matches(MethodRegex.findByXXBetween)) {
+			if (methodNameRegex.matches(MethodRegex.findByXXBetweenAndXX)) {
+				return findByXXBetweenAndXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXBetweenAndXX);
+			}
+			if ( methodNameRegex.matches(MethodRegex.findByXXBetween)) {
 				return findByXXBetween(myZRClass, entityClass, className1, method);
 			}
 
@@ -1886,12 +1890,27 @@ public class ZRepositoryMain {
 	}
 
 	private static String findByXXNotBetween(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
-		checkFindByXXBetween(myZRClass, entityClass, method, MethodRegex.findByXXNotBetween);
+		checkFindByXXBetween(myZRClass, entityClass, method, MethodRegex.findByXXNotBetween, FIND_BY_XX_BETWEEN_PARAMETERS_SIZE);
 		return findByXXBetween0(myZRClass, entityClass, className1, method);
 	}
 
+	private static String findByXXBetweenAndXX(final Class<?> myZRClass, final Class<?> entityClass,
+			final String className1, final Method method, final String methodRegex) {
+
+		checkFindByXXBetweenAndXX(myZRClass, entityClass, method, methodRegex, FIND_BY_XX_BETWEENANDXX_PARAMETERS_SIZE);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		final String modeString = modeString(method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
+				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+	}
+
 	private static String findByXXBetween(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
-		checkFindByXXBetween(myZRClass, entityClass, method, MethodRegex.findByXXBetween);
+		checkFindByXXBetween(myZRClass, entityClass, method, MethodRegex.findByXXBetween, FIND_BY_XX_BETWEEN_PARAMETERS_SIZE);
 		return findByXXBetween0(myZRClass, entityClass, className1, method);
 	}
 
@@ -1906,11 +1925,86 @@ public class ZRepositoryMain {
 				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
 	}
 
-	private static void checkFindByXXBetween(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex) {
+	private static void checkFindByXXBetweenAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex, final int mps) {
 
 		final D d = findFieldName(entityClass, method.getName());
 		// 先校验method.parameters 个数
-		if (method.getParameters().length != FIND_BY_XX_BETWEEN_PARAMETERS_SIZE) {
+		if (method.getParameters().length != mps) {
+			final Field f = getDeclaredField(entityClass,
+					ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(0))));
+			final String fnj1 = f.getType().getSimpleName() + " " + f.getName()+ "1" + "," + f.getType().getSimpleName() + " " + f.getName() + "2";
+
+			final Field f2 = getDeclaredField(entityClass,
+					ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(1))));
+
+			final String fnj2 = f2.getType().getSimpleName() + " " + f.getName();
+
+			final String fnj = fnj1 + "," + fnj2;
+
+			final String m1 =
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" +myZRClass.getSimpleName() + "." + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须有且只有["+(mps)+"]个参数,"
+							+ "形式为"
+							+ "\r\n\t"
+							+ method.getName() + "(" + fnj + ")"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个"
+							+ "\r\n\t"
+							+ "请检查代码:修改为参数 (" + fnj + ")"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+
+		final List<String> mnl = d.getFiledNameMethodNameOrder();
+
+		final Field f = getDeclaredField(entityClass,
+				ZFieldConverter.toJavaField(ZFieldConverter.toDbField(mnl.get(0))));
+
+		if (!f.getType().equals(method.getParameters()[0].getType())) {
+			extracted(myZRClass, method, methodRegex, 0, method.getParameters()[0].getType(), f);
+			return;
+		}
+		if (!f.getType().equals(method.getParameters()[1].getType())) {
+			extracted(myZRClass, method, methodRegex, 1, method.getParameters()[0].getType(), f);
+			return;
+		}
+
+		for (int i = 1; i < mnl.size(); i++) {
+			final Field fT = getDeclaredField(entityClass,
+					ZFieldConverter.toJavaField(ZFieldConverter.toDbField(mnl.get(i))));
+			final Parameter pT = method.getParameters()[i+1];
+			if (!fT.getType().equals(pT.getType())) {
+				extracted(myZRClass, method, methodRegex, i, pT.getType(), fT);
+				return;
+			}
+		}
+
+	}
+
+	private static void extracted(final Class<?> myZRClass, final Method method, final String methodRegex, final int i, final Class pClass, final Field f) {
+		final String m1 =
+				"\r\n\t"
+						+ methodRegex + " 声明式方法"
+						+ "\r\n\t"
+						+ "[" +myZRClass.getSimpleName() + "." + method.getName() + "]"
+						+ "\r\n\t"
+						+ "第[" + (i + 1) + "]个参数类型["+pClass.getCanonicalName()+"]错误"
+						+ "\r\n\t"
+						+ "请检查代码:修改第["+(i+1)+"]个参数类型为[" + f.getType().getCanonicalName() + "]"
+						+ "\r\n\t"
+						;
+		throw new IllegalArgumentException(m1);
+	}
+	private static void checkFindByXXBetween(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex, final int mps) {
+
+		final D d = findFieldName(entityClass, method.getName());
+		// 先校验method.parameters 个数
+		if (method.getParameters().length != mps) {
 			final Field f2 = getDeclaredField(entityClass, ZFieldConverter.toJavaField(ZFieldConverter.toDbField(d.getFiledNameMethodNameOrder().get(0))));
 			final String fnj = f2.getType().getSimpleName() + " " + f2.getName()+ "1" + "," + f2.getType().getSimpleName() + " " + f2.getName() + "2";
 
@@ -1920,13 +2014,14 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							+ "[" +myZRClass.getSimpleName() + "." + method.getName() + "]"
 							+ "\r\n\t"
-							+ "必须有且只有["+(FIND_BY_XX_BETWEEN_PARAMETERS_SIZE)+"]个参数,"
+							+ "必须有且只有["+(mps)+"]个参数,"
 							+ "形式为"
 							+ "\r\n\t"
 							+ method.getName() + "(" + fnj + ")"
 							+ "\r\n\t"
-							+ "当前有[" + method.getParameterCount() + "]个,请检查代码:"
-							+ "去掉多余的参数"
+							+ "当前有[" + method.getParameterCount() + "]个"
+							+ "\r\n\t"
+							+ "请检查代码:修改方法参数"
 							+ "\r\n\t"
 							;
 			throw new IllegalArgumentException(m1);
