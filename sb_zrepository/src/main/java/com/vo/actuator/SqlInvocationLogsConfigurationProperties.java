@@ -26,7 +26,7 @@ public class SqlInvocationLogsConfigurationProperties {
 	 * 是否启用SQL统计功能
 	 */
 	@ZNotNull
-	private Boolean enable;
+	private Boolean enable = false;
 
 	/**
 	 * 待save的队列最大容量
