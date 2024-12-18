@@ -16,6 +16,7 @@ import com.vo.conn.ZCPool;
 import com.vo.core.Sort;
 import com.vo.exception.ZRepositoryException;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
@@ -143,6 +144,7 @@ import lombok.Getter;
 // 即使支持这种最简单的函数，本类也要大改，因为支持了or操作。哪怕支持稍复杂一点的avg函数，都很可能
 // [avg(integer) 结果是double] 这种情况导致 entityClass 赋值异常，ZR.find 又是固定的返回类型，不好搞
 // 目前就只支持自定义 where / order by / limit
+@EqualsAndHashCode
 public class ZRWrapper<T> {
 
 	private static final int ONE = 1;

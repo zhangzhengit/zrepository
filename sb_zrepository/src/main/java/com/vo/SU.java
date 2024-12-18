@@ -31,7 +31,6 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -160,8 +159,7 @@ public class SU {
 			final Long countR = pscRS.getLong(1);
 			final long pages = (countR.longValue() % size) == 0 ? countR.longValue() / size
 					: (countR.longValue() / size) + 1;
-			return new Page(size, Long.valueOf(String.valueOf(page)), pages, countR,
-					ImmutableList.copyOf(rL));
+			return new Page(size, Long.valueOf(String.valueOf(page)), pages, countR, rL);
 
 		} catch (final SQLException | IllegalArgumentException  e1) {
 			e1.printStackTrace();
@@ -175,8 +173,7 @@ public class SU {
 			returnZConnectionIfZCPool(dataSourceName, zc);
 		}
 
-		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L,
-				ImmutableList.copyOf(Collections.emptyList()));
+		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L, new ArrayList<>());
 	}
 
 	private static Boolean isShowSQL(final String dataSourceName) {

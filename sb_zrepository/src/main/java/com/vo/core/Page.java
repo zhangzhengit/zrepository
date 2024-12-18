@@ -1,10 +1,8 @@
 package com.vo.core;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -15,7 +13,6 @@ import lombok.Data;
  *
  */
 @Data
-@AllArgsConstructor
 public final class Page<T> {
 
 	/**
@@ -41,14 +38,14 @@ public final class Page<T> {
 	/**
 	 * 本页内容
 	 */
-	private final ImmutableList<T> list;
+	private List<T> list;
 
 	public Page() {
 		this.size = 0;
 		this.page = 0L;
 		this.totalPage = 0L;
 		this.totalPage = 0L;
-		this.list = ImmutableList.copyOf(Collections.emptyList());
+		this.list = new ArrayList<>();
 	}
 
 	/**
@@ -67,6 +64,14 @@ public final class Page<T> {
 
 	public boolean hasContent() {
 		return this.getList().size() > 0;
+	}
+
+	public Page(final Integer size, final Long page, final Long totalPage, final Long totalCount, final List<T> listAAA) {
+		this.size = size;
+		this.page = page;
+		this.totalPage = totalPage;
+		this.totalCount = totalCount;
+		this.list = listAAA;
 	}
 
 }
