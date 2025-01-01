@@ -25,16 +25,12 @@ public class ZCPoolJob {
 	private final static ZE ZE = ZES.newZE(1, "ZCPool-Job-Thread-");
 
 	public void start() {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZCPoolJob.start()");
 
-		ZE.executeInQueue(() -> ZCPoolJob.this.job());
+		ZE.executeInQueue(ZCPoolJob.this::job);
 
 	}
 
 	private void job() {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZCPoolJob.job()");
 
 		while (true) {
 
@@ -54,7 +50,7 @@ public class ZCPoolJob {
 						ZCPoolJob.select1(cR.getConnection());
 					} catch (final SQLException e) {
 
-						LOG.info("select1 job 发现失效的Connection对象，开始重置连接.c = {}", cR.getConnection());
+						LOG.debug("select1 job 发现失效的Connection对象，开始重置连接.c = {}", cR.getConnection());
 
 						try {
 							cR.getConnection().close();
@@ -72,7 +68,7 @@ public class ZCPoolJob {
 							LOG.error("select1 job 获取新连接失败");
 						} else {
 							cR.setConnection(newConnection.getConnection());
-							LOG.info("select1 job 重置连接成功.cN = {}", newConnection.getConnection());
+							LOG.debug("select1 job 重置连接成功.cN = {}", newConnection.getConnection());
 						}
 						continue;
 					}

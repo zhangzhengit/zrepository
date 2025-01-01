@@ -320,7 +320,6 @@ public class ZCPool {
 			this.newReadConnection(r.get(i));
 		}
 
-		LOG.info("初始化数据源完成,properties文件名称=[{}],ZDatasourceProperties={}", dataSourceName, zdp);
 	}
 
 	private synchronized void newReadConnection(final ZDatasourceProperties.P p) {
@@ -336,8 +335,8 @@ public class ZCPool {
 			final ZConnection zConnection = ZConnection.newConnection(p);
 			zConnection.setMode(Mode.READ);
 			this.readVector.add(zConnection);
-			LOG.info("第{}个数据库[读]连接创建成功,ZConnection={}", i, zConnection);
-			LOG.info("当前已创建[读]连接数={}", this.readVector.size());
+			//			LOG.info("第{}个数据库[读]连接创建成功,ZConnection={}", i, zConnection);
+			//			LOG.info("当前已创建[读]连接数={}", this.readVector.size());
 		}
 	}
 
@@ -354,7 +353,7 @@ public class ZCPool {
 			final ZConnection zConnection = ZConnection.newConnection(p);
 			zConnection.setMode(Mode.WRITE);
 			this.writeVector.add(zConnection);
-			LOG.info("第{}个数据库[写]连接创建成功,ZConnection={}", i, zConnection);
+			//			LOG.info("第{}个数据库[写]连接创建成功,ZConnection={}", i, zConnection);
 		}
 	}
 	// FIXME 2024年6月1日 上午3:16:29 zhangzhen : shutdown 此方法 从 poolMap 取值然后关闭

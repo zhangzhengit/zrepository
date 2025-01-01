@@ -111,20 +111,20 @@ public class ZRepositoryMain {
 
 	public static Map<Class, ZClass> generateClassForZRSubinterfaceMap(final Set<Class<?>> zrSubclassSet) {
 
-		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
+		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
 
 		final Map<Class, ZClass> map = Maps.newConcurrentMap();
 
 		//		final Set<ZClass> zrsubIZClass = Sets.newHashSet();
 		for (final Class<?> cls : zrSubclassSet) {
-			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
+			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
 			final String canonicalName = cls.getCanonicalName();
 			//			System.out.println("canonicalName = \n\n" + canonicalName);
 
 			final ZClass generateZRepositorySubclass = generateMyZRepositorySubclass(cls);
-			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
-					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
-					generateZRepositorySubclass.toString());
+			//			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
+			//					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
+			//					generateZRepositorySubclass.toString());
 
 			//			zrsubIZClass.add(generateZRepositorySubclass);
 			map.put(cls, generateZRepositorySubclass);
@@ -137,17 +137,17 @@ public class ZRepositoryMain {
 
 	public static Map<Class, ZClass> generateClassForZRSubinterface(final Set<Class<?>> zrSubclassSet) {
 
-		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
+		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
 
 		final Map<Class, ZClass> map = Maps.newHashMap();
 
 		for (final Class<?> cls : zrSubclassSet) {
-			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
+			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
 
 			final ZClass generateZRepositorySubclass = generateMyZRepositorySubclass(cls);
-			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
-					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
-					generateZRepositorySubclass.toString());
+			//			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
+			//					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
+			//					generateZRepositorySubclass.toString());
 
 			map.put(cls, generateZRepositorySubclass);
 
@@ -199,17 +199,17 @@ public class ZRepositoryMain {
 	}
 
 	public synchronized static void showSupportedMethod() {
-		System.out.println();
+		//		System.out.println();
 
 		final HashMap<String, HashMap<String, String>> map = MethodRegex.R_M;
 		final Set<String> keySet = map.keySet();
-		System.out.println("@" + ZRepository.class.getCanonicalName() + " 子接口中支持的声明式方法形式如下：");
-		for (final String m : keySet) {
-			final HashMap<String, String> hashMap = map.get(m);
-			System.out.println("\t" + hashMap.keySet());
-		}
-
-		System.out.println();
+		//		System.out.println("@" + ZRepository.class.getCanonicalName() + " 子接口中支持的声明式方法形式如下：");
+		//		for (final String m : keySet) {
+		//			final HashMap<String, String> hashMap = map.get(m);
+		//			System.out.println("\t" + hashMap.keySet());
+		//		}
+		//
+		//		System.out.println();
 	}
 	/**
 	 * 展示出 create table 语句
@@ -320,12 +320,12 @@ public class ZRepositoryMain {
 	 */
 	public static List<SqlResult> generateSqlForZRSubclass(final Set<Class<?>> zrClassSet) {
 
-		LOG.info("ZRepositoryStarter开始生成[{}]的子接口的SQL模板", ZRepository.class.getCanonicalName());
+		//		LOG.info("ZRepositoryStarter开始生成[{}]的子接口的SQL模板", ZRepository.class.getCanonicalName());
 
 		final List<SqlResult> sqlResultlist = Lists.newArrayList();
 
 		for (final Class<?> zrSubClass : zrClassSet) {
-			LOG.info("ZRepositoryStarter开始生成[{}]的SQL模板", zrSubClass.getCanonicalName());
+			//			LOG.info("ZRepositoryStarter开始生成[{}]的SQL模板", zrSubClass.getCanonicalName());
 			final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(zrSubClass);
 			final String tType = typeArray[0];
 			checkZRG(tType, typeArray[1], zrSubClass);
@@ -333,7 +333,7 @@ public class ZRepositoryMain {
 			final Method[] ms = zrSubClass.getMethods();
 
 			for (final Method m : ms) {
-				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getCanonicalName(), m.getName());
+				//				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getCanonicalName(), m.getName());
 
 				final MethodSQL methodSQL = MethodRegex.check(m.getName(), m);
 
@@ -2477,8 +2477,6 @@ public class ZRepositoryMain {
 			return;
 		}
 
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZRMain.checkZEntityZID()");
 
 		final Field[] fs = typeClass.getDeclaredFields();
 		final List<Field> zidList = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
@@ -2600,7 +2598,6 @@ public class ZRepositoryMain {
 
 			final DataSourceDTO dataSourceDTO = findCatalog(zConnection.getUrl());
 			try (ResultSet columns = metaData.getColumns(dataSourceDTO.getCatalog(), null, tableName, null)) {
-				System.out.println("开始校验[" + zConnection.getMode().name() + "]数据表 = " + tableName);
 
 				int columnsCount = 0;
 				final List<String> columnNameList = Lists.newArrayList();

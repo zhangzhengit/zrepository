@@ -21,17 +21,11 @@ public class ZJdbcTemplateConfiguration {
 
 	@Bean
 	public <T> ZJdbcTemplate<T> jdbcTemplate() {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-				+ "ZJdbcTemplateConfiguration.jdbcTemplate()");
-
 		return new ZJdbcTemplate();
 	}
 
 	@ZBean
 	public <T> ZJdbcTemplate<T> zJdbcTemplate() {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-				+ "ZJdbcTemplateConfiguration.zJdbcTemplate()");
-
 		return new ZJdbcTemplate();
 	}
 
