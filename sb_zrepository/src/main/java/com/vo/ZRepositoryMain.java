@@ -57,7 +57,6 @@ import com.vo.exception.ParameterTypeDeclarationException;
 import com.vo.exception.ZRepositoryException;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -184,6 +183,7 @@ public class ZRepositoryMain {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
+
 		final Set<String> set = ScanPackage.get();
 
 		if (CollUtil.isEmpty(set)) {
@@ -192,7 +192,7 @@ public class ZRepositoryMain {
 
 		final Set<Class<?>> r = Sets.newHashSet();
 		for (final String p : set) {
-			final Set<Class<?>> clsSet = ClassUtil.scanPackage(p);
+			final Set<Class<?>> clsSet = ClassMap.scanPackage(p);
 			r.addAll(clsSet);
 		}
 		return r;
@@ -336,7 +336,6 @@ public class ZRepositoryMain {
 				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getCanonicalName(), m.getName());
 
 				final MethodSQL methodSQL = MethodRegex.check(m.getName(), m);
-				//				final Entry<String, String> check = MethodRegex.check(m.getName(), m);
 
 				try {
 					final Class<?> typeClass = Class.forName(tType);
@@ -351,7 +350,8 @@ public class ZRepositoryMain {
 					final String tableName = zEntity.tableName();
 					final String sqlTemplateTemp = sqlTemplate.replace(TABLE_NAME, tableName);
 
-					final String sqlFinal = checkMethodName(typeClass, m, methodName, sqlTemplateTemp, methodSQL, zrSubClass);
+					final String sqlFinal = checkMethodName(typeClass, m, methodName, sqlTemplateTemp, methodSQL,
+							zrSubClass);
 
 					final SqlResult result = new SqlResult(zrSubClassName, methodName, sqlFinal);
 
