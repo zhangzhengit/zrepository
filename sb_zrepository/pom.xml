@@ -29,14 +29,6 @@
 			<version>2.1.4</version>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/commons-configuration/commons-configuration -->
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>1.10</version>
-<!-- 			<optional>true</optional> -->
-		</dependency>
-
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
