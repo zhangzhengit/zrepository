@@ -38,10 +38,6 @@ public class ZProperties {
 
 	private static final String[] EMPTY_STRING_ARRAY = {};
 
-	public static void getProperties(final String dataSourceName) {
-
-	}
-
 	public static boolean readBoolean(final String key) {
 		final String property = properties.getProperty(key);
 		return Boolean.parseBoolean(property);
@@ -199,35 +195,6 @@ public class ZProperties {
 
 	public static Properties getInstance() {
 		return properties;
-	}
-
-	static {
-
-		final Properties p1 = load();
-
-		System.out.println("p1 = " + p1);
-
-	}
-
-	private static Properties load() {
-		Properties p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_1);
-		if (p1 == null) {
-			p1 = loadDirConfig(File.separator + ZProperties.PROPERTIES_2);
-			if (p1 == null) {
-				p1 = loadPResources("/" + ZProperties.PROPERTIES_1);
-				if (p1 == null) {
-					p1 = loadPResources("/" + ZProperties.PROPERTIES_2);
-				}
-			}
-		}
-
-		if (p1 == null) {
-			System.out.println("ERROR: 启动失败," + ZProperties.PROPERTIES_1 + "配置文件不存在,请编写此配置文件");
-			System.exit(0);
-		}
-
-		properties = p1;
-		return p1;
 	}
 
 	public static Properties loadPResources(final String path) {
