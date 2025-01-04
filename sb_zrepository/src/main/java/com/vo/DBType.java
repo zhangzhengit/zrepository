@@ -132,6 +132,7 @@ public class DBType {
 		JAVA_PGSQL.put("java.lang.Short", "integer");
 		JAVA_PGSQL.put("java.lang.Short", "int4");
 		JAVA_PGSQL.put("java.lang.Integer", "int4");
+		JAVA_PGSQL.put("java.lang.Integer", "serial");
 		JAVA_PGSQL.put("java.lang.Integer", "integer");
 		JAVA_PGSQL.put("java.lang.Long", "int8");
 		JAVA_PGSQL.put("java.lang.Long", "bigint");
