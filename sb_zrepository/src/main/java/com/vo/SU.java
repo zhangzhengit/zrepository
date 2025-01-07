@@ -11,9 +11,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -933,7 +935,15 @@ public class SU {
 			} else if (fn.equals(java.sql.Time.class.getCanonicalName())) {
 				ps.setTime(i, (java.sql.Time) v2);
 			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
+				// FIXME 2025年1月6日 下午9:34:19 zhangzhen : 考虑好：LocalTime和mysql的time不是完全对应的，要不要支持LocalTime？
 				ps.setTime(i, Time.valueOf((LocalTime) v2));
+			} else if (fn.equals(LocalDate.class.getCanonicalName())) {
+				ps.setDate(i, java.sql.Date.valueOf((LocalDate) v2));
+			} else if (fn.equals(LocalDateTime.class.getCanonicalName())) {
+				final LocalDateTime localDateTime = (LocalDateTime) v2;
+				final ZonedDateTime atZone = localDateTime.atZone(ZoneId.systemDefault());
+				final Timestamp timestamp = Timestamp.from(atZone.toInstant());
+				ps.setTimestamp(i, timestamp);
 			} else if (fn.equals(Timestamp.class.getCanonicalName())) {
 				ps.setTimestamp(i, (Timestamp) v2);
 			} else {
@@ -1450,6 +1460,10 @@ public class SU {
 						final Timestamp time = new Timestamp((long) columValue);
 						field.set(object, time);
 					}
+				}  else if (cn.equals(LocalDate.class.getCanonicalName())) {
+					final java.sql.Date d = (java.sql.Date) columValue;
+					final LocalDate localDate = d.toLocalDate();
+					field.set(object, localDate);
 				}  else if (cn.equals(LocalTime.class.getCanonicalName())) {
 					if (columValue.getClass().equals(Time.class)) {
 						final Time t1 = (Time) columValue;
@@ -1491,6 +1505,10 @@ public class SU {
 						final Time time = new Time((long) columValue);
 						field.set(object, time);
 					}
+				} else if (cn.equals(java.time.LocalDateTime.class.getCanonicalName())) {
+					final Timestamp timestamp = (Timestamp) columValue;
+					final LocalDateTime localDateTime = timestamp.toLocalDateTime();
+					field.set(object, localDateTime);
 				} else if (field.getClass().isArray()) {
 				} else {
 					field.set(object, columValue);
