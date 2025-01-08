@@ -227,9 +227,12 @@ public class DBType {
 		JAVA_SQLITE.put("java.lang.String", "VARCHAR");
 		JAVA_SQLITE.put("java.lang.String", "text");
 		JAVA_SQLITE.put("java.lang.String", "TEXT");
+		JAVA_SQLITE.put("java.time.LocalTime", "TIME");
 		JAVA_SQLITE.put("java.sql.Time", "TIME");
 		JAVA_SQLITE.put("java.sql.Timestamp", "DATETIME");
 		JAVA_SQLITE.put("java.sql.Timestamp", "TIMESTAMP");
+		JAVA_SQLITE.put("java.time.LocalDateTime", "TIMESTAMP");
+		JAVA_SQLITE.put("java.time.LocalDate", "DATE");
 		JAVA_SQLITE.put("java.sql.Date", "DATE");
 		JAVA_SQLITE.put("java.sql.Date", "DATETIME");
 		JAVA_SQLITE.put("java.util.Date", "DATE");

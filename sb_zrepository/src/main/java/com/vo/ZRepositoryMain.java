@@ -12,6 +12,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1608,10 +1609,10 @@ public class ZRepositoryMain {
 		final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
 			final Field declaredField = getDeclaredField(entityClass,
 					ZFieldConverter.toJavaField(ZFieldConverter.toDbField(ff)));
-			return declaredField.getType().getSimpleName() + " " + declaredField.getName();
+			return declaredField.getType().getName() + " " + declaredField.getName();
 		}).collect(Collectors.joining(DELIMITER));
 
-		final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getSimpleName() + " " + p1.getName())
+		final String fnj = Arrays.stream(ps).map(p1 -> p1.getType().getName() + " " + p1.getName())
 				.collect(Collectors.joining(","));
 
 		final String m1 =
@@ -2602,11 +2603,15 @@ public class ZRepositoryMain {
 				int columnsCount = 0;
 				final List<String> columnNameList = Lists.newArrayList();
 
+				//				System.out.println("-------字段信息 = " + tableName);
 				while (columns.next()) {
 					columnsCount++;
 					final String columnName = columns.getString(COLUMN_NAME);
 					columnNameList.add(columnName);
 					final String columnType = columns.getString(TYPE_NAME);
+
+					final int columnSize  = columns.getInt("COLUMN_SIZE");
+					final int decimalDigits   = columns.getInt("DECIMAL_DIGITS");
 
 					final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 					final Optional<Field> o = fieldList.stream().filter(fn -> fn.getName().equals(javaFieldName)).findAny();
@@ -2656,6 +2661,10 @@ public class ZRepositoryMain {
 										;
 						throw new IllegalArgumentException(m);
 					}
+
+					// FIXME 2025年1月7日 下午9:24:23 zhangzhen : 校验：时间日期类型必须格式和mysql完全一致，现在在做mysql
+					checkDateTimeFormat(columnName, columnType, columnSize, decimalDigits, o.get(),
+							dataSourceDTO.getDbEnum(), tableName);
 
 					checkZCT(typeClass, o, ZCreateTime.class, ZCreateTimeHandler.SUPPORTED_CLASS_SET);
 					checkZCT(typeClass, o, ZUpdateTime.class, ZUpdateTimeHandler.SUPPORTED_CLASS_SET);
@@ -2745,6 +2754,158 @@ public class ZRepositoryMain {
 		}
 
 	}
+
+	public static void checkDateTimeFormat(final String columnName, final String columnType, final int columnSize, final int decimalDigits,
+			final Field field, final DBEnum dbEnum, final String tableName) {
+
+		// FIXME 2025年1月7日 下午10:31:30 zhangzhen : 在做mysql，
+		// LocalDateTime > TIMESTAMP 启动校验可以了，继续做:数据交互时转换为指定的格式
+
+		if (dbEnum == DBEnum.MYSQL) {
+			if ("DATETIME".equalsIgnoreCase(columnType)) {
+				checkMysqlTIMESTAMPAndDATETIME(columnName, columnType, columnSize, field, dbEnum, tableName);
+			} else if ("TIME".equalsIgnoreCase(columnType)) {
+				checkMysqlTIME(columnName, columnSize, field, dbEnum, tableName);
+			} else if ("TIMESTAMP".equalsIgnoreCase(columnType)) {
+				final int times = 0;
+				checkMysqlTIMESTAMPAndDATETIME(columnName, columnType, columnSize, field, dbEnum, tableName);
+			}
+			//			else if ("DATE".equalsIgnoreCase(columnType)) {
+			//				// mysql DATE 10 位，不用管
+			//			}
+			// FIXME 2025年1月8日 下午10:35:22 zhangzhen : 继续写
+		}
+	}
+
+	private static void checkMysqlTIME(final String columnName, final int columnSize, final Field field,
+			final DBEnum dbEnum, final String tableName) {
+		// java.sql.Time 不带毫秒，所以强制DB也不带毫秒
+		if ((field.getType() == java.sql.Time.class)) {
+			if((columnSize != 8)) {
+				final String message =
+						"\r\n\t"
+								+ dbEnum + ":"
+								+ tableName + "." + columnName +
+								" 对应的java Field " + field.getName()
+								+ " 是[" + java.sql.Time.class.getName() + "],此类不带毫秒部分"
+								+ "\r\n\t"
+								+ " 请修改代码："
+								+ "修改数据库字段["+tableName + "." + columnName+"]长度为0"
+								;
+				throw new IllegalArgumentException(message);
+			}
+
+			final ZDateFormat dateFormat = field.getAnnotation(ZDateFormat.class);
+			if ((dateFormat != null) && (dateFormat.format() != ZDateFormatEnum.HH_MM_SS)) {
+
+				final String message =
+						"\r\n\t"
+								+ dbEnum + ":"
+								+ tableName + "." + columnName +
+								" 对应的java Field " + field.getName()
+								+ " 是[" + java.sql.Time.class.getName() + "],此类不带毫秒部分"
+								+ "\r\n\t"
+								+ " 请修改代码："
+								+ "修改Field格式为["+ZDateFormatEnum.HH_MM_SS+"]"
+								;
+				throw new IllegalArgumentException(message);
+			}
+
+			return;
+		}
+
+		// 到此是 java.time.LocalTime类型了
+		if (field.getType() == LocalTime.class) {
+			final ZDateFormat dateFormat = field.getAnnotation(ZDateFormat.class);
+			if (dateFormat == null) {
+				final ZDateFormatEnum mFormatEnum = ZDateFormatEnum.getTIMEByMysqlColumnSize(columnSize);
+				final String message =
+						"\r\n\t"
+								+ dbEnum + ":"
+								+ tableName + "." + columnName +
+								" 对应的java Field " + field.getName()
+								+ " 缺少注解@" + ZDateFormat.class.getSimpleName() + ""
+								+ "\r\n\t"
+								+ " 请修改代码：添加 @"+ZDateFormat.class.getSimpleName()+"(format ="
+								+ ZDateFormatEnum.class.getSimpleName()  + "." + mFormatEnum + ")"
+								;
+				throw new IllegalArgumentException(message);
+			}
+
+			final ZDateFormatEnum jFormat = dateFormat.format();
+
+			final ZDateFormatEnum mysqlFormat = ZDateFormatEnum.getTIMEByMysqlColumnSize(columnSize);
+			if (jFormat != mysqlFormat) {
+
+				final int mcs = ZDateFormatEnum.getMysqlColumnSizeBYTIME(jFormat);
+				final String message =
+						"\r\n\t"
+								+ dbEnum + ":"
+								+ tableName + "." + columnName +
+								" 对应的java Field " + field.getName()
+								+ " 的注解@" + ZDateFormat.class.getSimpleName() + "格式和数据库字段不匹配"
+								+ "\r\n\t"
+								+ " 请修改代码：改用["+mysqlFormat+"]格式或者修改数据库字段长度为["+ (
+										mcs == 8 ? 0 :  mcs - 8 - 1) + "]"
+								;
+				throw new IllegalArgumentException(message);
+			}
+
+			return;
+		}
+
+		final String message =
+				"\r\n\t"
+						+ dbEnum + ":"
+						+ tableName + "." + columnName +
+						" 类型不支持，详情请看 @see " + DBType.class.getName()
+						;
+		throw new IllegalArgumentException(message);
+	}
+
+	private static void checkMysqlTIMESTAMPAndDATETIME(final String columnName, final String columnType,
+			final int columnSize, final Field field, final DBEnum dbEnum, final String tableName) {
+		if ("TIMESTAMP".equalsIgnoreCase(columnType) || "DATETIME".equalsIgnoreCase(columnType)) {
+
+			final ZDateFormat dateFormat = field.getAnnotation(ZDateFormat.class);
+			if (dateFormat == null) {
+				final ZDateFormatEnum mFormatEnum = ZDateFormatEnum.getLocalDateTimeByMysqlColumnSize(columnSize);
+				final String message =
+						"\r\n\t"
+								+ dbEnum + ":"
+								+ tableName + "." + columnName +
+								" 对应的java Field " + field.getName()
+								+ " 缺少注解@" + ZDateFormat.class.getSimpleName() + ""
+								+ "\r\n\t"
+								+ " 请修改代码：添加 @"+ZDateFormat.class.getSimpleName()+"(format ="
+								+ ZDateFormatEnum.class.getSimpleName()  + "." + mFormatEnum + ")"
+								;
+				throw new IllegalArgumentException(message);
+
+			}
+
+			final ZDateFormatEnum jFormat = dateFormat.format();
+
+			final ZDateFormatEnum mysqlFormat = ZDateFormatEnum.getLocalDateTimeByMysqlColumnSize(columnSize);
+			if (jFormat != mysqlFormat) {
+
+				final int mcs = ZDateFormatEnum.getMysqlColumnSizeByLocalDateTimeFormat(jFormat);
+				final String message =
+						"\r\n\t"
+								+ dbEnum + ":"
+								+ tableName + "." + columnName +
+								" 对应的java Field " + field.getName()
+								+ " 的注解@" + ZDateFormat.class.getSimpleName() + "格式和数据库字段不匹配"
+								+ "\r\n\t"
+								+ " 请修改代码：改用["+mysqlFormat+"]格式或者修改数据库字段长度为["+ (
+										mcs == 19 ? 0 :  mcs - 19 - 1) + "]"
+								;
+				throw new IllegalArgumentException(message);
+
+			}
+		}
+	}
+
 
 	private static void checkZDF(final Class<?> typeClass, final Optional<Field> o) {
 		if (o.get().getType().equals(java.util.Date.class)) {

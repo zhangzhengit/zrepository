@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -936,8 +937,7 @@ public class SU {
 				// FIXME 2025年1月8日 下午8:46:34 zhangzhen : 使用(java.sql.Time) v 会导致取出来的结果不一致？以后再查什么原因
 				ps.setTime(i, Time.valueOf(v2.toString()));
 			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
-				// FIXME 2025年1月6日 下午9:34:19 zhangzhen : 考虑好：LocalTime和mysql的time不是完全对应的，要不要支持LocalTime？
-				ps.setTime(i, Time.valueOf((LocalTime) v2));
+				ps.setObject(i, (LocalTime) v2);
 			} else if (fn.equals(LocalDate.class.getCanonicalName())) {
 				ps.setDate(i, java.sql.Date.valueOf((LocalDate) v2));
 			} else if (fn.equals(LocalDateTime.class.getCanonicalName())) {
@@ -1371,13 +1371,9 @@ public class SU {
 			e.printStackTrace();
 		}
 
+
 		for (int i = 0; i < count; i++) {
-			Object columValue = null;
-			try {
-				columValue = rs.getObject(i + 1);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
+
 			String columnName = null;
 			try {
 				// pgsql 对于 select max(id) as maxId
@@ -1402,11 +1398,13 @@ public class SU {
 				continue;
 			}
 
+			final String cn = field.getType().getCanonicalName();
+
+			final Object columValue = getColumnValue(rs, i, field);
 			if (columValue == null) {
 				continue;
 			}
 
-			final String cn = field.getType().getCanonicalName();
 			try {
 
 				if (cn.equals(Byte.class.getCanonicalName())) {
@@ -1462,9 +1460,16 @@ public class SU {
 						field.set(object, time);
 					}
 				}  else if (cn.equals(LocalDate.class.getCanonicalName())) {
-					final java.sql.Date d = (java.sql.Date) columValue;
-					final LocalDate localDate = d.toLocalDate();
-					field.set(object, localDate);
+					if (columValue.getClass() == Long.class) {
+						// sqlite 为Long类型
+						final Instant instant = Instant.ofEpochMilli((Long) columValue);
+						final LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+						field.set(object, localDate);
+					} else {
+						final java.sql.Date d = (java.sql.Date) columValue;
+						final LocalDate localDate = d.toLocalDate();
+						field.set(object, localDate);
+					}
 				}  else if (cn.equals(LocalTime.class.getCanonicalName())) {
 					if (columValue.getClass().equals(Time.class)) {
 						final Time t1 = (Time) columValue;
@@ -1507,9 +1512,16 @@ public class SU {
 						field.set(object, time);
 					}
 				} else if (cn.equals(java.time.LocalDateTime.class.getCanonicalName())) {
-					final Timestamp timestamp = (Timestamp) columValue;
-					final LocalDateTime localDateTime = timestamp.toLocalDateTime();
-					field.set(object, localDateTime);
+					if (columValue.getClass() == Long.class) {
+						// sqlite 中此值为long类型
+						final Instant ins = Instant.ofEpochMilli((long) columValue);
+						final LocalDateTime localDateTime = ins.atZone(ZoneId.systemDefault()).toLocalDateTime();
+						field.set(object, localDateTime);
+					} else {
+						final Timestamp timestamp = (Timestamp) columValue;
+						final LocalDateTime localDateTime = timestamp.toLocalDateTime();
+						field.set(object, localDateTime);
+					}
 				} else if (field.getClass().isArray()) {
 				} else {
 					field.set(object, columValue);
@@ -1520,6 +1532,25 @@ public class SU {
 
 		}
 		return object;
+	}
+
+	private static Object getColumnValue(final ResultSet rs, final int i, final Field field) {
+
+		final Class<?> type = field.getType();
+		if ((type == LocalTime.class) || (type == String.class) || (type == Time.class)) {
+			try {
+				return rs.getObject(i + 1, type);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			return rs.getObject(i + 1);
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode,
@@ -1697,6 +1728,8 @@ public class SU {
 			ps.setTimestamp(index, new java.sql.Timestamp(((Date) fieldValue).getTime()));
 		} else if(fieldValue.getClass().equals(java.sql.Date.class)){
 			ps.setDate(index, (java.sql.Date)fieldValue);
+		} else if(fieldValue.getClass().equals(java.sql.Time.class)){
+			ps.setTime(index, (java.sql.Time)fieldValue);
 		} else {
 			ps.setObject(index, fieldValue);
 		}
