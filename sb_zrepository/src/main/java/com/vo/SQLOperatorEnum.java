@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.StringJoiner;
@@ -262,6 +263,29 @@ public enum SQLOperatorEnum {
 				final long time = vtt.getTime();
 				return "'" + time + "'";
 			}
+			if ((value instanceof java.sql.Date) || (value instanceof Time)
+					|| (value instanceof Timestamp)) {
+				return "'" + value + "'";
+			}
+
+			if ((value instanceof LocalDate)) {
+				final LocalDate localDate = (LocalDate) value;
+				final LocalDateTime localDateTime = localDate.atStartOfDay();
+				final long epochMilli = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+				return "'" + epochMilli + "'";
+			}
+
+			if ((value instanceof LocalTime)) {
+				final LocalTime localTime = (LocalTime) value;
+				return "'" + localTime + "'";
+			}
+
+			if ((value instanceof LocalDateTime)) {
+				final LocalDateTime localDateTime = (LocalDateTime) value;
+				final long epochMilli = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+				return "'" + epochMilli + "'";
+			}
+
 		} else if (dbEnum == DBEnum.MYSQL) {
 			if (value instanceof Date) {
 				final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);

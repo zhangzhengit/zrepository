@@ -937,7 +937,7 @@ public class SU {
 				// FIXME 2025年1月8日 下午8:46:34 zhangzhen : 使用(java.sql.Time) v 会导致取出来的结果不一致？以后再查什么原因
 				ps.setTime(i, Time.valueOf(v2.toString()));
 			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
-				ps.setObject(i, (LocalTime) v2);
+				ps.setObject(i, v2);
 			} else if (fn.equals(LocalDate.class.getCanonicalName())) {
 				ps.setDate(i, java.sql.Date.valueOf((LocalDate) v2));
 			} else if (fn.equals(LocalDateTime.class.getCanonicalName())) {
@@ -1730,7 +1730,16 @@ public class SU {
 			ps.setDate(index, (java.sql.Date)fieldValue);
 		} else if(fieldValue.getClass().equals(java.sql.Time.class)){
 			ps.setTime(index, (java.sql.Time)fieldValue);
+		} else if(fieldValue.getClass().equals(java.time.LocalDateTime.class)){
+			final LocalDateTime localDateTime = (LocalDateTime) fieldValue;
+			final ZonedDateTime atZone = localDateTime.atZone(ZoneId.systemDefault());
+			final Timestamp timestamp = Timestamp.from(atZone.toInstant());
+			ps.setTimestamp(index, timestamp);
+		} else if(fieldValue.getClass().equals(java.time.LocalDate.class)){
+			ps.setDate(index, java.sql.Date.valueOf((LocalDate) fieldValue));
 		} else {
+			if(fieldValue.getClass().equals(java.time.LocalTime.class)){
+			}
 			ps.setObject(index, fieldValue);
 		}
 	}
