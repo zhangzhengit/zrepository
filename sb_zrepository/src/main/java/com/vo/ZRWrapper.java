@@ -334,6 +334,19 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.NE);
 	}
 
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final LocalDate value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final LocalTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+	public ZRWrapper<T> ne(final SerializableFunction<T, Object> function, final LocalDateTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NE);
+	}
+
+
 	/**
 	 * 小于,构造条件如: id < ?
 	 * 调用本方法的方式为：
@@ -401,6 +414,18 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.LT);
 	}
 
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final LocalDateTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final LocalDate value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
+	public ZRWrapper<T> lt(final SerializableFunction<T, Object> function, final LocalTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LT);
+	}
+
 	/**
 	 * 小于等于,构造条件如: id <= ? 调用本方法的方式为：
 	 * wrapper.lte(MyEntity::getId(),myEntity.getId()); 或者
@@ -459,6 +484,18 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final java.sql.Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final LocalDateTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final LocalDate value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LTE);
+	}
+
+	public ZRWrapper<T> lte(final SerializableFunction<T, Object> function, final LocalTime value) {
 		return this.addValue0(function, value, SQLOperatorEnum.LTE);
 	}
 
@@ -525,6 +562,18 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.GT);
 	}
 
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final LocalDateTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final LocalDate value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
+	public ZRWrapper<T> gt(final SerializableFunction<T, Object> function, final LocalTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GT);
+	}
+
 	/**
 	 * 大于等于,构造条件如: id >= ?
 	 * 调用本方法的方式为：
@@ -588,6 +637,17 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, value, SQLOperatorEnum.GTE);
 	}
 
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final LocalDateTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final LocalDate value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
+
+	public ZRWrapper<T> gte(final SerializableFunction<T, Object> function, final LocalTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.GTE);
+	}
 
 	/**
 	 * 模糊查询,构造条件如: name LIKE '%?%'
@@ -822,8 +882,48 @@ public class ZRWrapper<T> {
 		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
 	}
 
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final LocalDateTime value1,
+			final LocalDateTime value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final LocalDate value1,
+			final LocalDate value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final LocalTime value1,
+			final LocalTime value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
 	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Date value1,
 			final Date value2) {
+		if ((value1 == null) && (value2 == null)) {
+			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
+		}
+
+		final Object[] a = { value1, value2 };
+		return this.addValue0(function, a, SQLOperatorEnum.BETWEEN);
+	}
+
+	public ZRWrapper<T> between(final SerializableFunction<T, Object> function, final Timestamp value1,
+			final Timestamp value2) {
 		if ((value1 == null) && (value2 == null)) {
 			return this.addValue0(function, null, SQLOperatorEnum.BETWEEN);
 		}

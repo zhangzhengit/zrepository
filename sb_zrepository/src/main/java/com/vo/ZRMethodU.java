@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 
 import com.google.common.collect.ImmutableSet;
@@ -23,6 +26,7 @@ public class ZRMethodU {
 	 */
 	public static final ImmutableSet<Class<?>> GTE = ImmutableSet.copyOf(Sets.newHashSet(
 			Date.class,java.sql.Date.class,Time.class,Timestamp.class,
+			LocalDateTime.class,LocalDate.class,LocalTime.class,
 			Byte.class, Short.class, Integer.class, Long.class,
 			Double.class, BigDecimal.class, BigInteger.class, String.class, Character.class));
 
