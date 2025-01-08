@@ -933,7 +933,8 @@ public class SU {
 			} else if (fn.equals(java.sql.Date.class.getCanonicalName())) {
 				ps.setDate(i, (java.sql.Date) v2);
 			} else if (fn.equals(java.sql.Time.class.getCanonicalName())) {
-				ps.setTime(i, (java.sql.Time) v2);
+				// FIXME 2025年1月8日 下午8:46:34 zhangzhen : 使用(java.sql.Time) v 会导致取出来的结果不一致？以后再查什么原因
+				ps.setTime(i, Time.valueOf(v2.toString()));
 			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
 				// FIXME 2025年1月6日 下午9:34:19 zhangzhen : 考虑好：LocalTime和mysql的time不是完全对应的，要不要支持LocalTime？
 				ps.setTime(i, Time.valueOf((LocalTime) v2));
