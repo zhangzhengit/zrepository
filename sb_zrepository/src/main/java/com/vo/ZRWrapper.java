@@ -4,6 +4,9 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -253,6 +256,18 @@ public class ZRWrapper<T> {
 	}
 
 	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final Timestamp value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final LocalDate value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final LocalTime value) {
+		return this.addValue0(function, value, SQLOperatorEnum.EQ);
+	}
+
+	public ZRWrapper<T> eq(final SerializableFunction<T, Object> function, final LocalDateTime value) {
 		return this.addValue0(function, value, SQLOperatorEnum.EQ);
 	}
 

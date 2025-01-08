@@ -3,6 +3,9 @@ package com.vo;
 import java.lang.reflect.Field;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.StringJoiner;
@@ -271,6 +274,13 @@ public enum SQLOperatorEnum {
 			}
 			if ((value instanceof java.sql.Date) || (value instanceof Time)
 					|| (value instanceof Timestamp)) {
+				return "'" + value + "'";
+			}
+			if ((value instanceof LocalDate)
+					|| (value instanceof LocalTime)
+					|| (value instanceof LocalDateTime)
+					) {
+
 				return "'" + value + "'";
 			}
 		} else if (dbEnum == DBEnum.POSTGRESQL) {
