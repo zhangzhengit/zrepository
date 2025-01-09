@@ -42,6 +42,7 @@ import com.vo.actuator.SqlInvocationLogsEntity;
 import com.vo.actuator.SqlInvocationLogsService;
 import com.vo.anno.ZEntity;
 import com.vo.anno.ZTransient;
+import com.vo.cache.STU;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
@@ -1364,23 +1365,17 @@ public class SU {
 
 	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int count) {
-		T object = null;
-		try {
-			object = returnType.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
 
+		final T object = newInstance(returnType);
 
 		for (int i = 0; i < count; i++) {
-
 			String columnName = null;
 			try {
 				// pgsql 对于 select max(id) as maxId
 				// 读取到的 columnName 会是maxid ，导致匹配 returnType 中的字段时匹配不到，
 				// 所以统一自定义SQL AS 后面的写法使用下划线命名法.只要是下划线命名法就行了，不关心大小写，
 				// 在此统一为小写了
-				columnName = metaData.getColumnLabel(i + 1).toLowerCase();
+				columnName = STU.toLowerCase(metaData.getColumnLabel(i + 1));
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
@@ -1398,18 +1393,6 @@ public class SU {
 				// 前者会导致多一点流量，后者导致逻辑不通会自己发现的
 				continue;
 			}
-
-			//			Field field = null;
-			//			try {
-			//				field = returnType.getDeclaredField(javaFieldName);
-			//				field.setAccessible(true);
-			//			} catch (NoSuchFieldException | SecurityException e) {
-			//				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
-			//				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
-			//				// 有可能是手误多写了一个column，或者少写了一个Field等等情况
-			//				// 前者会导致多一点流量，后者导致逻辑不通会自己发现的
-			//				continue;
-			//			}
 
 			final String cn = field.getType().getName();
 
@@ -1547,6 +1530,16 @@ public class SU {
 		return object;
 	}
 
+	private static <T> T newInstance(final Class<T> returnType) {
+		T object = null;
+		try {
+			object = returnType.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return object;
+	}
+
 	private static Object getColumnValue(final ResultSet rs, final int i, final Field field) {
 
 		final Class<?> type = field.getType();
@@ -1557,6 +1550,8 @@ public class SU {
 				e.printStackTrace();
 			}
 		}
+
+
 		try {
 			return rs.getObject(i + 1);
 		} catch (final SQLException e) {
