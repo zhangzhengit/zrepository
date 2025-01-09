@@ -33,12 +33,12 @@ public class ZPreventDeleteAllHandler extends ZDeleteAllHandler {
 				+ "\r\n\t"
 				+ "[" + sua.getZrSubClassName() + "." + sua.getCallerMethodName() + "]"
 				+ "\r\n\t"
-				+ "本功能由 @" + ZPreventDeleteAll.class.getCanonicalName()  + " 提供"
+				+ "本功能由 @" + ZPreventDeleteAll.class.getName()  + " 提供"
 				+ "\r\n\t"
 				+ "如果就是要删除 ["
 				+ sua.getEntityClass().getAnnotation(ZEntity.class).tableName()
 				+ "] 表中的全部数据, 请删除 @" + ZEntity.class.getSimpleName() +" 对象 ["
-				+ sua.getEntityClass().getSimpleName() + "] 上的 [@" + ZPreventDeleteAll.class.getCanonicalName() + "] 注解 "
+				+ sua.getEntityClass().getSimpleName() + "] 上的 [@" + ZPreventDeleteAll.class.getName() + "] 注解 "
 				+ "\r\n\t";
 
 		if (Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZLogicalDelete.class)).findAny().isPresent()) {

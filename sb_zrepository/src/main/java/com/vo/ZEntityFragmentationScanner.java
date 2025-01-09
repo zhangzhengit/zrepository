@@ -21,7 +21,7 @@ public class ZEntityFragmentationScanner {
 //		final Set<Class<?>> cs = ZRMain.scanPackage_COM();
 //		for (final Class<?> c : cs) {
 //			if (c.isAnnotationPresent(ZEntity.class) && c.isAnnotationPresent(ZEntityFragmentation.class)) {
-//				System.out.println("一个分表的entity = " + c.getCanonicalName());
+//				System.out.println("一个分表的entity = " + c.getName());
 //
 //				final ZEntity ze = c.getAnnotation(ZEntity.class);
 //				final ZEntityFragmentation zef = c.getAnnotation(ZEntityFragmentation.class);

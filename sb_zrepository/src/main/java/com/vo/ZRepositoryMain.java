@@ -112,19 +112,19 @@ public class ZRepositoryMain {
 
 	public static Map<Class, ZClass> generateClassForZRSubinterfaceMap(final Set<Class<?>> zrSubclassSet) {
 
-		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
+		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getName());
 
 		final Map<Class, ZClass> map = Maps.newConcurrentMap();
 
 		//		final Set<ZClass> zrsubIZClass = Sets.newHashSet();
 		for (final Class<?> cls : zrSubclassSet) {
-			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
+			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getName(), cls.getName());
 			final String canonicalName = cls.getCanonicalName();
 			//			System.out.println("canonicalName = \n\n" + canonicalName);
 
 			final ZClass generateZRepositorySubclass = generateMyZRepositorySubclass(cls);
-			//			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
-			//					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
+			//			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getName(),
+			//					cls.getName(), generateZRepositorySubclass.getName(),
 			//					generateZRepositorySubclass.toString());
 
 			//			zrsubIZClass.add(generateZRepositorySubclass);
@@ -138,16 +138,16 @@ public class ZRepositoryMain {
 
 	public static Map<Class, ZClass> generateClassForZRSubinterface(final Set<Class<?>> zrSubclassSet) {
 
-		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getCanonicalName());
+		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getName());
 
 		final Map<Class, ZClass> map = Maps.newHashMap();
 
 		for (final Class<?> cls : zrSubclassSet) {
-			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getCanonicalName(), cls.getCanonicalName());
+			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getName(), cls.getName());
 
 			final ZClass generateZRepositorySubclass = generateMyZRepositorySubclass(cls);
-			//			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getCanonicalName(),
-			//					cls.getCanonicalName(), generateZRepositorySubclass.getName(),
+			//			LOG.info("给[{}]的子接口[{}]生成实现类完成,className={},class=\n\n{}", ZRepository.class.getName(),
+			//					cls.getName(), generateZRepositorySubclass.getName(),
 			//					generateZRepositorySubclass.toString());
 
 			map.put(cls, generateZRepositorySubclass);
@@ -173,7 +173,7 @@ public class ZRepositoryMain {
 
 			final Class<?>[] ia = cls.getInterfaces();
 			for (final Class<?> i : ia) {
-				final boolean isZRSubclass = i.getCanonicalName().equals(ZRepository.class.getCanonicalName());
+				final boolean isZRSubclass = i.getName().equals(ZRepository.class.getName());
 				if (isZRSubclass) {
 					zrSubclassSet.add(cls);
 				}
@@ -188,7 +188,7 @@ public class ZRepositoryMain {
 		final Set<String> set = ScanPackage.get();
 
 		if (CollUtil.isEmpty(set)) {
-			throw new IllegalArgumentException(ScanPackage.class.getCanonicalName() + " 扫描的包名未设置！");
+			throw new IllegalArgumentException(ScanPackage.class.getName() + " 扫描的包名未设置！");
 		}
 
 		final Set<Class<?>> r = Sets.newHashSet();
@@ -204,7 +204,7 @@ public class ZRepositoryMain {
 
 		final HashMap<String, HashMap<String, String>> map = MethodRegex.R_M;
 		final Set<String> keySet = map.keySet();
-		//		System.out.println("@" + ZRepository.class.getCanonicalName() + " 子接口中支持的声明式方法形式如下：");
+		//		System.out.println("@" + ZRepository.class.getName() + " 子接口中支持的声明式方法形式如下：");
 		//		for (final String m : keySet) {
 		//			final HashMap<String, String> hashMap = map.get(m);
 		//			System.out.println("\t" + hashMap.keySet());
@@ -300,7 +300,7 @@ public class ZRepositoryMain {
 				final Class<?> typeClass = Class.forName(type);
 				final ZEntity zEntity = typeClass.getAnnotation(ZEntity.class);
 				if (zEntity == null) {
-					final String m = typeClass.getCanonicalName() + " 类缺少" + "@ " + ZEntity.class.getCanonicalName()
+					final String m = typeClass.getName() + " 类缺少" + "@ " + ZEntity.class.getName()
 							+ " 注解";
 					throw new IllegalArgumentException(m);
 				}
@@ -321,12 +321,12 @@ public class ZRepositoryMain {
 	 */
 	public static List<SqlResult> generateSqlForZRSubclass(final Set<Class<?>> zrClassSet) {
 
-		//		LOG.info("ZRepositoryStarter开始生成[{}]的子接口的SQL模板", ZRepository.class.getCanonicalName());
+		//		LOG.info("ZRepositoryStarter开始生成[{}]的子接口的SQL模板", ZRepository.class.getName());
 
 		final List<SqlResult> sqlResultlist = Lists.newArrayList();
 
 		for (final Class<?> zrSubClass : zrClassSet) {
-			//			LOG.info("ZRepositoryStarter开始生成[{}]的SQL模板", zrSubClass.getCanonicalName());
+			//			LOG.info("ZRepositoryStarter开始生成[{}]的SQL模板", zrSubClass.getName());
 			final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(zrSubClass);
 			final String tType = typeArray[0];
 			checkZRG(tType, typeArray[1], zrSubClass);
@@ -334,7 +334,7 @@ public class ZRepositoryMain {
 			final Method[] ms = zrSubClass.getMethods();
 
 			for (final Method m : ms) {
-				//				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getCanonicalName(), m.getName());
+				//				LOG.info("ZRepositoryStarter开始生成[{}]的方法[{}]的SQL模板", zrSubClass.getName(), m.getName());
 
 				final MethodSQL methodSQL = MethodRegex.check(m.getName(), m);
 
@@ -344,7 +344,7 @@ public class ZRepositoryMain {
 
 					checkZEntity(typeClass);
 
-					final String zrSubClassName = zrSubClass.getCanonicalName();
+					final String zrSubClassName = zrSubClass.getName();
 					final String methodName = m.getName();
 					final String sqlTemplate = methodSQL.getSqlTemplate();
 
@@ -501,7 +501,7 @@ public class ZRepositoryMain {
 				.collect(Collectors.toList());
 		if (ml.size() > 1) {
 			throw new IllegalArgumentException(
-					"@" + ZRepository.class.getCanonicalName() + " 类 " + entityClass.getSimpleName()
+					"@" + ZRepository.class.getName() + " 类 " + entityClass.getSimpleName()
 					+ " 有重复的方法 [" + ml + "] ，不允许重名！"
 					);
 		}
@@ -716,16 +716,16 @@ public class ZRepositoryMain {
 			final ZRead read = method.getAnnotation(ZRead.class);
 			if ((write != null) && (read != null)) {
 				throw new IllegalArgumentException("方法[" + method.getName() + "] 不能同时存在 "
-						+ ZWrite.class.getCanonicalName() + " 和 " + ZRead.class.getCanonicalName());
+						+ ZWrite.class.getName() + " 和 " + ZRead.class.getName());
 			}
 
 			final ZMethod zm = new ZMethod();
 			zm.setAbstract(false);
 			zm.setName(method.getName());
 			final Class<?> returnType = method.getReturnType();
-			zm.setReturnType(returnType.getCanonicalName());
-			//			System.out.println("returnType.getCanonicalName() = " + returnType.getCanonicalName());
-			if (returnType.getCanonicalName().equals(Object.class.getCanonicalName())) {
+			zm.setReturnType(returnType.getName());
+			//			System.out.println("returnType.getName() = " + returnType.getName());
+			if (returnType.getName().equals(Object.class.getName())) {
 				zm.setReturnType(typeArray[0]);
 			}
 
@@ -740,7 +740,7 @@ public class ZRepositoryMain {
 				}
 
 				if ("save".equals(method.getName())) {
-					if (p1.getType().getCanonicalName().equals(Object.class.getCanonicalName())) {
+					if (p1.getType().getName().equals(Object.class.getName())) {
 						argLIst.add(new ZMethodArg(typeArray[0], p1.getName()));
 					}
 				} else {
@@ -752,7 +752,7 @@ public class ZRepositoryMain {
 			zm.setMethodArgList(argLIst);
 			zmSet.add(zm);
 
-			final String sql = ZRSqlMap.get(myZRClass.getCanonicalName(), zm.getName());
+			final String sql = ZRSqlMap.get(myZRClass.getName(), zm.getName());
 
 			// 结束
 			final String body = "String sql = \""+sql+"\";";
@@ -780,48 +780,48 @@ public class ZRepositoryMain {
 
 		final String modeString = modeString(method);
 
-		final String className1 = "\"" + myZRClass.getCanonicalName() + "\"";
+		final String className1 = "\"" + myZRClass.getName() + "\"";
 		final String methodName1 = "\"" + method.getName() + "\"";
 		switch (method.getName()) {
 		case "findById":
-			return "return " + SU.class.getCanonicalName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
+			return "return " + SU.class.getName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "findByIdIn":
-			return "return " + SU.class.getCanonicalName() + ".findByIdIn(" + className1 + "," + methodName1 + "," + modeString + " ,idList,classType,sql);";
+			return "return " + SU.class.getName() + ".findByIdIn(" + className1 + "," + methodName1 + "," + modeString + " ,idList,classType,sql);";
 
 		case "findAll":
-			return "return " + SU.class.getCanonicalName() + ".findAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
+			return "return " + SU.class.getName() + ".findAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
 
 		case "saveAll":
-			return "return " + SU.class.getCanonicalName() + ".saveAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql,tList);";
+			return "return " + SU.class.getName() + ".saveAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql,tList);";
 
 		case "update":
-			return "return " + SU.class.getCanonicalName() + ".update(" + className1 + "," + methodName1 + "," + modeString + ", classType,t,sql);";
+			return "return " + SU.class.getName() + ".update(" + className1 + "," + methodName1 + "," + modeString + ", classType,t,sql);";
 
 		case "save":
-			return "return " + SU.class.getCanonicalName() + ".save(" + className1 + "," + methodName1 + ","
+			return "return " + SU.class.getName() + ".save(" + className1 + "," + methodName1 + ","
 			+ modeString + "," + ", classType," + entityTName + ",t,sql);";
 
 		case "page":
-			return "return " + SU.class.getCanonicalName() + ".page(" + className1 + "," + methodName1 + ","
+			return "return " + SU.class.getName() + ".page(" + className1 + "," + methodName1 + ","
 			+ modeString + ", classType," + entityTName + ",wrapper,size,page);";
 
 		case "existByIdIn":
-			return "return " + SU.class.getCanonicalName() + ".existByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
+			return "return " + SU.class.getName() + ".existByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
 		case "existById":
-			return "return " + SU.class.getCanonicalName() + ".existById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
+			return "return " + SU.class.getName() + ".existById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "deleteById":
-			return "return " + SU.class.getCanonicalName() + ".deleteById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
+			return "return " + SU.class.getName() + ".deleteById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "deleteByIdIn":
-			return "return " + SU.class.getCanonicalName() + ".deleteByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
+			return "return " + SU.class.getName() + ".deleteByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
 
 		case "deleteAll":
-			return "return " + SU.class.getCanonicalName() + ".deleteAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
+			return "return " + SU.class.getName() + ".deleteAll(" + className1 + "," + methodName1 + "," + modeString + ", classType,sql);";
 
 		case "count":
-			return "return " + SU.class.getCanonicalName() + ".count(" + className1 + "," + methodName1
+			return "return " + SU.class.getName() + ".count(" + className1 + "," + methodName1
 					+ ","  + modeString + ",classType,sql);";
 
 		case "find":
@@ -1068,8 +1068,8 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		return "return " + SU.class.getCanonicalName() + ".find(" + className1 + "," + methodName1
-				+ ","  + modeString + ",classType,"+returnType.getCanonicalName()+",sql," + joiner.toString()  + ");";
+		return "return " + SU.class.getName() + ".find(" + className1 + "," + methodName1
+				+ ","  + modeString + ",classType,"+returnType.getName()+",sql," + joiner.toString()  + ");";
 	}
 
 	private static String findByXXIsEmptyAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
@@ -1102,8 +1102,8 @@ public class ZRepositoryMain {
 		final String methodNameF = StrUtil.count(joiner.toString(), DELIMITER) == 0
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
-		return "return " + SU.class.getCanonicalName() + "."+methodNameF+"(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner + ");";
+		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner + ");";
 	}
 	private static String findByXXIsEmptyAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
@@ -1134,8 +1134,8 @@ public class ZRepositoryMain {
 		final String methodNameF = StrUtil.count(joiner.toString(), DELIMITER) == 0
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
-		return "return " + SU.class.getCanonicalName() + "."+methodNameF+"(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner + ");";
+		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner + ");";
 	}
 	private static String findByXXIsEmpty(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
@@ -1160,8 +1160,8 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
+		return "return " + SU.class.getName() + ".findByXXIsNull(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql);";
 	}
 
 
@@ -1177,12 +1177,12 @@ public class ZRepositoryMain {
 		final Field[] fs = entityClass.getDeclaredFields();
 		final Optional<Field> findAny = Arrays.stream(fs).filter(f -> f.getName().equals(javaField)).findAny();
 
-		if (!findAny.get().getType().getCanonicalName().equals(String.class.getCanonicalName())
-				&& !findAny.get().getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+		if (!findAny.get().getType().getName().equals(String.class.getName())
+				&& !findAny.get().getType().getName().equals(Character.class.getName())) {
 
 			final List<String> sln = Arrays.stream(fs)
-					.filter(f -> f.getType().getCanonicalName().equals(String.class.getCanonicalName())
-							|| f.getType().getCanonicalName().equals(Character.class.getCanonicalName())
+					.filter(f -> f.getType().getName().equals(String.class.getName())
+							|| f.getType().getName().equals(Character.class.getName())
 							).map(Field::getName)
 					.collect(Collectors.toList());
 
@@ -1198,7 +1198,7 @@ public class ZRepositoryMain {
 							+ "]"
 							+ "\r\n\t"
 							+ "当前参数[" + findAny.get().getName() + "]"
-							+ "的类型是[" + findAny.get().getType().getCanonicalName() + "]"
+							+ "的类型是[" + findAny.get().getType().getName() + "]"
 							+ "\r\n\t"
 							+ "请检查代码:"
 							+ "\r\n\t"
@@ -1245,8 +1245,8 @@ public class ZRepositoryMain {
 				ac == 0 ? "findByXXIsNullAndXX" : "findByXXIsNullAndXXAndXX";
 
 
-		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner +  ");";
+		return "return " + SU.class.getName() + "." + suMethodName + "(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner +  ");";
 	}
 
 
@@ -1272,8 +1272,8 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
+		return "return " + SU.class.getName() + ".findByXXIsNull(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql);";
 	}
 	private static String findByXXIsNull(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
@@ -1296,8 +1296,8 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNull(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql);";
+		return "return " + SU.class.getName() + ".findByXXIsNull(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql);";
 	}
 
 	/**
@@ -1309,9 +1309,9 @@ public class ZRepositoryMain {
 	 */
 	private static String modeString(final Method method) {
 		if (method.isAnnotationPresent(ZRead.class)) {
-			return Mode.class.getCanonicalName() + "." + Mode.READ.name();
+			return Mode.class.getName() + "." + Mode.READ.name();
 		}
-		return Mode.class.getCanonicalName() + "." + Mode.WRITE.name();
+		return Mode.class.getName() + "." + Mode.WRITE.name();
 	}
 
 	private static String findByXXXEndingWith(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1323,8 +1323,8 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXXEndingWith(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXXEndingWith(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static StringJoiner checkFindByXXEndingWithAndStartingWith(final Class<?> zrSubClass, final Class<?> entityClass,
@@ -1356,7 +1356,7 @@ public class ZRepositoryMain {
 							+ methodRegex + "声明式方法"
 							+ "[" + zrSubClass.getSimpleName() + "." + method.getName() + "]"
 							+ "\r\n\t"
-							+ "不支持声明中" + fl + "的类型[" + f.getType().getCanonicalName() + "]"
+							+ "不支持声明中" + fl + "的类型[" + f.getType().getName() + "]"
 							+ "\r\n\t"
 							+ "支持类型为[" + supportedClassName + "],"
 							+ "请修改方法声明:"
@@ -1410,8 +1410,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXXStartingWith(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXXStartingWith(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXGreaterThanEquals(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1424,8 +1424,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + ".findByIdLessThan(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByIdLessThan(" + className1 + "," + methodName1 + "," + modeString
+				+ ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXOrderByXXDescLimit(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1524,8 +1524,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static Field getDeclaredField(final Class<?> cls, final String fieldName) {
@@ -1558,7 +1558,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 		final String suMethodName =
 				ac == 0 ? "countingByXX" : "countingByXXAndXX";
-		return "return " + SU.class.getCanonicalName() + "." + suMethodName + "(" + className1 + "," + methodName1 + ","
+		return "return " + SU.class.getName() + "." + suMethodName + "(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType,sql," + joiner.toString() + ");";
 	}
 
@@ -1641,8 +1641,8 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXOrYY(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXOrYY(" + className1 + "," + methodName1
+				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXXIsNullAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1654,8 +1654,8 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXIsNullAndXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static void checkFindByXXIsNull(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex, final int PARAMETER_SIZE) {
@@ -1738,8 +1738,8 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXIsNullAndXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1750,8 +1750,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXXAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1764,8 +1764,8 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1776,8 +1776,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXNotNull(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1805,8 +1805,8 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXNotLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1826,7 +1826,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
+		return "return " + SU.class.getName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
@@ -1843,7 +1843,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
+		return "return " + SU.class.getName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
@@ -1864,7 +1864,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + ".findByXXLike(" + className1 + "," + methodName1 + ","
+		return "return " + SU.class.getName() + ".findByXXLike(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
@@ -1879,7 +1879,7 @@ public class ZRepositoryMain {
 							+ "] 参数类型必须为["
 							+ String.class.getSimpleName()
 							+ "/" + Character.class.getSimpleName()
-							+ "],当前为" + method.getParameters()[0].getType().getCanonicalName()
+							+ "],当前为" + method.getParameters()[0].getType().getName()
 							+ "\r\n\t"
 							+ "请检查代码:修改参数类型为["
 							+ String.class.getSimpleName()
@@ -1906,8 +1906,8 @@ public class ZRepositoryMain {
 
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
+				+ ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXBetween(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1922,8 +1922,8 @@ public class ZRepositoryMain {
 
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getCanonicalName() + ",sql," + joiner.toString() + ");";
+		return "return " + SU.class.getName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
+				+ ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
 	}
 
 	private static void checkFindByXXBetweenAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex, final int mps) {
@@ -1994,9 +1994,9 @@ public class ZRepositoryMain {
 						+ "\r\n\t"
 						+ "[" +myZRClass.getSimpleName() + "." + method.getName() + "]"
 						+ "\r\n\t"
-						+ "第[" + (i + 1) + "]个参数类型["+pClass.getCanonicalName()+"]错误"
+						+ "第[" + (i + 1) + "]个参数类型["+pClass.getName()+"]错误"
 						+ "\r\n\t"
-						+ "请检查代码:修改第["+(i+1)+"]个参数类型为[" + f.getType().getCanonicalName() + "]"
+						+ "请检查代码:修改第["+(i+1)+"]个参数类型为[" + f.getType().getName() + "]"
 						+ "\r\n\t"
 						;
 		throw new IllegalArgumentException(m1);
@@ -2104,8 +2104,8 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getCanonicalName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getCanonicalName() + ",sql," + joiner.toString() + ","+fieldName+");";
+		return "return " + SU.class.getName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
+		+ returnType.getName() + ",sql," + joiner.toString() + ","+fieldName+");";
 	}
 
 	private static String query(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
@@ -2118,11 +2118,11 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName()
+		return "return " + SU.class.getName()
 				+ ".zQuerySelect(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
 				// ZRepository.query 方法就是要用 ORIGIN 模式
-				+ entityClass.getCanonicalName() + ",\""+SQLEMode.ORIGIN.name()+"\","+ joiner.toString() + ");";
+				+ entityClass.getName() + ",\""+SQLEMode.ORIGIN.name()+"\","+ joiner.toString() + ");";
 	}
 
 	private static String zQuery(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
@@ -2165,10 +2165,10 @@ public class ZRepositoryMain {
 								+ "@" + ZQuery.class.getSimpleName()
 								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型声明错误:"
 								+ "\r\n\t"
-								+ "[SELECT]操作必须返回[" + List.class.getCanonicalName() + "]类型,当前返回类型为["
-								+ returnType.getCanonicalName() + "]"
+								+ "[SELECT]操作必须返回[" + List.class.getName() + "]类型,当前返回类型为["
+								+ returnType.getName() + "]"
 								+ "\r\n\t"
-								+ "请修改代码:把返回类型改为[" + List.class.getCanonicalName() + "<T>" + "]的形式"
+								+ "请修改代码:把返回类型改为[" + List.class.getName() + "<T>" + "]的形式"
 								+ "\r\n\t"
 								;
 				throw new IllegalArgumentException(m);
@@ -2181,10 +2181,10 @@ public class ZRepositoryMain {
 								+ "@" + ZQuery.class.getSimpleName()
 								+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型声明错误:"
 								+ "\r\n\t"
-								+ "返回类型必须声明为[" + List.class.getCanonicalName() + "<T>]带泛型参数的形式,"
+								+ "返回类型必须声明为[" + List.class.getName() + "<T>]带泛型参数的形式,"
 								+ "当前无泛型参数"
 								+ "\r\n\t"
-								+ "请修改代码:把返回类型改为[" + List.class.getCanonicalName() + "<T>" + "]带泛型参数的形式"
+								+ "请修改代码:把返回类型改为[" + List.class.getName() + "<T>" + "]带泛型参数的形式"
 								+ "\r\n\t"
 								;
 				throw new IllegalArgumentException(m);
@@ -2217,10 +2217,10 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType2 = getReturnType(method);
 
-		return "return " + SU.class.getCanonicalName() + "." + subClassMethodName
+		return "return " + SU.class.getName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
-				+ returnType2.getCanonicalName() + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ joiner.toString() + ");";
+				+ returnType2.getName() + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ joiner.toString() + ");";
 	}
 
 	private static void checkZQueryUpdateDeleteInsert(final Class<?> myZRClass, final Method method,
@@ -2231,10 +2231,10 @@ public class ZRepositoryMain {
 							+ "@" + ZQuery.class.getSimpleName()
 							+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型声明错误:"
 							+ "\r\n\t"
-							+ "返回类型必须声明为[" + Integer.class.getCanonicalName() + "]类型,当前类型为["
-							+ returnType.getCanonicalName() + "]"
+							+ "返回类型必须声明为[" + Integer.class.getName() + "]类型,当前类型为["
+							+ returnType.getName() + "]"
 							+ "\r\n\t"
-							+ "请修改代码:把返回类型改为[" + Integer.class.getCanonicalName() + "]类型"
+							+ "请修改代码:把返回类型改为[" + Integer.class.getName() + "]类型"
 							+ "\r\n\t"
 							;
 			throw new IllegalArgumentException(m);
@@ -2390,13 +2390,13 @@ public class ZRepositoryMain {
 									+ "方法[" + myZRClass.getSimpleName() + "." + method.getName() + "]返回类型中的字段类型错误:"
 									+ "\r\n\t"
 									+ "返回类型[" + returnType.getSimpleName() + "]"
-									+ "中的字段[" + f.getName() + "]类型["+f.getType().getCanonicalName()+"]"
+									+ "中的字段[" + f.getName() + "]类型["+f.getType().getName()+"]"
 									+ "\r\n\t"
 									+ "和@" + ZEntity.class.getSimpleName()
 									+ "对象[" + entityClass.getSimpleName() + "]中的字段[" + esF1.getName() + "]类型["
-									+ esF1.getType().getCanonicalName() + "]不一致"
+									+ esF1.getType().getName() + "]不一致"
 									+ "\r\n\t"
-									+ "请修改代码:把[" + returnType.getSimpleName() +"." + f.getName() + "]类型修改为[" + esF1.getType().getCanonicalName() + "]"
+									+ "请修改代码:把[" + returnType.getSimpleName() +"." + f.getName() + "]类型修改为[" + esF1.getType().getName() + "]"
 									+ "\r\n\t"
 
 							;
@@ -2456,7 +2456,7 @@ public class ZRepositoryMain {
 		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getCanonicalName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getCanonicalName()+",sql,"
+		return "return " + SU.class.getName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+",sql,"
 		+ joiner.toString() + ");";
 	}
 
@@ -2582,11 +2582,11 @@ public class ZRepositoryMain {
 		}
 
 		final Optional<Field> findAny = fieldList.stream()
-				.filter(fn -> DBType.JAVA.contains(fn.getType().getCanonicalName())).findAny();
+				.filter(fn -> DBType.JAVA.contains(fn.getType().getName())).findAny();
 		if (findAny.isPresent()) {
 			final String m = "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName() + "] 中的字段 ["
 					+ findAny.get().getName() + "] 不允许使用基本类型 ："
-					+ "" + findAny.get().getType().getCanonicalName() + " " + findAny.get().getName()
+					+ "" + findAny.get().getType().getName() + " " + findAny.get().getName()
 					+ " 请改为引用类型"
 					;
 			throw new IllegalArgumentException(m);
@@ -2652,10 +2652,10 @@ public class ZRepositoryMain {
 										+  dbEnum.name()
 										+ ":"
 										+ "@" + ZEntity.class.getSimpleName() + "类[" + typeClass.getSimpleName()
-										+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getCanonicalName()
+										+ "]中的字段[" + o.get().getName() + "] 类型 [" + o.get().getType().getName()
 										+ "] 与数据表[" + tableName + "] 的字段 [" + columnName + "] 类型 [" + columnType + "] 不匹配"
 										+ "\r\n\t"
-										+ "java类型和DB类型匹配关系请看 @see " + DBType.class.getCanonicalName()
+										+ "java类型和DB类型匹配关系请看 @see " + DBType.class.getName()
 										+ "\r\n\t"
 
 										;
@@ -2718,7 +2718,7 @@ public class ZRepositoryMain {
 									+ "@" + ZEntity.class
 									.getSimpleName() + "类[" + typeClass.getSimpleName()
 									+ "]中存在数据表[" + tableName + "]中不存在的字段" + noZTransientFieldList + EMTPY
-									+ "，如需与数据表字段对应，请在数据表中加入此字段；如不需与数据表对应，请在字段上加入@" + ZTransient.class.getCanonicalName() + " 注解"
+									+ "，如需与数据表字段对应，请在数据表中加入此字段；如不需与数据表对应，请在字段上加入@" + ZTransient.class.getName() + " 注解"
 									;
 							throw new IllegalArgumentException(m);
 						}
@@ -2939,7 +2939,7 @@ public class ZRepositoryMain {
 						"\r\n\t"
 								+ "@" + checkClass.getSimpleName() + "字段["
 								+ typeClass.getSimpleName()
-								+ "." + o.get().getName() + "] 的类型 [" + o.get().getType().getCanonicalName()
+								+ "." + o.get().getName() + "] 的类型 [" + o.get().getType().getName()
 								+ "] 不支持"
 								+ "\r\n\t"
 								+ "支持类型为: " + supportedClassSet
@@ -3169,11 +3169,11 @@ public class ZRepositoryMain {
 			}
 			final Field idField = idO.get();
 
-			if (!idField.getType().getCanonicalName().equals(idType)) {
+			if (!idField.getType().getName().equals(idType)) {
 				final String m = ZRepository.class.getSimpleName() + " 的子接口 " + zrSubClass.getSimpleName()
 				+ " 泛型参数<T,ID> 设置错误. "
 				+ "泛型参数ID类型("+idType+")应和T("+tClass.getSimpleName()+")中的@" + ZID.class.getSimpleName()
-				+ "标记的Field的类型("+idField.getType().getCanonicalName()+")保持一致";
+				+ "标记的Field的类型("+idField.getType().getName()+")保持一致";
 				throw new IllegalArgumentException(m);
 			}
 

@@ -64,7 +64,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.gte(value.getClass())) {
-				throw new UnsupportedOperationException("LT操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("LT操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 			return addAll(field, value, dbEnum);
 		}
@@ -78,7 +78,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.gte(value.getClass())) {
-				throw new UnsupportedOperationException("LTE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("LTE操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 			return addAll(field, value, dbEnum);
 		}
@@ -92,7 +92,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.gte(value.getClass())) {
-				throw new UnsupportedOperationException("GT操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("GT操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 			return addAll(field, value, dbEnum);
 		}
@@ -106,7 +106,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.gte(value.getClass())) {
-				throw new UnsupportedOperationException("GTE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("GTE操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 			return addAll(field, value, dbEnum);
 		}
@@ -125,7 +125,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.like(value.getClass())) {
-				throw new UnsupportedOperationException("LIKE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("LIKE操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 
 			return addAll(field, "%" + value + "%", dbEnum);
@@ -140,7 +140,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.like(value.getClass())) {
-				throw new UnsupportedOperationException("NOT_LIKE操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("NOT_LIKE操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 
 			return addAll(field, "%" + value + "%", dbEnum);
@@ -170,7 +170,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.startingWith(value.getClass())) {
-				throw new UnsupportedOperationException("ENDING_WITH操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("ENDING_WITH操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 			return addAll(field, "%" + value, dbEnum);
 		}
@@ -184,7 +184,7 @@ public enum SQLOperatorEnum {
 			}
 
 			if (!ZRMethodU.startingWith(value.getClass())) {
-				throw new UnsupportedOperationException("STARTING_WITH操作:参数类型" + value.getClass().getCanonicalName() + "不支持");
+				throw new UnsupportedOperationException("STARTING_WITH操作:参数类型" + value.getClass().getName() + "不支持");
 			}
 			return addAll(field, value + "%", dbEnum);
 		}
@@ -346,7 +346,7 @@ public enum SQLOperatorEnum {
 		}
 
 		if (!(value instanceof Iterable)) {
-			final String m = "参数必须是" + Iterable.class.getSimpleName() + "类型,当前类型为[" + value.getClass().getCanonicalName()
+			final String m = "参数必须是" + Iterable.class.getSimpleName() + "类型,当前类型为[" + value.getClass().getName()
 					+ "]";
 			throw new ZRWrapperTypeException(m);
 		}

@@ -76,19 +76,19 @@ public class ZEntityHandlerScanner {
 
 			if (noZORDER.isPresent()) {
 
-				final String s = ZEntityHandler.class.getCanonicalName() + " " + "对象"
+				final String s = ZEntityHandler.class.getName() + " " + "对象"
 						+ " ["
-						+ noZORDER.get().getClass().getCanonicalName()
+						+ noZORDER.get().getClass().getName()
 						+ "] "
 
-						+ "缺失 @" + ZOrder.class.getCanonicalName()
+						+ "缺失 @" + ZOrder.class.getName()
 						+ " 注解，请加入此注解";
 				throw new ZRepositoryException(s);
 			}
 		}
 
 		final Map<String, List<ZEntityHandler>> pMap = saveHS.stream()
-				.collect(Collectors.groupingBy(h -> h.getClass().getSuperclass().getCanonicalName()));
+				.collect(Collectors.groupingBy(h -> h.getClass().getSuperclass().getName()));
 
 		final Set<Entry<String, List<ZEntityHandler>>> es = pMap.entrySet();
 		for (final Entry<String, List<ZEntityHandler>> e : es) {
@@ -105,9 +105,9 @@ public class ZEntityHandlerScanner {
 				if (!add) {
 					final String s = e.getKey() + " 子类"
 							+ " ["
-							+ h.getClass().getCanonicalName()
+							+ h.getClass().getName()
 							+ "] "
-							+ "的 @" + ZOrder.class.getCanonicalName()
+							+ "的 @" + ZOrder.class.getName()
 							+ " 注解值 [" + v + "] 重复，请修改此值";
 					throw new ZRepositoryException(s);
 				}

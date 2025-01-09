@@ -18,12 +18,12 @@ public class UserRepositoryTest1 {
 	public static String[] findZRSubclassFanxing(final Class<?> cls) {
 		final Set<Class<?>> classSet = ZRepositoryMain.scanPackage_COM();
 		for (final Class<?> class1 : classSet) {
-			if (!cls.getCanonicalName().equals(class1.getCanonicalName())) {
+			if (!cls.getName().equals(class1.getName())) {
 				continue;
 			}
 
 			for (final Class<?> cls2 : class1.getInterfaces()) {
-				if(cls2.getCanonicalName().equals(ZRepository.class.getCanonicalName())) {
+				if(cls2.getName().equals(ZRepository.class.getName())) {
 					final Type[] genericInterfaces = class1.getGenericInterfaces();
 					for (final Type type : genericInterfaces) {
 						final String typeName = type.getTypeName();

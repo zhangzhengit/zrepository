@@ -64,7 +64,7 @@ public class ZRC {
 	}
 
 	public static <T> T computeIfAbsent(final Object key, final Supplier<T> supplier, final boolean storeNull) {
-		final String k = key.getClass().getCanonicalName() + "@" + key.hashCode();
+		final String k = key.getClass().getName() + "@" + key.hashCode();
 		return computeIfAbsent(k, supplier, storeNull);
 	}
 

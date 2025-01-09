@@ -185,7 +185,7 @@ public class ZRWrapper<T> {
 
 		if (!entityClass.isAnnotationPresent(ZEntity.class)) {
 			throw new ZRepositoryException(
-					"entityClass必须是 @" + ZEntity.class.getCanonicalName() + " 标记的类，当前为 " + entityClass);
+					"entityClass必须是 @" + ZEntity.class.getName() + " 标记的类，当前为 " + entityClass);
 		}
 
 		final ZRWrapper<T> w = new ZRWrapper<>(entityClass);
@@ -1321,7 +1321,7 @@ public class ZRWrapper<T> {
 	}
 
 	private DBEnum getDBEnum() {
-		final String key = this.entityClass.getCanonicalName();
+		final String key = this.entityClass.getName();
 		return ZRC.computeIfAbsent(key, this::getDBEnum0);
 	}
 

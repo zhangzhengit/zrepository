@@ -224,7 +224,7 @@ public class SU {
 				.findAny();
 		if (!zidO.isPresent()) {
 			throw new IllegalArgumentException(
-					"无 " + ZID.class.getSimpleName() + " 标记的属性，t = " + t.getClass().getCanonicalName());
+					"无 " + ZID.class.getSimpleName() + " 标记的属性，t = " + t.getClass().getName());
 		}
 
 		final Object idValue = getUpdateIdValue(t, zidO);
@@ -653,7 +653,7 @@ public class SU {
 				.filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
 		if (!zid.isPresent()) {
 			throw new IllegalArgumentException(
-					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + entityClass.getCanonicalName());
+					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + entityClass.getName());
 		}
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
@@ -713,23 +713,23 @@ public class SU {
 			while (rs.next()) {
 				// 类型转换
 				final Object id = rs.getObject(1);
-				if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
+				if (type.getName().equals(String.class.getName())) {
 					r.add(String.valueOf(id));
-				} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+				} else if (type.getName().equals(Integer.class.getName())) {
 					r.add(Integer.valueOf(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+				} else if (type.getName().equals(Byte.class.getName())) {
 					r.add(Byte.valueOf(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+				} else if (type.getName().equals(Short.class.getName())) {
 					r.add(Short.valueOf(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+				} else if (type.getName().equals(Long.class.getName())) {
 					r.add(Long.valueOf(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+				} else if (type.getName().equals(Double.class.getName())) {
 					r.add(Double.valueOf(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
+				} else if (type.getName().equals(BigInteger.class.getName())) {
 					r.add(new BigInteger(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
+				} else if (type.getName().equals(BigDecimal.class.getName())) {
 					r.add(new BigDecimal(String.valueOf(id)));
-				} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+				} else if (type.getName().equals(Character.class.getName())) {
 					r.add(Character.valueOf(String.valueOf(id).charAt(0)));
 				}
 			}
@@ -771,7 +771,7 @@ public class SU {
 			return sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES, v.toString());
 		};
 
-		final String key = cls.getCanonicalName() + "@" + sql;
+		final String key = cls.getName() + "@" + sql;
 
 		return ZRC.computeIfAbsent(key, supplier);
 	}
@@ -887,10 +887,10 @@ public class SU {
 				return false;
 			}
 
-			final String fn = field.getType().getCanonicalName();
+			final String fn = field.getType().getName();
 
 			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
-			if (fn.equals(Boolean.class.getCanonicalName())) {
+			if (fn.equals(Boolean.class.getName())) {
 				// XXX sqlite也暂时Boolean和tinyint 对应，和mysql一样
 				if ((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.SQLITE)) {
 					final boolean equals = Boolean.TRUE.equals(v2);
@@ -899,22 +899,22 @@ public class SU {
 				} else if (dbEnum == DBEnum.POSTGRESQL) {
 					ps.setBoolean(i, Boolean.parseBoolean(String.valueOf(v2)));
 				}
-			} else if (fn.equals(Character.class.getCanonicalName())) {
+			} else if (fn.equals(Character.class.getName())) {
 				// char 类型直接用String
 				ps.setString(i, String.valueOf(v2));
-			} else if (fn.equals(Byte.class.getCanonicalName())) {
+			} else if (fn.equals(Byte.class.getName())) {
 				ps.setByte(i, (Byte) v2);
-			} else if (fn.equals(Short.class.getCanonicalName())) {
+			} else if (fn.equals(Short.class.getName())) {
 				ps.setShort(i, (Short) v2);
-			} else if (fn.equals(Integer.class.getCanonicalName())) {
+			} else if (fn.equals(Integer.class.getName())) {
 				ps.setInt(i, (Integer) v2);
-			} else if (fn.equals(Long.class.getCanonicalName())) {
+			} else if (fn.equals(Long.class.getName())) {
 				ps.setLong(i, (Long) v2);
-			} else if (fn.equals(Double.class.getCanonicalName())) {
+			} else if (fn.equals(Double.class.getName())) {
 				ps.setDouble(i, (Double) v2);
-			} else if (fn.equals(String.class.getCanonicalName())) {
+			} else if (fn.equals(String.class.getName())) {
 				ps.setString(i, String.valueOf(v2));
-			} else if (fn.equals(BigDecimal.class.getCanonicalName())) {
+			} else if (fn.equals(BigDecimal.class.getName())) {
 				ps.setBigDecimal(i, (BigDecimal) v2);
 			} else if (v2.getClass().isArray()) {
 				// blob类型
@@ -925,27 +925,27 @@ public class SU {
 				// v2);
 				// ps.setBlob(i, inputStream);
 				// ps.setBinaryStream(i, inputStream);
-			} else if (fn.equals(java.util.Date.class.getCanonicalName())) {
+			} else if (fn.equals(java.util.Date.class.getName())) {
 				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
 				// 日期时间的字段，新增注解：表示插入的格式
 				// ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
 				// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
 				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
-			} else if (fn.equals(java.sql.Date.class.getCanonicalName())) {
+			} else if (fn.equals(java.sql.Date.class.getName())) {
 				ps.setDate(i, (java.sql.Date) v2);
-			} else if (fn.equals(java.sql.Time.class.getCanonicalName())) {
+			} else if (fn.equals(java.sql.Time.class.getName())) {
 				// FIXME 2025年1月8日 下午8:46:34 zhangzhen : 使用(java.sql.Time) v 会导致取出来的结果不一致？以后再查什么原因
 				ps.setTime(i, Time.valueOf(v2.toString()));
-			} else if (fn.equals(LocalTime.class.getCanonicalName())) {
+			} else if (fn.equals(LocalTime.class.getName())) {
 				ps.setObject(i, v2);
-			} else if (fn.equals(LocalDate.class.getCanonicalName())) {
+			} else if (fn.equals(LocalDate.class.getName())) {
 				ps.setDate(i, java.sql.Date.valueOf((LocalDate) v2));
-			} else if (fn.equals(LocalDateTime.class.getCanonicalName())) {
+			} else if (fn.equals(LocalDateTime.class.getName())) {
 				final LocalDateTime localDateTime = (LocalDateTime) v2;
 				final ZonedDateTime atZone = localDateTime.atZone(ZoneId.systemDefault());
 				final Timestamp timestamp = Timestamp.from(atZone.toInstant());
 				ps.setTimestamp(i, timestamp);
-			} else if (fn.equals(Timestamp.class.getCanonicalName())) {
+			} else if (fn.equals(Timestamp.class.getName())) {
 				ps.setTimestamp(i, (Timestamp) v2);
 			} else {
 				// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
@@ -968,24 +968,24 @@ public class SU {
 		}
 
 		final String k = "getconnection" + dataSourceName;
-		synchronized (k.intern()) {
-			final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
-			try {
-				final Connection connection = zConnection.getConnection();
-				connection.setAutoCommit(true);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-
-			final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
-			ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
-			try {
-				zc2.getZConnection().getConnection().setAutoCommit(false);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-			return zc2;
+		//		synchronized (k.intern()) {
+		final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
+		try {
+			final Connection connection = zConnection.getConnection();
+			connection.setAutoCommit(true);
+		} catch (final SQLException e) {
+			e.printStackTrace();
 		}
+
+		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
+		ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
+		try {
+			zc2.getZConnection().getConnection().setAutoCommit(false);
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+		return zc2;
+		//		}
 
 	}
 
@@ -1120,9 +1120,9 @@ public class SU {
 				zrSubClassName + "@"
 						+ callerMethodName + "@"
 						+ mode + "@"
-						+ entityClass.getCanonicalName() + "@"
+						+ entityClass.getName() + "@"
 						+ sql + "@"
-						+ idList.get(0).getClass().getCanonicalName() + "@"
+						+ idList.get(0).getClass().getName() + "@"
 						+ idList;
 
 		final ZC2 zc2 = getZCAndSetAutoCommitFALSE(mode, getDataSourceNameFromClassType(entityClass));
@@ -1211,7 +1211,7 @@ public class SU {
 			entity.setSql(s2);
 			entity.setTableName(tableName);
 
-			final String beanName = SqlInvocationLogsService.class.getCanonicalName() + "@" + "service";
+			final String beanName = SqlInvocationLogsService.class.getName() + "@" + "service";
 			// FIXME 2024年6月8日 下午8:14:06 zhangzhen : 这行改为异步的
 			final SqlInvocationLogsService service = (SqlInvocationLogsService) ZContext.getBean(beanName);
 			service.add(entity);
@@ -1344,9 +1344,9 @@ public class SU {
 				zrSubClassName + "@"
 						+ callerMethodName + "@"
 						+ mode + "@"
-						+ entityClass.getCanonicalName() + "@"
+						+ entityClass.getName() + "@"
 						+ sql + "@"
-						+ id.getClass().getCanonicalName() + "@"
+						+ id.getClass().getName() + "@"
 						+ id;
 
 		return (T) selectFromCacheIfZT(cachekey, zc, supplier);
@@ -1386,11 +1386,12 @@ public class SU {
 			}
 
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
+
 			Field field = null;
 			try {
-				field = returnType.getDeclaredField(javaFieldName);
+				field = FU.getDeclaredField(returnType, javaFieldName);
 				field.setAccessible(true);
-			} catch (NoSuchFieldException | SecurityException e) {
+			} catch (NoSuchFieldException | SecurityException e1) {
 				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
 				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
 				// 有可能是手误多写了一个column，或者少写了一个Field等等情况
@@ -1398,7 +1399,19 @@ public class SU {
 				continue;
 			}
 
-			final String cn = field.getType().getCanonicalName();
+			//			Field field = null;
+			//			try {
+			//				field = returnType.getDeclaredField(javaFieldName);
+			//				field.setAccessible(true);
+			//			} catch (NoSuchFieldException | SecurityException e) {
+			//				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
+			//				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
+			//				// 有可能是手误多写了一个column，或者少写了一个Field等等情况
+			//				// 前者会导致多一点流量，后者导致逻辑不通会自己发现的
+			//				continue;
+			//			}
+
+			final String cn = field.getType().getName();
 
 			final Object columValue = getColumnValue(rs, i, field);
 			if (columValue == null) {
@@ -1407,26 +1420,26 @@ public class SU {
 
 			try {
 
-				if (cn.equals(Byte.class.getCanonicalName())) {
+				if (cn.equals(Byte.class.getName())) {
 					field.set(object, Byte.valueOf(String.valueOf(columValue)));
-				} else if (cn.equals(Short.class.getCanonicalName())) {
+				} else if (cn.equals(Short.class.getName())) {
 					field.set(object, Short.valueOf(String.valueOf(columValue)));
-				} else if (cn.equals(Integer.class.getCanonicalName())) {
+				} else if (cn.equals(Integer.class.getName())) {
 					field.set(object, Integer.valueOf(String.valueOf(columValue)));
-				} else if (cn.equals(Long.class.getCanonicalName())) {
+				} else if (cn.equals(Long.class.getName())) {
 					field.set(object, Long.valueOf(String.valueOf(columValue)));
-				} else if (cn.equals(Double.class.getCanonicalName())) {
+				} else if (cn.equals(Double.class.getName())) {
 					field.set(object, Double.valueOf(String.valueOf(columValue)));
-				} else if (cn.equals(BigDecimal.class.getCanonicalName())) {
+				} else if (cn.equals(BigDecimal.class.getName())) {
 					field.set(object, new BigDecimal(String.valueOf(columValue)));
-				} else if (cn.equals(Boolean.class.getCanonicalName())) {
+				} else if (cn.equals(Boolean.class.getName())) {
 					field.set(object,
 							columValue == null ? null : (Integer.valueOf(1).equals(columValue) ? Boolean.TRUE : Boolean.FALSE));
-				} else if (cn.equals(Character.class.getCanonicalName())) {
+				} else if (cn.equals(Character.class.getName())) {
 					field.set(object, Character.valueOf(String.valueOf(columValue).charAt(0)));
-				} else if (cn.equals(String.class.getCanonicalName())) {
+				} else if (cn.equals(String.class.getName())) {
 					field.set(object, String.valueOf(columValue));
-				} else if (cn.equals(java.util.Date.class.getCanonicalName())) {
+				} else if (cn.equals(java.util.Date.class.getName())) {
 					if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
 						final java.util.Date date = new Date((long) columValue);
@@ -1442,7 +1455,7 @@ public class SU {
 							field.set(object, columValue);
 						}
 					}
-				} else if (cn.equals(java.sql.Date.class.getCanonicalName())) {
+				} else if (cn.equals(java.sql.Date.class.getName())) {
 					if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
 						// sqlite 中此值为long类型
 						final java.sql.Date date = new java.sql.Date((long) columValue);
@@ -1450,7 +1463,7 @@ public class SU {
 					} else {
 						field.set(object, columValue);
 					}
-				} else if (cn.equals(java.sql.Timestamp.class.getCanonicalName())) {
+				} else if (cn.equals(java.sql.Timestamp.class.getName())) {
 					final DBEnum db = dbEnum;
 					if (columValue.getClass().equals(Timestamp.class)) {
 						field.set(object, columValue);
@@ -1459,7 +1472,7 @@ public class SU {
 						final Timestamp time = new Timestamp((long) columValue);
 						field.set(object, time);
 					}
-				}  else if (cn.equals(LocalDate.class.getCanonicalName())) {
+				}  else if (cn.equals(LocalDate.class.getName())) {
 					if (columValue.getClass() == Long.class) {
 						// sqlite 为Long类型
 						final Instant instant = Instant.ofEpochMilli((Long) columValue);
@@ -1470,7 +1483,7 @@ public class SU {
 						final LocalDate localDate = d.toLocalDate();
 						field.set(object, localDate);
 					}
-				}  else if (cn.equals(LocalTime.class.getCanonicalName())) {
+				}  else if (cn.equals(LocalTime.class.getName())) {
 					if (columValue.getClass().equals(Time.class)) {
 						final Time t1 = (Time) columValue;
 						final Calendar c = Calendar.getInstance();
@@ -1499,7 +1512,7 @@ public class SU {
 						field.set(object, time);
 					}
 
-				} else if (cn.equals(java.sql.Time.class.getCanonicalName())) {
+				} else if (cn.equals(java.sql.Time.class.getName())) {
 					final DBEnum db = dbEnum;
 					if (columValue.getClass().equals(Time.class)) {
 						field.set(object, columValue);
@@ -1511,7 +1524,7 @@ public class SU {
 						final Time time = new Time((long) columValue);
 						field.set(object, time);
 					}
-				} else if (cn.equals(java.time.LocalDateTime.class.getCanonicalName())) {
+				} else if (cn.equals(java.time.LocalDateTime.class.getName())) {
 					if (columValue.getClass() == Long.class) {
 						// sqlite 中此值为long类型
 						final Instant ins = Instant.ofEpochMilli((long) columValue);
@@ -1610,7 +1623,7 @@ public class SU {
 
 	public static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
 		final Supplier<String> supplier = () -> gSelectFromReturnType0(entityClass, returnType);
-		final String key = "gSelectFromReturnType" + entityClass.getComponentType() +"@" + returnType.getCanonicalName();
+		final String key = "gSelectFromReturnType" + entityClass.getComponentType() +"@" + returnType.getName();
 		return ZRC.computeIfAbsent(key, supplier);
 	}
 
@@ -1654,10 +1667,10 @@ public class SU {
 				zrSubClassName + "@"
 						+ callerMethodName + "@"
 						+ mode + "@"
-						+ entityClass.getCanonicalName() + "@"
-						+ returnType.getCanonicalName() + "@"
+						+ entityClass.getName() + "@"
+						+ returnType.getName() + "@"
 						+ sql + "@"
-						+ fieldValue.getClass().getCanonicalName() + "@"
+						+ fieldValue.getClass().getName() + "@"
 						+ fieldValue;
 
 		return (List<T>) selectFromCacheIfZT(cachekey, zc2, supplier);
@@ -2944,7 +2957,7 @@ public class SU {
 
 			final int argcount = StrUtil.count(sqlT, '?');
 			if (argcount != arg.length) {
-				final String message = "@" + ZQuery.class.getCanonicalName() + " 自定义SQL参数个数[" + argcount
+				final String message = "@" + ZQuery.class.getName() + " 自定义SQL参数个数[" + argcount
 						+ "]和方法传入的参数个数[" + arg.length + "]不匹配";
 				throw new ZQuerySQLException(message);
 			}

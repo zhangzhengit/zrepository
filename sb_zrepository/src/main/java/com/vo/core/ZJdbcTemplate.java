@@ -27,7 +27,7 @@ public final class ZJdbcTemplate<T> {
 	 * @param sql         要执行的SELECT语句，如：select name from blobt
 	 * @param entityClass @ZEntity注解标记的类
 	 */
-	public  List<T> query(final String sql, final Class<T> entityClass) {
+	public List<T> query(final String sql, final Class<T> entityClass) {
 
 		final List<Object> zQuerySelect = SU.zQuerySelect(
 				ZR_SUB_CLASS_NAME,
