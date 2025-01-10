@@ -47,6 +47,7 @@ import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
 import com.vo.conn.ZDatasourcePropertiesLoader;
+import com.vo.core.RU;
 import com.vo.core.Page;
 import com.vo.core.Sort;
 import com.vo.core.ZContext;
@@ -1384,7 +1385,7 @@ public class SU {
 
 			Field field = null;
 			try {
-				field = FU.getDeclaredField(returnType, javaFieldName);
+				field = RU.getDeclaredField(returnType, javaFieldName);
 				field.setAccessible(true);
 			} catch (NoSuchFieldException | SecurityException e1) {
 				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
