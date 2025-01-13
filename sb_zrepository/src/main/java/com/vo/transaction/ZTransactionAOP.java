@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import com.vo.ZC2;
 import com.vo.ZCSourceEnum;
 import com.vo.ZIDG;
-import com.vo.ZRC;
 import com.vo.anno.ZRead;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
@@ -22,6 +21,7 @@ import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
 import com.vo.conn.ZDatasourcePropertiesLoader;
+import com.vo.core.ZRC;
 
 
 /**

@@ -17,6 +17,7 @@ import com.vo.anno.ZEntity;
 import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.core.Sort;
+import com.vo.core.ZRC;
 import com.vo.exception.ZRepositoryException;
 
 import lombok.EqualsAndHashCode;

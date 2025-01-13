@@ -1,10 +1,8 @@
 package com.vo;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.vo.core.ZRC;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -16,10 +14,6 @@ import cn.hutool.core.util.StrUtil;
  *
  */
 public class ZFieldConverter {
-	// FIXME 2024年5月27日 下午8:50:47 zhangzhen: 这个要好好测，万一出了问题，容易导致认为是后续代码的问题
-
-
-	private final static Map<String, Object> CACHE = new WeakHashMap<>(128, 1F);
 
 	public static final String UNDERSCORE = "_";
 	public static final Character UNDERSCORE_CHARACTER = '_';
@@ -45,24 +39,7 @@ public class ZFieldConverter {
 	}
 
 	public static String toJavaField(final String dbFieldName) {
-
-		final Object v = CACHE.get(dbFieldName);
-		if (v != null) {
-			return (String) v;
-		}
-
-		synchronized (dbFieldName) {
-
-			final Object v2 = CACHE.get(dbFieldName);
-			if (v2 != null) {
-				return (String) v2;
-			}
-
-			final String vN = toJavaField0(dbFieldName);
-			CACHE.put(dbFieldName, vN);
-
-			return vN;
-		}
+		return ZRC.computeIfAbsent("toJavaField-" + dbFieldName,() ->  toJavaField0(dbFieldName));
 	}
 
 	private static String toJavaField0(final String dbFieldName) {

@@ -47,11 +47,12 @@ import com.vo.conn.Mode;
 import com.vo.conn.ZCPool;
 import com.vo.conn.ZConnection;
 import com.vo.conn.ZDatasourcePropertiesLoader;
-import com.vo.core.RU;
 import com.vo.core.Page;
+import com.vo.core.RU;
 import com.vo.core.Sort;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.core.ZRC;
 import com.vo.exception.ZRepositoryException;
 import com.vo.transaction.ZIsolationEnum;
 import com.vo.transaction.ZTransactionAOP;
@@ -1301,8 +1302,7 @@ public class SU {
 
 		zc2.addKey(key);
 
-		synchronized (key.intern()) {
-			// FIXME 2024年7月2日 下午10:38:40 zhangzhen : 是否要重写一个类?因为 ZRC 类是用 WeakHashMap实现的，可能会丢数据
+		synchronized (key) {
 			final Object v = ZRC.computeIfAbsent(key, supplier, true);
 			return v;
 		}
