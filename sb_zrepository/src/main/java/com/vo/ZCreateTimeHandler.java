@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.vo.core.RU;
 
 /**
  * @ZCreateTime 字段 ZRepository.save 时的动作：如果字段值为null，则自动给一个初始值[当前时间]
@@ -22,7 +23,8 @@ public class ZCreateTimeHandler extends ZSaveHandler {
 	public SUA handle(final SUA sua) {
 		// XXX 2024年6月27日 下午9:46:08 zhangzhen : save 操作，就不取 @ZDateFormat 了，暂时还没发现有问题
 		final java.util.Date now = new Date();
-		final Field[] fs = sua.getEntityClass().getDeclaredFields();
+
+		final Field[] fs = RU.getDeclaredFields(sua.getEntityClass());
 		for (final Field f : fs) {
 			if (f.isAnnotationPresent(ZCreateTime.class)) {
 				f.setAccessible(true);
