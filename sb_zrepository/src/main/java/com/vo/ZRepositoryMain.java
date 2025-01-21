@@ -673,7 +673,7 @@ public class ZRepositoryMain {
 		final ZClass zClass = new ZClass();
 
 		// FIXME 2023年8月26日 下午5:54:25 zhanghen: com.vo改为配置项
-		zClass.setPackage1(new ZPackage("com"));
+		//		zClass.setPackage1(new ZPackage("com"));
 
 		//		userR.setImplementsSet(Sets.newHashSet(canonicalName + " <T, ID> "));
 		//		userR.setName(canonicalName + "_ZClass" + "<T,ID>");
@@ -740,7 +740,7 @@ public class ZRepositoryMain {
 					continue;
 				}
 
-				if ("save".equals(method.getName())) {
+				if ("save".equals(method.getName()) || "update".equals(method.getName())) {
 					if (p1.getType().getName().equals(Object.class.getName())) {
 						argLIst.add(new ZMethodArg(typeArray[0], p1.getName()));
 					}
@@ -801,11 +801,11 @@ public class ZRepositoryMain {
 
 		case "save":
 			return "return " + SU.class.getName() + ".save(" + className1 + "," + methodName1 + ","
-			+ modeString + "," + ", classType," + entityTName + ",t,sql);";
+			+ modeString + "," + " classType," + entityTName + ".class" + ",t,sql);";
 
 		case "page":
 			return "return " + SU.class.getName() + ".page(" + className1 + "," + methodName1 + ","
-			+ modeString + ", classType," + entityTName + ",wrapper,size,page);";
+			+ modeString + ", classType," + entityTName + ".class" + ",wrapper,size,page);";
 
 		case "existByIdIn":
 			return "return " + SU.class.getName() + ".existByIdIn(" + className1 + "," + methodName1 + "," + modeString + ", idList,classType,sql);";
@@ -1070,7 +1070,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		return "return " + SU.class.getName() + ".find(" + className1 + "," + methodName1
-				+ ","  + modeString + ",classType,"+returnType.getName()+",sql," + joiner.toString()  + ");";
+				+ ","  + modeString + ",classType," + returnType.getName() + ".class" + ", sql, " + joiner.toString()  + ");";
 	}
 
 	private static String findByXXIsEmptyAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
@@ -1104,7 +1104,7 @@ public class ZRepositoryMain {
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
 		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner + ");";
+				+ "," + modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner + ");";
 	}
 	private static String findByXXIsEmptyAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
@@ -1136,7 +1136,7 @@ public class ZRepositoryMain {
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
 		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner + ");";
+				+ "," + modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner + ");";
 	}
 	private static String findByXXIsEmpty(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
@@ -1162,7 +1162,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		return "return " + SU.class.getName() + ".findByXXIsNull(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql);";
+				+ "," + modeString + ",classType," + returnType.getName()+ ".class"  + ",sql);";
 	}
 
 
@@ -1247,7 +1247,7 @@ public class ZRepositoryMain {
 
 
 		return "return " + SU.class.getName() + "." + suMethodName + "(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner +  ");";
+				+ "," + modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner +  ");";
 	}
 
 
@@ -1274,7 +1274,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		return "return " + SU.class.getName() + ".findByXXIsNull(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql);";
+				+ "," + modeString + ",classType," + returnType.getName()+ ".class"  + ",sql);";
 	}
 	private static String findByXXIsNull(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
 			final String modeString, final String className1, final String methodName1, final String methodRegex) {
@@ -1298,7 +1298,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		return "return " + SU.class.getName() + ".findByXXIsNull(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql);";
+				+ "," + modeString + ",classType," + returnType.getName()+ ".class"  + ",sql);";
 	}
 
 	/**
@@ -1325,7 +1325,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByXXXEndingWith(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ modeString + ",classType," + returnType.getName()  + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static StringJoiner checkFindByXXEndingWithAndStartingWith(final Class<?> zrSubClass, final Class<?> entityClass,
@@ -1412,7 +1412,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByXXXStartingWith(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+				+ "," + modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXGreaterThanEquals(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1426,7 +1426,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByIdLessThan(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+				+ ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXOrderByXXDescLimit(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1526,7 +1526,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXOrderByXXLimit(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static Field getDeclaredField(final Class<?> cls, final String fieldName) {
@@ -1643,7 +1643,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByXXOrYY(" + className1 + "," + methodName1
-				+ "," + modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+				+ "," + modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXXIsNullAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1656,7 +1656,7 @@ public class ZRepositoryMain {
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXIsNullAndXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static void checkFindByXXIsNull(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex, final int PARAMETER_SIZE) {
@@ -1740,7 +1740,7 @@ public class ZRepositoryMain {
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXIsNullAndXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1752,7 +1752,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXXAndXXAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1766,7 +1766,7 @@ public class ZRepositoryMain {
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXIsNullAndXXAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXIsNullAndXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1778,7 +1778,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXIsNullAndXX(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXNotNull(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1807,7 +1807,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXNotLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1828,7 +1828,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		return "return " + SU.class.getName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXLikeAndXX(final Class<?> myZRClass, final Class entityClass, final String className1, final String methodName1, final Method method, final String methodRegex) {
@@ -1845,7 +1845,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
 		return "return " + SU.class.getName() + ".findByXXLikeAndXX(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1866,7 +1866,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByXXLike(" + className1 + "," + methodName1 + ","
-		+ modeString + ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+		+ modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static void checkFindByXXLike(final Class<?> myZRClass, final Method method, final String methodRegex) {
@@ -1908,7 +1908,7 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+				+ ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXBetween(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
@@ -1924,7 +1924,7 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXBetween(" + className1 + "," + methodName1 + "," + modeString
-				+ ",classType," + returnType.getName() + ",sql," + joiner.toString() + ");";
+				+ ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
 	private static void checkFindByXXBetweenAndXX(final Class<?> myZRClass, final Class<?> entityClass, final Method method, final String methodRegex, final int mps) {
@@ -2106,7 +2106,7 @@ public class ZRepositoryMain {
 
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXIn(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName() + ",sql," + joiner.toString() + ","+fieldName+");";
+		+ returnType.getName() + ".class" + ",sql," + joiner.toString() + ","+fieldName+");";
 	}
 
 	private static String query(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
@@ -2121,9 +2121,9 @@ public class ZRepositoryMain {
 
 		return "return " + SU.class.getName()
 				+ ".zQuerySelect(" + className1 + "," + methodName1 + "," + modeString + ","
-				+ entityTName + ","
+				+ entityTName + ".class" + ","
 				// ZRepository.query 方法就是要用 ORIGIN 模式
-				+ entityClass.getName() + ",\""+SQLEMode.ORIGIN.name()+"\","+ joiner.toString() + ");";
+				+ entityClass.getName() + ".class" + ",\""+SQLEMode.ORIGIN.name()+"\","+ joiner.toString() + ");";
 	}
 
 	private static String zQuery(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String sqlTemplate, final String entityTName) {
@@ -2221,7 +2221,7 @@ public class ZRepositoryMain {
 		return "return " + SU.class.getName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
 				+ entityTName + ","
-				+ returnType2.getName() + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ joiner.toString() + ");";
+				+ returnType2.getName() +".class" + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ joiner.toString() + ");";
 	}
 
 	private static void checkZQueryUpdateDeleteInsert(final Class<?> myZRClass, final Method method,
@@ -2457,7 +2457,7 @@ public class ZRepositoryMain {
 		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 		final String methodName1 = "\"" + method.getName() + "\"";
 
-		return "return " + SU.class.getName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+",sql,"
+		return "return " + SU.class.getName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
 		+ joiner.toString() + ");";
 	}
 

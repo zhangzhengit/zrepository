@@ -215,7 +215,7 @@ public class SU {
 	}
 
 	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class<T> entityClass, final T t, final String sql) {
+			final Class entityClass, final T t, final String sql) {
 
 		if (t == null) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".update方法: t 参数不能为null");
@@ -993,7 +993,7 @@ public class SU {
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class<T> entityClass,final Class<T> returnType, final String sql, final Object wrapper) {
+			final Class entityClass,final Class returnType, final String sql, final Object wrapper) {
 
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
@@ -1027,7 +1027,7 @@ public class SU {
 			final ArrayList<T> r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
+				final T t = (T) newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
 			return r;
