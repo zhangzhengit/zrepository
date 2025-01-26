@@ -2,7 +2,6 @@ package com.vo;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.vo.core.ZRC;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -39,7 +38,7 @@ public class ZFieldConverter {
 	}
 
 	public static String toJavaField(final String dbFieldName) {
-		return ZRC.computeIfAbsent("toJavaField-" + dbFieldName,() ->  toJavaField0(dbFieldName));
+		return toJavaField0(dbFieldName);
 	}
 
 	private static String toJavaField0(final String dbFieldName) {
