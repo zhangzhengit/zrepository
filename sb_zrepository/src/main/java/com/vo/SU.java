@@ -978,6 +978,12 @@ public class SU {
 
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
 		ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
+		try {
+			zc2.getZConnection().getConnection().setAutoCommit(false);
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+
 
 		return zc2;
 	}
