@@ -968,8 +968,6 @@ public class SU {
 			return zcT;
 		}
 
-		final String k = "getconnection" + dataSourceName;
-		//		synchronized (k.intern()) {
 		final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
 		try {
 			final Connection connection = zConnection.getConnection();
@@ -985,9 +983,8 @@ public class SU {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
-		return zc2;
-		//		}
 
+		return zc2;
 	}
 
 	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -1360,7 +1357,7 @@ public class SU {
 		sh.forEach(h -> ((ZAllHandler)h).handle(sua));
 		return sua;
 	}
-	
+
 	private static FI getTCInfo(final Class<?> returnType, final ResultSetMetaData metaData, final int fieldCount) {
 
 		final Field[] fieldArray = new Field[fieldCount];
@@ -1375,17 +1372,17 @@ public class SU {
 				} catch (final SecurityException | NoSuchFieldException e1) {
 					e1.printStackTrace();
 				}
-				
+
 				fieldArray[i] = field;
-				
+
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return new FI(fieldCount, null, fieldArray);
 	}
-	
+
 	static class FI {
 		private final int fieldCount;
 		private final String[] columnNameArray;
@@ -1413,9 +1410,9 @@ public class SU {
 
 	private static <T> T newT2(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int fieldCount,final FI fi) {
-		
+
 		final T object = newInstance(returnType);
-		
+
 		for (int i = 0; i < fi.getFieldCount(); i++) {
 			final Object columValue = getColumnValue(rs, i, fi.getFieldArray()[i]);
 			if (columValue == null) {
@@ -1424,10 +1421,10 @@ public class SU {
 
 			setFieldValue(dbEnum, object, fi.getFieldArray()[i], columValue);
 		}
-		
+
 		return object;
 	}
-	
+
 	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int fieldCount) {
 
@@ -1479,7 +1476,7 @@ public class SU {
 		final String fieldName = field.getType().getName();
 
 		try {
-			
+
 			if (fieldName.equals(Byte.class.getName())) {
 				field.set(object, Byte.valueOf(String.valueOf(columValue)));
 			} else if (fieldName.equals(Short.class.getName())) {
@@ -2929,7 +2926,7 @@ public class SU {
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			final List<T> r = new  ArrayList<>();
-			
+
 			final int count = metaData.getColumnCount();
 			final FI tcInfo = getTCInfo(returnType, metaData, count);
 			while (rs.next()) {
