@@ -212,9 +212,8 @@ public class ZCPool {
 	 * 归还一个连接
 	 *
 	 * @param zConnection
-	 *
 	 */
-	public void returnZConnectionAndCommit(final ZConnection zConnection) {
+	public void returnZConnection(final ZConnection zConnection) {
 
 		final Mode mode = zConnection.getMode();
 		switch (mode) {
@@ -229,45 +228,86 @@ public class ZCPool {
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * 归还一个连接并且执行commit
+	 *
+	 * @param zConnection
+	 *
+	 */
+	public void returnZConnectionAndCommit(final ZConnection zConnection) {
+
+		final Mode mode = zConnection.getMode();
+		switch (mode) {
+		case WRITE:
+			this.returnWriteAndCommit(zConnection);
+			break;
+
+		case READ:
+			this.returnReadAndCommit(zConnection);
+			break;
+
+		default:
+			break;
+		}
 
 	}
 
-	private void returnRead(final ZConnection zConnection) {
+	private ZConnection returnRead(final ZConnection zConnection) {
+
 		synchronized (this.readLock) {
 
 			for (final ZConnection zc : this.readVector) {
 				if (zc.getConnection() == zConnection.getConnection()) {
-					try {
-						zConnection.getConnection().commit();
-					} catch (final SQLException e) {
-						e.printStackTrace();
-					}
+					//					this.commit(zConnection.getConnection());
 					zc.setBusy(false);
 					this.readLock.notify();
-					break;
+					return zc;
 				}
 			}
 		}
+
+		return null;
 	}
 
+	private void returnReadAndCommit(final ZConnection zConnection) {
+		synchronized (this.readLock) {
+			final ZConnection returnRead = this.returnRead(zConnection);
+			this.commit(returnRead.getConnection());
+		}
+	}
 
-	private void returnWrite(final ZConnection zConnection) {
+	private ZConnection returnWrite(final ZConnection zConnection) {
 		synchronized (this.writeLock) {
 
 			for (final ZConnection zc : this.writeVector) {
 				if (zc.getConnection() == zConnection.getConnection()) {
-					try {
-						// FIXME 2024年5月21日 下午3:07:13 zhangzhen: 测试出的问题：当server(armbian的panther x2
-						// mysql-8.0.34-0ubuntu0.22.04.1)硬盘满了，commit 会一直卡着没反应，也不报错，也没法设置超时时间，怎么办？
-						zConnection.getConnection().commit();
-					} catch (final SQLException e) {
-						e.printStackTrace();
-					}
+					// FIXME 2024年5月21日 下午3:07:13 zhangzhen: 测试出的问题：当server(armbian的panther x2
+					// mysql-8.0.34-0ubuntu0.22.04.1)硬盘满了，commit 会一直卡着没反应，也不报错，也没法设置超时时间，怎么办？
+					//					this.commit(zConnection.getConnection());
 					zc.setBusy(false);
 					this.writeLock.notify();
-					break;
+					return zc;
 				}
 			}
+		}
+
+		return null;
+	}
+
+	private void returnWriteAndCommit(final ZConnection zConnection) {
+		synchronized (this.writeLock) {
+			final ZConnection returnWrite = this.returnWrite(zConnection);
+			this.commit(returnWrite.getConnection());
+		}
+	}
+
+	private void commit(final Connection connection) {
+		try {
+			connection.commit();
+		} catch (final SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
