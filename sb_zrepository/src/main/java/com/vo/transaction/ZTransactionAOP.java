@@ -123,7 +123,7 @@ public class ZTransactionAOP implements ZIAOP {
 			rollback();
 		} finally {
 
-			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -161,7 +161,7 @@ public class ZTransactionAOP implements ZIAOP {
 			e1.printStackTrace();
 		}
 
-		resetToDefaultTransactionIsolation(zc2);
+		resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
@@ -177,7 +177,7 @@ public class ZTransactionAOP implements ZIAOP {
 		return defaultDatsourceName;
 	}
 
-	public static void resetToDefaultTransactionIsolation(final ZC2 zc2) {
+	public static void resetToDefaultTransactionIsolationAndSetAutoCommitFalse(final ZC2 zc2) {
 		try {
 			zc2.getZConnection().getConnection().setTransactionIsolation(
 					zc2.getZConnection().getTransactionIsolation());
@@ -223,7 +223,7 @@ public class ZTransactionAOP implements ZIAOP {
 
 		} finally {
 
-			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
