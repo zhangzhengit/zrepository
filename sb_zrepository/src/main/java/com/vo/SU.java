@@ -174,7 +174,7 @@ public class SU {
 			}
 		} finally {
 			close(ps, rs, psc, pscRS);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L, new ArrayList<>());
@@ -288,7 +288,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -356,7 +356,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -413,7 +413,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -456,7 +456,7 @@ public class SU {
 			}
 		} finally {
 			close(ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -530,7 +530,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		for (final Object id : idNotNullList) {
@@ -585,7 +585,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -628,7 +628,7 @@ public class SU {
 				}
 			}
 
-			returnZConnectionIfZCPool(dataSourceName, zc2);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc2);
 			return idl;
 
 		case MYSQL:
@@ -748,7 +748,7 @@ public class SU {
 
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -817,7 +817,7 @@ public class SU {
 				e1.printStackTrace();
 			}
 		} finally {
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return null;
@@ -984,7 +984,6 @@ public class SU {
 			e.printStackTrace();
 		}
 
-
 		return zc2;
 	}
 
@@ -1038,7 +1037,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1078,7 +1077,7 @@ public class SU {
 				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 			return r;
 
 		} catch (SQLException
@@ -1091,7 +1090,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1190,7 +1189,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc2);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc2);
 		}
 
 		return Collections.emptyList();
@@ -1331,7 +1330,7 @@ public class SU {
 						entityClass.getAnnotation(ZEntity.class).tableName());
 				return t;
 			} finally {
-				returnZConnectionIfZCPool(dataSourceName, zc);
+				returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 			}
 		};
 
@@ -1679,7 +1678,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1786,7 +1785,7 @@ public class SU {
 			e.printStackTrace();
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(getDataSourceNameFromClassType(entityClass), zc);
+			returnZConnectionAndCommitIfZCPool(getDataSourceNameFromClassType(entityClass), zc);
 		}
 
 		return Collections.emptyList();
@@ -1890,7 +1889,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 
@@ -1939,7 +1938,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
@@ -1989,7 +1988,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2041,7 +2040,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
@@ -2096,7 +2095,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2154,7 +2153,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2212,7 +2211,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2269,7 +2268,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2322,7 +2321,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2374,7 +2373,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
@@ -2422,7 +2421,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2514,7 +2513,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2567,21 +2566,34 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
 	}
 
 	/**
-	 * ZConnection 来自于ZCPool的才提交;来自SpringAOP的就不提交，而是由AOP类在目标方法执行结束后统一commit/rollback
+	 * ZConnection 来自于ZCPool的归还连接并提交;
+	 * 来自SpringAOP的就不管了，而是由AOP类在目标方法执行结束后统一commit/rollback
 	 *
+	 * @param dataSourceName
+	 * @param zc
+	 */
+	private static void returnZConnectionAndCommitIfZCPool(final String dataSourceName, final ZC2 zc) {
+		if (zc.getSourceEnum() == ZCSourceEnum.ZCPOOL) {
+			ZCPool.getInstance(dataSourceName).returnZConnectionAndCommit(zc.getZConnection());
+		}
+	}
+
+	/**
+	 * ZConnection 来自于ZCPool的归还连接;
+	 * 来自SpringAOP的就不管了
 	 * @param dataSourceName
 	 * @param zc
 	 */
 	private static void returnZConnectionIfZCPool(final String dataSourceName, final ZC2 zc) {
 		if (zc.getSourceEnum() == ZCSourceEnum.ZCPOOL) {
-			returnZConnectionAndCommit(dataSourceName, zc.getZConnection());
+			ZCPool.getInstance(dataSourceName).returnZConnection(zc.getZConnection());
 		}
 	}
 
@@ -2640,7 +2652,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2693,7 +2705,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2744,7 +2756,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2784,7 +2796,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc2);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc2);
 		}
 
 		return 0L;
@@ -2839,7 +2851,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return 0L;
@@ -2885,7 +2897,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return 0L;
@@ -2944,7 +2956,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3101,7 +3113,7 @@ public class SU {
 			}
 		} finally {
 			close(rs, ps);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3154,7 +3166,7 @@ public class SU {
 			}
 		} finally {
 			close(prepareStatement);
-			returnZConnectionIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
 		return NO_DELETE_OR_DELETE;
