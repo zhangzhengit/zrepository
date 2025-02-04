@@ -1320,9 +1320,7 @@ public class SU {
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSE(mode, dataSourceName);
 
-		final ZCSourceEnum sourceEnum = zc.getSourceEnum();
-
-		final Supplier supplier = () -> {
+		final Supplier<T> supplier = () -> {
 			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
 			final String sql2 = sua.getSql();
 
