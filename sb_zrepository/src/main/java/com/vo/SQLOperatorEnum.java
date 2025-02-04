@@ -309,7 +309,11 @@ public enum SQLOperatorEnum {
 			}
 		} else if (dbEnum == DBEnum.POSTGRESQL) {
 			if ((value instanceof Date) || (value instanceof java.sql.Date) || (value instanceof Time)
-					|| (value instanceof Timestamp)) {
+					|| (value instanceof Timestamp)
+					|| (value instanceof LocalDate)
+					|| (value instanceof LocalDateTime)
+					|| (value instanceof LocalTime)
+					) {
 				return "'" + value + "'";
 			}
 		}

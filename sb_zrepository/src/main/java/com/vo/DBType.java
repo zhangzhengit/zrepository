@@ -148,6 +148,9 @@ public class DBType {
 		JAVA_PGSQL.put("java.lang.Boolean", "boolean");
 		JAVA_PGSQL.put("java.sql.Date", "date");
 		JAVA_PGSQL.put("java.util.Date", "timestamp");
+		JAVA_PGSQL.put("java.time.LocalTime", "time");
+		JAVA_PGSQL.put("java.time.LocalDate", "date");
+		JAVA_PGSQL.put("java.time.LocalDateTime", "timestamp");
 		JAVA_PGSQL.put("java.sql.Time", "time");
 		JAVA_PGSQL.put("java.sql.Timestamp", "timestamp");
 		JAVA_PGSQL.put("byte[]", "bytea");
