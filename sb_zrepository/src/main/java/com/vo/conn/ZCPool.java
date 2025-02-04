@@ -198,7 +198,7 @@ public class ZCPool {
 					return zc;
 				}
 				try {
-					this.writeLock.wait(5);
+					this.writeLock.wait(1);
 				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
