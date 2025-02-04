@@ -125,7 +125,7 @@ public class ZTransactionAOP implements ZIAOP {
 		} finally {
 
 			// FIXME 2025年2月4日 下午7:19:52 zhangzhen : 这行似乎也没必要，暂时注释掉
-			//			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -162,12 +162,13 @@ public class ZTransactionAOP implements ZIAOP {
 		}
 
 		// FIXME 2025年2月4日 下午7:11:01 zhangzhen :  pg mysql sqlite 都试了，似乎这行重置也没必要，暂时注释掉
-		//		resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
+		//				resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
 			try {
 				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
+				zc2.getZConnection().setTransactionIsolationChanged(true);
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
@@ -179,8 +180,12 @@ public class ZTransactionAOP implements ZIAOP {
 	}
 
 	public static void resetToDefaultTransactionIsolationAndSetAutoCommitFalse(final ZC2 zc2) {
-		zc2.getZConnection().resetToDefaultTransactionIsolation();
-		zc2.getZConnection().setAutoCommitFalse();
+		if (zc2.getZConnection().isTransactionIsolationChanged()) {
+			zc2.getZConnection().resetToDefaultTransactionIsolation();
+			// FIXME 2025年2月4日 下午7:59:55 zhangzhen : 这个setACF看是否有必要？
+			zc2.getZConnection().setAutoCommitFalse();
+			zc2.getZConnection().setTransactionIsolationChanged(false);
+		}
 	}
 
 	@Pointcut("@annotation(com.vo.transaction.ZTransaction)")
@@ -220,7 +225,7 @@ public class ZTransactionAOP implements ZIAOP {
 		} finally {
 
 			// FIXME 2025年2月4日 下午7:20:49 zhangzhen : 这行似乎也没必要，暂时注释掉
-			//			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());

@@ -44,6 +44,11 @@ public class ZConnection {
 	private final int transactionIsolation;
 
 	/**
+	 * java.sql.Connnection 的隔离级别是否由 transactionIsolation 改变了
+	 */
+	private boolean transactionIsolationChanged = false;
+
+	/**
 	 * 回滚事务
 	 */
 	public synchronized void rollback() {
