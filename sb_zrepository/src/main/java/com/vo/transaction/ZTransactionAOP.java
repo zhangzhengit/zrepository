@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
+import com.vo.DBEnum;
 import com.vo.ZC2;
 import com.vo.ZCSourceEnum;
 import com.vo.ZIDG;
@@ -123,7 +124,8 @@ public class ZTransactionAOP implements ZIAOP {
 			rollback();
 		} finally {
 
-			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			// FIXME 2025年2月4日 下午7:19:52 zhangzhen : 这行似乎也没必要，暂时注释掉
+//			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -155,13 +157,12 @@ public class ZTransactionAOP implements ZIAOP {
 		// 加入 connection.setAutoCommit(true);
 		// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
 		// 不能在事务交易过程中改变事物交易隔绝等级。
-		try {
-			zc2.getZConnection().getConnection().setAutoCommit(true);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
+		if (zc2.getZConnection().getDbEnum() == DBEnum.POSTGRESQL) {
+			zc2.getZConnection().setAutoCommitFalse();
 		}
 
-		resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
+		// FIXME 2025年2月4日 下午7:11:01 zhangzhen :  pg mysql sqlite 都试了，似乎这行重置也没必要，暂时注释掉
+		//		resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
@@ -218,7 +219,8 @@ public class ZTransactionAOP implements ZIAOP {
 
 		} finally {
 
-			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			// FIXME 2025年2月4日 下午7:20:49 zhangzhen : 这行似乎也没必要，暂时注释掉
+			//			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
