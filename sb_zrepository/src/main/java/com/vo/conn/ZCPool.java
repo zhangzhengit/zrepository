@@ -241,11 +241,13 @@ public class ZCPool {
 		final Mode mode = zConnection.getMode();
 		switch (mode) {
 		case WRITE:
-			this.returnWriteAndCommit(zConnection);
+			final ZConnection returnWrite = this.returnWriteAndCommit(zConnection);
+			returnWrite.resetToDefaultTransactionIsolationIfChanged();
 			break;
 
 		case READ:
-			this.returnReadAndCommit(zConnection);
+			final ZConnection returnRead = this.returnReadAndCommit(zConnection);
+			returnRead.resetToDefaultTransactionIsolationIfChanged();
 			break;
 
 		default:
@@ -271,10 +273,11 @@ public class ZCPool {
 		return null;
 	}
 
-	private void returnReadAndCommit(final ZConnection zConnection) {
+	private ZConnection returnReadAndCommit(final ZConnection zConnection) {
 		synchronized (this.readLock) {
 			final ZConnection returnRead = this.returnRead(zConnection);
 			this.commitIfAutoCommitFalse(returnRead.getConnection());
+			return returnRead;
 		}
 	}
 
@@ -296,10 +299,11 @@ public class ZCPool {
 		return null;
 	}
 
-	private void returnWriteAndCommit(final ZConnection zConnection) {
+	private ZConnection returnWriteAndCommit(final ZConnection zConnection) {
 		synchronized (this.writeLock) {
 			final ZConnection returnWrite = this.returnWrite(zConnection);
 			this.commitIfAutoCommitFalse(returnWrite.getConnection());
+			return returnWrite;
 		}
 	}
 

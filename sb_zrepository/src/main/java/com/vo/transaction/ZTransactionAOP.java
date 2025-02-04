@@ -124,8 +124,8 @@ public class ZTransactionAOP implements ZIAOP {
 			rollback();
 		} finally {
 
-			// FIXME 2025年2月4日 下午7:19:52 zhangzhen : 这行似乎也没必要，暂时注释掉
-			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -179,13 +179,8 @@ public class ZTransactionAOP implements ZIAOP {
 		return defaultDatsourceName;
 	}
 
-	public static void resetToDefaultTransactionIsolationAndSetAutoCommitFalse(final ZC2 zc2) {
-		if (zc2.getZConnection().isTransactionIsolationChanged()) {
-			zc2.getZConnection().resetToDefaultTransactionIsolation();
-			// FIXME 2025年2月4日 下午7:59:55 zhangzhen : 这个setACF看是否有必要？
-			zc2.getZConnection().setAutoCommitFalse();
-			zc2.getZConnection().setTransactionIsolationChanged(false);
-		}
+	public static void resetToDefaultTransactionIsolation(final ZC2 zc2) {
+		zc2.getZConnection().resetToDefaultTransactionIsolationIfChanged();
 	}
 
 	@Pointcut("@annotation(com.vo.transaction.ZTransaction)")
@@ -224,8 +219,8 @@ public class ZTransactionAOP implements ZIAOP {
 
 		} finally {
 
-			// FIXME 2025年2月4日 下午7:20:49 zhangzhen : 这行似乎也没必要，暂时注释掉
-			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());

@@ -962,27 +962,44 @@ public class SU {
 		return false;
 	}
 
-	private static ZC2 getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
+	private static ZC2 getZC(final Mode mode, final String dataSourceName) {
 		final ZC2 zcT = ZTransactionAOP.getCurrentZConnection();
 		if (zcT != null) {
 			return zcT;
 		}
 
 		final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
-		try {
-			final Connection connection = zConnection.getConnection();
-			connection.setAutoCommit(true);
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		//		try {
+		//			final Connection connection = zConnection.getConnection();
+		//			connection.setAutoCommit(true);
+		//		} catch (final SQLException e) {
+		//			e.printStackTrace();
+		//		}
 
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
-		ZTransactionAOP.resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
-		try {
-			zc2.getZConnection().getConnection().setAutoCommit(false);
-		} catch (final SQLException e) {
-			e.printStackTrace();
+		//		ZTransactionAOP.resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
+		//		try {
+		//			zc2.getZConnection().getConnection().setAutoCommit(false);
+		//		} catch (final SQLException e) {
+		//			e.printStackTrace();
+		//		}
+
+		return zc2;
+	}
+
+	private static ZC2 getZCAndSetAutoCommitFALSE(final Mode mode, final String dataSourceName) {
+		final ZC2 zcT = ZTransactionAOP.getCurrentZConnection();
+		if (zcT != null) {
+			return zcT;
 		}
+
+		// XXX 注意：这里的逻辑就是 先setAC true再false，忘了当时为什么这样了，好像是为了兼容pg
+		final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
+		zConnection.setAutoCommitTrue();
+
+		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
+		ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
+		zc2.getZConnection().setAutoCommitFalse();
 
 		return zc2;
 	}

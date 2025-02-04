@@ -71,16 +71,23 @@ public class ZConnection {
 	}
 
 	/**
-	 * 重置为 java.sql.Connnection 默认的隔离级别
+	 * 如果 java.sql.Connnection 从默认的隔离级别修改过，则重置为它默认的隔离级别
+	 *
+	 * @return 返回是否重置了(是否重置为了默认的 transactionIsolation )
 	 */
-	public void resetToDefaultTransactionIsolation() {
-		try {
-			this.connection.setTransactionIsolation(this.transactionIsolation);
-		} catch (final SQLException e) {
-			e.printStackTrace();
+	public boolean resetToDefaultTransactionIsolationIfChanged() {
+		if (this.transactionIsolationChanged) {
+			try {
+				this.connection.setTransactionIsolation(this.transactionIsolation);
+				this.transactionIsolationChanged = false;
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+			return true;
 		}
-	}
 
+		return false;
+	}
 
 	public void setAutoCommitTrue() {
 		try {
@@ -114,6 +121,8 @@ public class ZConnection {
 			final Connection connection =
 					StrUtil.isEmpty(userName) ? DriverManager.getConnection(url)
 							: DriverManager.getConnection(url, userName, pwd);
+
+			connection.setAutoCommit(true);
 
 			final int transactionIsolation = connection.getTransactionIsolation();
 			final ZConnection zConnection = new ZConnection(transactionIsolation);
