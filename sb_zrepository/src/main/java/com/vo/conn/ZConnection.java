@@ -76,6 +76,15 @@ public class ZConnection {
 		}
 	}
 
+
+	public void setAutoCommitTrue() {
+		try {
+			this.connection.setAutoCommit(true);
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void setAutoCommitFalse() {
 		try {
 			this.connection.setAutoCommit(false);

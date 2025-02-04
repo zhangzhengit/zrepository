@@ -125,7 +125,7 @@ public class ZTransactionAOP implements ZIAOP {
 		} finally {
 
 			// FIXME 2025年2月4日 下午7:19:52 zhangzhen : 这行似乎也没必要，暂时注释掉
-//			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
+			//			resetToDefaultTransactionIsolationAndSetAutoCommitFalse(ZCONNECTION_THREADLOCAL.get());
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -158,7 +158,7 @@ public class ZTransactionAOP implements ZIAOP {
 		// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
 		// 不能在事务交易过程中改变事物交易隔绝等级。
 		if (zc2.getZConnection().getDbEnum() == DBEnum.POSTGRESQL) {
-			zc2.getZConnection().setAutoCommitFalse();
+			zc2.getZConnection().setAutoCommitTrue();
 		}
 
 		// FIXME 2025年2月4日 下午7:11:01 zhangzhen :  pg mysql sqlite 都试了，似乎这行重置也没必要，暂时注释掉
