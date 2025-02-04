@@ -274,7 +274,7 @@ public class ZCPool {
 	private void returnReadAndCommit(final ZConnection zConnection) {
 		synchronized (this.readLock) {
 			final ZConnection returnRead = this.returnRead(zConnection);
-			this.commit(returnRead.getConnection());
+			this.commitIfAutoCommitFalse(returnRead.getConnection());
 		}
 	}
 
@@ -299,13 +299,16 @@ public class ZCPool {
 	private void returnWriteAndCommit(final ZConnection zConnection) {
 		synchronized (this.writeLock) {
 			final ZConnection returnWrite = this.returnWrite(zConnection);
-			this.commit(returnWrite.getConnection());
+			this.commitIfAutoCommitFalse(returnWrite.getConnection());
 		}
 	}
 
-	private void commit(final Connection connection) {
+
+	private void commitIfAutoCommitFalse(final Connection connection) {
 		try {
-			connection.commit();
+			if (!connection.getAutoCommit()) {
+				connection.commit();
+			}
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
