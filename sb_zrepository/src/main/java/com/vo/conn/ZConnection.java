@@ -17,6 +17,7 @@ import lombok.Data;
 
 /**
  *
+ * 数据库连接对象
  *
  * @author zhangzhen
  * @date 2023年6月15日
@@ -59,6 +60,25 @@ public class ZConnection {
 	public synchronized void commit() {
 		try {
 			this.connection.commit();
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 重置为 java.sql.Connnection 默认的隔离级别
+	 */
+	public void resetToDefaultTransactionIsolation() {
+		try {
+			this.connection.setTransactionIsolation(this.transactionIsolation);
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void setAutoCommitFalse() {
+		try {
+			this.connection.setAutoCommit(false);
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}

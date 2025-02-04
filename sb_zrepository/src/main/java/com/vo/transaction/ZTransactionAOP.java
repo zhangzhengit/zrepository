@@ -178,13 +178,8 @@ public class ZTransactionAOP implements ZIAOP {
 	}
 
 	public static void resetToDefaultTransactionIsolationAndSetAutoCommitFalse(final ZC2 zc2) {
-		try {
-			zc2.getZConnection().getConnection().setTransactionIsolation(
-					zc2.getZConnection().getTransactionIsolation());
-			zc2.getZConnection().getConnection().setAutoCommit(false);
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		zc2.getZConnection().resetToDefaultTransactionIsolation();
+		zc2.getZConnection().setAutoCommitFalse();
 	}
 
 	@Pointcut("@annotation(com.vo.transaction.ZTransaction)")
