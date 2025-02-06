@@ -976,16 +976,13 @@ public class SU {
 		// 并且截止现在  2025年2月4日 下午9:49:59 sb_zrepository_test 里的265个单元测试，处理pg处理 java.util.Date
 		// new 一个存入pg再取出和new的equals是false以外，其他的都通过测试了.
 		final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
-
 		if (zConnection.getDbEnum() == DBEnum.POSTGRESQL) {
 			zConnection.setAutoCommitTrue();
+			zConnection.setAutoCommitFalse();
 		}
 
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
-		if (zConnection.getDbEnum() == DBEnum.POSTGRESQL) {
-			ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
-			zc2.getZConnection().setAutoCommitFalse();
-		}
+		ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
 
 		return zc2;
 	}
