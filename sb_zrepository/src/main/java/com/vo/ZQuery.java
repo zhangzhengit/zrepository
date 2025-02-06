@@ -87,6 +87,11 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 public @interface ZQuery {
 
+	public static final String SELECT_METHOD_NAME_PREFIX = "SELECT";
+	public static final String INSERT_METHOD_NAME_PREFIX = "INSERT";
+	public static final String UPDATE_METHOD_NAME_PREFIX = "UPDATE";
+	public static final String DELETE_METHOD_NAME_PREFIX = "DELETE";
+
 	public static final String MAPPER = "ZRMAPPER";
 
 	/**
@@ -100,5 +105,12 @@ public @interface ZQuery {
 	 * @return
 	 */
 	String sql() default MAPPER;
+
+	/**
+	 * 操作
+	 *
+	 * @return
+	 */
+	DMLEnum dml() default DMLEnum.SELECT;
 
 }
