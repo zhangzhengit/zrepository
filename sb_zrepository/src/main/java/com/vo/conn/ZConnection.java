@@ -13,7 +13,6 @@ import com.vo.ZRepositoryMain;
 import com.vo.core.ZLog2;
 
 import cn.hutool.core.util.StrUtil;
-import lombok.Data;
 
 /**
  *
@@ -23,7 +22,7 @@ import lombok.Data;
  * @date 2023年6月15日
  *
  */
-@Data
+// FIXME 2025年2月7日 下午11:46:04 zhangzhen : 去掉了lombok后，继续改，尽量不要让connection传递出去
 public class ZConnection {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
@@ -183,6 +182,94 @@ public class ZConnection {
 		e.printStackTrace(writer);
 
 		return stringWriter.toString();
+	}
+
+	public Boolean getBusy() {
+		return this.busy;
+	}
+
+	public void setBusy(final Boolean busy) {
+		this.busy = busy;
+	}
+
+	public Mode getMode() {
+		return this.mode;
+	}
+
+	public void setMode(final Mode mode) {
+		this.mode = mode;
+	}
+
+	public DBEnum getDbEnum() {
+		return this.dbEnum;
+	}
+
+	public void setDbEnum(final DBEnum dbEnum) {
+		this.dbEnum = dbEnum;
+	}
+
+	public String getDriverClass() {
+		return this.driverClass;
+	}
+
+	public void setDriverClass(final String driverClass) {
+		this.driverClass = driverClass;
+	}
+
+	public String getUrl() {
+		return this.url;
+	}
+
+	public void setUrl(final String url) {
+		this.url = url;
+	}
+
+	public String getUserName() {
+		return this.userName;
+	}
+
+	public void setUserName(final String userName) {
+		this.userName = userName;
+	}
+
+	public String getPwd() {
+		return this.pwd;
+	}
+
+	public void setPwd(final String pwd) {
+		this.pwd = pwd;
+	}
+
+	public Connection getConnection() {
+		return this.connection;
+	}
+
+	public void setConnection(final Connection connection) {
+		this.connection = connection;
+	}
+
+	public boolean isAutoCommit() {
+		return this.autoCommit;
+	}
+
+	public void setAutoCommit(final boolean autoCommit) {
+		this.autoCommit = autoCommit;
+	}
+
+	public boolean isTransactionIsolationChanged() {
+		return this.transactionIsolationChanged;
+	}
+
+	public void setTransactionIsolationChanged(final boolean transactionIsolationChanged) {
+		this.transactionIsolationChanged = transactionIsolationChanged;
+	}
+
+	public int getTransactionIsolation() {
+		return this.transactionIsolation;
+	}
+
+	public ZConnection(final int transactionIsolation) {
+		this.transactionIsolation = transactionIsolation;
 	}
 
 }
