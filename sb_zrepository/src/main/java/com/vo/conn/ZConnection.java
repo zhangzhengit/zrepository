@@ -9,8 +9,8 @@ import java.util.Objects;
 
 import com.vo.DBEnum;
 import com.vo.DataSourceDTO;
-import com.vo.ZRepositoryMain;
 import com.vo.core.ZLog2;
+import com.vo.transaction.ZIsolationEnum;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -225,8 +225,16 @@ public class ZConnection {
 		this.pwd = pwd;
 	}
 
-	public Connection getConnection() {
+	Connection getConnection() {
 		return this.connection;
+	}
+
+	public void setTransactionIsolation(final ZIsolationEnum isolationEnum) {
+		try {
+			this.connection.setTransactionIsolation(isolationEnum.getIsolation());
+		} catch (final SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	void setConnection(final Connection connection) {

@@ -84,22 +84,14 @@ public class ZTransactionAOP implements ZIAOP {
 	 * 回滚当前事务
 	 */
 	public static void rollback() {
-		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		ZCONNECTION_THREADLOCAL.get().getZConnection().rollback();
 	}
 
 	/**
 	 * 提交当前事务
 	 */
 	public static void commit() {
-		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		ZCONNECTION_THREADLOCAL.get().getZConnection().commitIfAutoCommitFalse();
 	}
 
 	private static void clear() {
@@ -114,7 +106,7 @@ public class ZTransactionAOP implements ZIAOP {
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
 		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setAutoCommit(false);
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitFalse();
 
 			final Object v = proceedingJoinPoint.proceed();
 			commit();
@@ -166,12 +158,8 @@ public class ZTransactionAOP implements ZIAOP {
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
-			try {
-				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
-				zc2.getZConnection().setTransactionIsolationChanged(true);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
+			zc2.getZConnection().setTransactionIsolation(isolationEnum);
+			zc2.getZConnection().setTransactionIsolationChanged(true);
 		}
 
 		ZCONNECTION_THREADLOCAL.set(zc2);
@@ -208,7 +196,7 @@ public class ZTransactionAOP implements ZIAOP {
 
 		try {
 
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setAutoCommit(false);
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitFalse();
 
 			final Object v = aopParameter.invoke();
 			commit();

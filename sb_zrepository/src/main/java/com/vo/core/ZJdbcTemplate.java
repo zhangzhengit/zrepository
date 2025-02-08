@@ -3,8 +3,8 @@ package com.vo.core;
 import java.util.List;
 
 import com.vo.SQLEMode;
-import com.vo.SU;
 import com.vo.conn.Mode;
+import com.vo.conn.SU;
 
 /**
  * 提供直接执行SQL的方法
