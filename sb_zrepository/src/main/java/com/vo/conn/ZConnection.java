@@ -38,11 +38,6 @@ public class ZConnection {
 	private Connection connection;
 
 	/**
-	 * connection当前是否自动提交
-	 */
-	private boolean autoCommit;
-
-	/**
 	 * java.sql.Connnection对象创建时，此对象的默认隔离级别
 	 */
 	private final int transactionIsolation;
@@ -67,12 +62,12 @@ public class ZConnection {
 	 * 提交当前事务
 	 */
 	public synchronized void commitIfAutoCommitFalse() {
-		if (!this.autoCommit) {
-			try {
+		try {
+			if (!this.connection.getAutoCommit()) {
 				this.connection.commit();
-			} catch (final SQLException e) {
-				e.printStackTrace();
 			}
+		} catch (final SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -99,13 +94,10 @@ public class ZConnection {
 	 * 设置 java.sql.Connection 自动提交为true
 	 */
 	public void setAutoCommitTrue() {
-		if (!this.autoCommit) {
-			try {
-				this.connection.setAutoCommit(true);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-			this.autoCommit = true;
+		try {
+			this.connection.setAutoCommit(true);
+		} catch (final SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -113,14 +105,10 @@ public class ZConnection {
 	 * 设置 java.sql.Connection 自动提交为false
 	 */
 	public void setAutoCommitFalse() {
-		if (this.autoCommit) {
-			try {
-				this.connection.setAutoCommit(false);
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
-
-			this.autoCommit = false;
+		try {
+			this.connection.setAutoCommit(false);
+		} catch (final SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -141,12 +129,9 @@ public class ZConnection {
 					StrUtil.isEmpty(userName) ? DriverManager.getConnection(url)
 							: DriverManager.getConnection(url, userName, pwd);
 
-			connection.setAutoCommit(true);
-
 			final int transactionIsolation = connection.getTransactionIsolation();
 			final ZConnection zConnection = new ZConnection(transactionIsolation);
 
-			zConnection.setAutoCommit(connection.getAutoCommit());
 			zConnection.setDriverClass(p.getDatasourceDriverClass());
 			zConnection.setUrl(p.getDatasourceUrl());
 			zConnection.setUserName(p.getDatasourceUsername());
@@ -244,16 +229,8 @@ public class ZConnection {
 		return this.connection;
 	}
 
-	public void setConnection(final Connection connection) {
+	void setConnection(final Connection connection) {
 		this.connection = connection;
-	}
-
-	public boolean isAutoCommit() {
-		return this.autoCommit;
-	}
-
-	public void setAutoCommit(final boolean autoCommit) {
-		this.autoCommit = autoCommit;
 	}
 
 	public boolean isTransactionIsolationChanged() {
