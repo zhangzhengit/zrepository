@@ -3,8 +3,8 @@ package com.vo.anno;
 import java.lang.reflect.Type;
 import java.util.Set;
 
-import com.vo.ZRepositoryMain;
 import com.vo.ZRepository;
+import com.vo.conn.ZRepositoryMain;
 
 /**
  *

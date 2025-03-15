@@ -166,12 +166,14 @@ public class ZCPool {
 		final int ms = 1000 * 10;
 		synchronized (this.readLock) {
 
-			for (int i = 1; i <= ms; i++) {
-				final Optional<ZConnection> findFirst = this.readVector.stream().filter(zc -> !zc.getBusy()).findFirst();
-				if (findFirst.isPresent()) {
-					final ZConnection zc = findFirst.get();
-					zc.setBusy(true);
-					return zc;
+			for (int m = 1; m <= ms; m++) {
+
+				for (int i = 0; i < this.readVector.size(); i++) {
+					final ZConnection zc = this.readVector.get(i);
+					if (!zc.getBusy()) {
+						zc.setBusy(true);
+						return zc;
+					}
 				}
 
 				try {
@@ -181,6 +183,7 @@ public class ZCPool {
 				}
 			}
 		}
+
 		throw new IllegalArgumentException("获取不到空闲的[读]连接");
 	}
 
@@ -189,16 +192,17 @@ public class ZCPool {
 		final int ms = 1000 * 10;
 		synchronized (this.writeLock) {
 
-			for (int i = 1; i <= ms; i++) {
-				final Optional<ZConnection> findFirst = this.writeVector.stream().filter(zc -> !zc.getBusy())
-						.findFirst();
-				if (findFirst.isPresent()) {
-					final ZConnection zc = findFirst.get();
-					zc.setBusy(true);
-					return zc;
+			for (int m = 1; m <= ms; m++) {
+				for (int i = 0; i < this.writeVector.size(); i++) {
+					final ZConnection zc = this.writeVector.get(i);
+					if (!zc.getBusy()) {
+						zc.setBusy(true);
+						return zc;
+					}
 				}
+
 				try {
-					this.writeLock.wait(5);
+					this.writeLock.wait(1);
 				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -208,13 +212,15 @@ public class ZCPool {
 		throw new IllegalArgumentException("获取不到空闲的[写]连接");
 	}
 
+
+
+
 	/**
 	 * 归还一个连接
 	 *
 	 * @param zConnection
-	 *
 	 */
-	public void returnZConnectionAndCommit(final ZConnection zConnection) {
+	public void returnZConnection(final ZConnection zConnection) {
 
 		final Mode mode = zConnection.getMode();
 		switch (mode) {
@@ -229,45 +235,84 @@ public class ZCPool {
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * 归还一个连接并且执行commit
+	 *
+	 * @param zConnection
+	 *
+	 */
+	public void returnZConnectionAndCommit(final ZConnection zConnection) {
+
+		final Mode mode = zConnection.getMode();
+		switch (mode) {
+		case WRITE:
+			final ZConnection returnWrite = this.returnWriteAndCommit(zConnection);
+			returnWrite.resetToDefaultTransactionIsolationIfChanged();
+			break;
+
+		case READ:
+			final ZConnection returnRead = this.returnReadAndCommit(zConnection);
+			returnRead.resetToDefaultTransactionIsolationIfChanged();
+			break;
+
+		default:
+			break;
+		}
 
 	}
 
-	private void returnRead(final ZConnection zConnection) {
+	private ZConnection returnRead(final ZConnection zConnection) {
+
 		synchronized (this.readLock) {
 
-			for (final ZConnection zc : this.readVector) {
+			for (int i = 0; i < this.readVector.size(); i++) {
+				final ZConnection zc = this.readVector.get(i);
 				if (zc.getConnection() == zConnection.getConnection()) {
-					try {
-						zConnection.getConnection().commit();
-					} catch (final SQLException e) {
-						e.printStackTrace();
-					}
 					zc.setBusy(false);
 					this.readLock.notify();
-					break;
+					return zc;
 				}
 			}
+
+		}
+
+		return null;
+	}
+
+	private ZConnection returnReadAndCommit(final ZConnection zConnection) {
+		synchronized (this.readLock) {
+			final ZConnection returnRead = this.returnRead(zConnection);
+			returnRead.commitIfAutoCommitFalse();
+			return returnRead;
 		}
 	}
 
-
-	private void returnWrite(final ZConnection zConnection) {
+	private ZConnection returnWrite(final ZConnection zConnection) {
 		synchronized (this.writeLock) {
 
-			for (final ZConnection zc : this.writeVector) {
+			for (int i = 0; i < this.writeVector.size(); i++) {
+				final ZConnection zc = this.writeVector.get(i);
 				if (zc.getConnection() == zConnection.getConnection()) {
-					try {
-						// FIXME 2024年5月21日 下午3:07:13 zhangzhen: 测试出的问题：当server(armbian的panther x2
-						// mysql-8.0.34-0ubuntu0.22.04.1)硬盘满了，commit 会一直卡着没反应，也不报错，也没法设置超时时间，怎么办？
-						zConnection.getConnection().commit();
-					} catch (final SQLException e) {
-						e.printStackTrace();
-					}
+					// FIXME 2024年5月21日 下午3:07:13 zhangzhen: 测试出的问题：当server(armbian的panther x2
+					// mysql-8.0.34-0ubuntu0.22.04.1)硬盘满了，commit 会一直卡着没反应，也不报错，也没法设置超时时间，怎么办？
+					// this.commit(zConnection.getConnection());
 					zc.setBusy(false);
 					this.writeLock.notify();
-					break;
+					return zc;
 				}
 			}
+		}
+
+		return null;
+	}
+
+	private ZConnection returnWriteAndCommit(final ZConnection zConnection) {
+		synchronized (this.writeLock) {
+			final ZConnection returnWrite = this.returnWrite(zConnection);
+			returnWrite.commitIfAutoCommitFalse();
+			return returnWrite;
 		}
 	}
 

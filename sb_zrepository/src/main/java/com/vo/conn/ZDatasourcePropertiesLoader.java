@@ -142,6 +142,16 @@ public class ZDatasourcePropertiesLoader {
 			System.exit(0);
 		}
 
+		if ((url.contains("jdbc:postgresql") || url.contains("jdbc:mysql")) && (max <= 1)) {
+			LOG.error("datasource.read.maxConnection[" + i + "]必须大于1");
+			System.exit(0);
+		}
+
+		if (url.contains("jdbc:sqlite") && (max != 1)) {
+			LOG.error("datasource.read.maxConnection[" + i + "]必须等于1");
+			System.exit(0);
+		}
+
 		read.setDatasourceMaxConnection(max);
 
 		return read;
@@ -182,12 +192,13 @@ public class ZDatasourcePropertiesLoader {
 		}
 		write.setDatasourceDriverClass(driverClass);
 
-		final int min = Integer.parseInt(properties.getProperty("datasource.write.minConnection"));
 		final boolean containsKeyMinConnection = properties.containsKey("datasource.write.minConnection");
 		if(!containsKeyMinConnection) {
 			LOG.error("datasource.write.minConnection 不存在");
 			System.exit(0);
 		}
+
+		final int min = Integer.parseInt(properties.getProperty("datasource.write.minConnection"));
 		if (min <= 0) {
 			LOG.error("datasource.write.minConnection 必须大于0");
 			System.exit(0);
@@ -195,18 +206,30 @@ public class ZDatasourcePropertiesLoader {
 
 		write.setDatasourceMinConnection(min);
 
-		final int max = Integer.parseInt(properties.getProperty("datasource.write.maxConnection"));
 		final boolean containsKeyMaxConnection = properties.containsKey("datasource.write.maxConnection");
 		if (!containsKeyMaxConnection) {
 			LOG.error("datasource.write.maxConnection 不存在");
 			System.exit(0);
 		}
+
+		final int max = Integer.parseInt(properties.getProperty("datasource.write.maxConnection"));
 		if (max <= 0) {
 			LOG.error("datasource.write.maxConnection 必须大于0");
 			System.exit(0);
 		}
+
 		if (max < min) {
 			LOG.error("datasource.write.maxConnection 必须大于 datasource.write.minConnection");
+			System.exit(0);
+		}
+
+		if ((url.contains("jdbc:postgresql") || url.contains("jdbc:mysql")) && (max <= 1)) {
+			LOG.error("datasource.write.maxConnection 必须大于 1");
+			System.exit(0);
+		}
+
+		if (url.contains("jdbc:sqlite") && (max != 1)) {
+			LOG.error("datasource.write.maxConnection 必须等于 1");
 			System.exit(0);
 		}
 

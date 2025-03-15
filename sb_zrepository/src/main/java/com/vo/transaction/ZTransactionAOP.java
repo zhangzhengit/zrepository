@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
+import com.vo.DBEnum;
 import com.vo.ZC2;
 import com.vo.ZCSourceEnum;
 import com.vo.ZIDG;
@@ -83,22 +84,14 @@ public class ZTransactionAOP implements ZIAOP {
 	 * 回滚当前事务
 	 */
 	public static void rollback() {
-		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().rollback();
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		ZCONNECTION_THREADLOCAL.get().getZConnection().rollback();
 	}
 
 	/**
 	 * 提交当前事务
 	 */
 	public static void commit() {
-		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().commit();
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		ZCONNECTION_THREADLOCAL.get().getZConnection().commitIfAutoCommitFalse();
 	}
 
 	private static void clear() {
@@ -113,7 +106,7 @@ public class ZTransactionAOP implements ZIAOP {
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
 		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setAutoCommit(false);
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitFalse();
 
 			final Object v = proceedingJoinPoint.proceed();
 			commit();
@@ -124,6 +117,7 @@ public class ZTransactionAOP implements ZIAOP {
 		} finally {
 
 			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
@@ -155,21 +149,17 @@ public class ZTransactionAOP implements ZIAOP {
 		// 加入 connection.setAutoCommit(true);
 		// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
 		// 不能在事务交易过程中改变事物交易隔绝等级。
-		try {
-			zc2.getZConnection().getConnection().setAutoCommit(true);
-		} catch (final SQLException e1) {
-			e1.printStackTrace();
+		if (zc2.getZConnection().getDbEnum() == DBEnum.POSTGRESQL) {
+			zc2.getZConnection().setAutoCommitTrue();
 		}
 
-		resetToDefaultTransactionIsolation(zc2);
+		// FIXME 2025年2月4日 下午7:11:01 zhangzhen :  pg mysql sqlite 都试了，似乎这行重置也没必要，暂时注释掉
+		//				resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
-			try {
-				zc2.getZConnection().getConnection().setTransactionIsolation(isolationEnum.getIsolation());
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
+			zc2.getZConnection().setTransactionIsolation(isolationEnum);
+			zc2.getZConnection().setTransactionIsolationChanged(true);
 		}
 
 		ZCONNECTION_THREADLOCAL.set(zc2);
@@ -178,13 +168,7 @@ public class ZTransactionAOP implements ZIAOP {
 	}
 
 	public static void resetToDefaultTransactionIsolation(final ZC2 zc2) {
-		try {
-			zc2.getZConnection().getConnection().setTransactionIsolation(
-					zc2.getZConnection().getTransactionIsolation());
-			zc2.getZConnection().getConnection().setAutoCommit(false);
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
+		zc2.getZConnection().resetToDefaultTransactionIsolationIfChanged();
 	}
 
 	@Pointcut("@annotation(com.vo.transaction.ZTransaction)")
@@ -212,7 +196,7 @@ public class ZTransactionAOP implements ZIAOP {
 
 		try {
 
-			ZCONNECTION_THREADLOCAL.get().getZConnection().getConnection().setAutoCommit(false);
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitFalse();
 
 			final Object v = aopParameter.invoke();
 			commit();
@@ -224,6 +208,7 @@ public class ZTransactionAOP implements ZIAOP {
 		} finally {
 
 			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
 
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
