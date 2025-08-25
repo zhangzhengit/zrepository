@@ -53,7 +53,7 @@ public class ZCPool {
 		
 		// 不加载sql执行记录的数据源，因为加载了也无用处
 		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
-			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 					SqlInvocationLogsConfigurationProperties.NAME);
 			return;
 		}
@@ -93,7 +93,7 @@ public class ZCPool {
 		}
 		
 		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
-			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 					SqlInvocationLogsConfigurationProperties.NAME);
 			return null;
 		}

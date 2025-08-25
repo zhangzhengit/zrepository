@@ -335,7 +335,7 @@ public class ZRepositoryMain {
 				String dataSourceName = zEntity.dataSourceName();
 				if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext
 						.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
-					LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+					LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 							SqlInvocationLogsConfigurationProperties.NAME);
 					continue;
 				}
@@ -2534,7 +2534,7 @@ public class ZRepositoryMain {
 		String dataSourceName = ze.dataSourceName();
 		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)
 				&& !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
-			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 					SqlInvocationLogsConfigurationProperties.NAME);
 			return;
 		}
