@@ -1105,19 +1105,19 @@ public class ZRWrapper<T> {
 	 */
 	public ZRWrapper<T> fetchPage(final Integer page, final Integer size) {
 		if (page == null) {
-			throw new NullPointerException("page 不能为空");
+			throw new ZRepositoryException("page 不能为空");
 		}
 
 		if (size == null) {
-			throw new NullPointerException("size 不能为空");
+			throw new ZRepositoryException("size 不能为空");
 		}
 
 		if (page.intValue() <= 0) {
-			throw new NullPointerException("page 不能小于1");
+			throw new ZRepositoryException("page 不能小于1");
 		}
 
 		if (size.intValue() <= 0) {
-			throw new NullPointerException("size 不能小于1");
+			throw new ZRepositoryException("size 不能小于1");
 		}
 
 		final int offset = size * (page - 1);
