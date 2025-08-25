@@ -1214,7 +1214,7 @@ public class SU {
 
 	// FIXME 2024年6月8日 下午9:15:32 zhangzhen : 各个方法都加入
 	private static void saveSQLInvokeTime(final String zrSubClassName, final String callerMethodName,
-			final Date invokeTime, final long start, final String s2, final String tableName) {
+			final Date invokeTime, final long start, final String sql, final String tableName) {
 		final SqlInvocationLogsConfigurationProperties cp = ZContext
 				.getBean(SqlInvocationLogsConfigurationProperties.class);
 		if ((cp != null) && cp.getEnable()) {
@@ -1223,7 +1223,7 @@ public class SU {
 			entity.setZrSubClassName(zrSubClassName);
 			entity.setMethodName(callerMethodName);
 			entity.setInvokeTime(invokeTime);
-			entity.setSql(s2);
+			entity.setSql(sql);
 			entity.setTableName(tableName);
 
 			final String beanName = SqlInvocationLogsService.class.getName() + "@" + "service";
