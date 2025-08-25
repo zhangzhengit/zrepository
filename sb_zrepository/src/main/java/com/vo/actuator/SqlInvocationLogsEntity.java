@@ -60,4 +60,9 @@ public class SqlInvocationLogsEntity {
 	 * 此sql执行时对应的table的名称
 	 */
 	String tableName;
+
+	/**
+	 * SQL 的参数值，多个的话用,分隔开
+	 */
+	String value;
 }

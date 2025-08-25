@@ -1193,7 +1193,8 @@ public class SU {
 				rList.add(t);
 			}
 
-			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, start, s2, entityClass.getAnnotation(ZEntity.class).tableName());
+			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, start, s2,
+					entityClass.getAnnotation(ZEntity.class).tableName(), param);
 
 			return rList;
 		} catch (SQLException | SecurityException e) {
@@ -1214,7 +1215,7 @@ public class SU {
 
 	// FIXME 2024年6月8日 下午9:15:32 zhangzhen : 各个方法都加入
 	private static void saveSQLInvokeTime(final String zrSubClassName, final String callerMethodName,
-			final Date invokeTime, final long start, final String sql, final String tableName) {
+			final Date invokeTime, final long start, final String sql, final String tableName, Object... value) {
 		final SqlInvocationLogsConfigurationProperties cp = ZContext
 				.getBean(SqlInvocationLogsConfigurationProperties.class);
 		if ((cp != null) && cp.getEnable()) {
@@ -1225,6 +1226,17 @@ public class SU {
 			entity.setInvokeTime(invokeTime);
 			entity.setSql(sql);
 			entity.setTableName(tableName);
+			if (value != null) {
+				if (value.length == 1) {
+					entity.setValue(String.valueOf(value[0]));
+				} else {
+					StringJoiner vj = new StringJoiner(",");
+					for (Object v : value) {
+						vj.add(String.valueOf(v));
+					}
+					entity.setValue(vj.toString());
+				}
+			}
 
 			final String beanName = SqlInvocationLogsService.class.getName() + "@" + "service";
 			// FIXME 2024年6月8日 下午8:14:06 zhangzhen : 这行改为异步的
@@ -1344,7 +1356,7 @@ public class SU {
 				final T t = findById0(zrSubClassName, callerMethodName, zc.getZConnection().getDbEnum(), mode, id,
 						entityClass, sql2, zc.getZConnection());
 				saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
-						entityClass.getAnnotation(ZEntity.class).tableName());
+						entityClass.getAnnotation(ZEntity.class).tableName(), id);
 				return t;
 			} finally {
 				returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
