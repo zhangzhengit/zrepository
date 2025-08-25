@@ -23,6 +23,11 @@ import lombok.NoArgsConstructor;
 public class SqlInvocationLogsConfigurationProperties {
 
 	/**
+	 * 内置的统计SQL执行信息的数据源名称，次名称固定，想指定此数据源，必须用此名称
+	 */
+	public static final String NAME = "zdatasource_actuator.properties";
+	
+	/**
 	 * 是否启用SQL统计功能
 	 */
 	@ZNotNull

@@ -22,7 +22,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ZEntity(tableName = "sql_invocation_logs", dataSourceName = "zdatasource_sqlite.properties")
+@ZEntity(tableName = "sql_invocation_logs", dataSourceName = "zdatasource_actuator.properties")
+// FIXME 2025年8月25日 下午4:11:34 zhangzhen: 加入记录 sql的参数值 
 public class SqlInvocationLogsEntity {
 
 	@ZID

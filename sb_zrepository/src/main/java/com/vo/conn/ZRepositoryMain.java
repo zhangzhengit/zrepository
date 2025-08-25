@@ -63,12 +63,14 @@ import com.vo.ZUpdateTimeHandler;
 import com.vo.ZVersion;
 import com.vo.ZVersionHandler;
 import com.vo.ZXML;
+import com.vo.actuator.SqlInvocationLogsConfigurationProperties;
 import com.vo.anno.UserRepositoryTest1;
 import com.vo.anno.ZEntity;
 import com.vo.anno.ZRead;
 import com.vo.anno.ZTransient;
 import com.vo.anno.ZWrite;
 import com.vo.core.ZClass;
+import com.vo.core.ZContext;
 import com.vo.core.ZField;
 import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
@@ -330,8 +332,16 @@ public class ZRepositoryMain {
 					throw new IllegalArgumentException(m);
 				}
 
-				checkZEntity_TableNameExist(zEntity.tableName(), getPoolInstance(zEntity.dataSourceName()).getZConnection(Mode.WRITE), zEntity.dataSourceName());
-				checkZEntity_TableNameExist(zEntity.tableName(), getPoolInstance(zEntity.dataSourceName()).getZConnection(Mode.READ), zEntity.dataSourceName());
+				String dataSourceName = zEntity.dataSourceName();
+				if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext
+						.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
+					LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+							SqlInvocationLogsConfigurationProperties.NAME);
+					continue;
+				}
+
+				checkZEntity_TableNameExist(zEntity.tableName(), getPoolInstance(dataSourceName).getZConnection(Mode.WRITE), dataSourceName);
+				checkZEntity_TableNameExist(zEntity.tableName(), getPoolInstance(dataSourceName).getZConnection(Mode.READ), dataSourceName);
 			} catch (final ClassNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -2521,11 +2531,19 @@ public class ZRepositoryMain {
 
 		final String name = zidList.get(0).getName();
 
-		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.WRITE), ze.dataSourceName());
-		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.READ), ze.dataSourceName());
+		String dataSourceName = ze.dataSourceName();
+		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)
+				&& !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
+			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+					SqlInvocationLogsConfigurationProperties.NAME);
+			return;
+		}
+		
+		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(dataSourceName).getZConnection(Mode.WRITE), dataSourceName);
+		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(dataSourceName).getZConnection(Mode.READ), dataSourceName);
 
-		checkZEntityFiled(typeClass, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.WRITE));
-		checkZEntityFiled(typeClass, getPoolInstance(ze.dataSourceName()).getZConnection(Mode.READ));
+		checkZEntityFiled(typeClass, getPoolInstance(dataSourceName).getZConnection(Mode.WRITE));
+		checkZEntityFiled(typeClass, getPoolInstance(dataSourceName).getZConnection(Mode.READ));
 
 	}
 

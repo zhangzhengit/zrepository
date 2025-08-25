@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Properties;
 
 import com.google.common.collect.Lists;
+import com.vo.actuator.SqlInvocationLogsConfigurationProperties;
 import com.vo.common.STU;
 import com.vo.conn.ZDatasourceProperties.P;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRC;
 
@@ -38,6 +40,20 @@ public class ZDatasourcePropertiesLoader {
 	}
 
 	private static ZDatasourceProperties initialize(final String dataSourceName) {
+		
+		// repository.actuator.enable=false时，不加载 sql执行记录的数据源，因为加载了也无用处
+		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)) {
+			SqlInvocationLogsConfigurationProperties bean = ZContext
+					.getBean(SqlInvocationLogsConfigurationProperties.class);
+
+			Boolean enable = bean.getEnable();
+			if (!enable.equals(Boolean.TRUE)) {
+				LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载[]数据源",
+						SqlInvocationLogsConfigurationProperties.NAME);
+				return null;
+			}
+		}
+		
 		final ZDatasourceProperties zDatasourceProperties = new ZDatasourceProperties();
 
 		try {
@@ -243,7 +259,7 @@ public class ZDatasourcePropertiesLoader {
 	}
 
 	private static Properties getProperties0(final String dataSourceName) {
-
+		
 		final Properties p1 = ZProperties.loadDirConfig(File.separator + "config" + File.separator);
 		if (p1 != null) {
 			return p1;
@@ -264,6 +280,7 @@ public class ZDatasourcePropertiesLoader {
 			return p4;
 		}
 
+		// 到此为异常情况，直接退出程序
 		LOG.error("配置文件[{}]不存在", dataSourceName);
 		System.exit(0);
 		return null;
