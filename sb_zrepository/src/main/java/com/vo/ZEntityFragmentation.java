@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
  */
 // FIXME 2023年6月17日 下午11:34:27 zhanghen: 具体策略待定，是每个表单独配置hash、还是id等，还是配置文件统一配置
 // FIXME 2023年6月17日 下午11:44:18 zhanghen: 仔细想想每个 ZRepository 里的方法怎么改写、子接口中声明式的方法需要支持到什么程度
-@Component
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })

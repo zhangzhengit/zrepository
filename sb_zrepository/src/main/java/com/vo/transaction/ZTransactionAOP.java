@@ -1,7 +1,6 @@
 package com.vo.transaction;
 
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

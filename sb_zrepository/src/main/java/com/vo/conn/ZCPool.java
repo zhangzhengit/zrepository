@@ -15,9 +15,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vo.DBEnum;
-import com.vo.actuator.SqlInvocationLogsConfigurationProperties;
 import com.vo.conn.ZDatasourceProperties.P;
-import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 
 import cn.hutool.core.util.StrUtil;
@@ -51,13 +49,6 @@ public class ZCPool {
 
 	private void initialize(final String dataSourceName) {
 		
-		// 不加载sql执行记录的数据源，因为加载了也无用处
-		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
-			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
-					SqlInvocationLogsConfigurationProperties.NAME);
-			return;
-		}
-
 		this.create(dataSourceName);
 
 		if (!addShutdownHook.get()) {
@@ -92,12 +83,6 @@ public class ZCPool {
 			throw new IllegalArgumentException("dataSourceName 不能为空");
 		}
 		
-		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
-			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
-					SqlInvocationLogsConfigurationProperties.NAME);
-			return null;
-		}
-
 		final ZCPool pool = poolMap.get(dataSourceName);
 		if (pool != null) {
 			return pool;

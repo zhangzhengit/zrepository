@@ -333,8 +333,7 @@ public class ZRepositoryMain {
 				}
 
 				String dataSourceName = zEntity.dataSourceName();
-				if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName) && !ZContext
-						.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
+				if (actuatorEnableFALSE(dataSourceName)) {
 					LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 							SqlInvocationLogsConfigurationProperties.NAME);
 					continue;
@@ -346,6 +345,23 @@ public class ZRepositoryMain {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * 是否数据源是[存储SQL执行监控信息的数据源]，并且 repository.actuator.enable 没有配置为true
+	 * 
+	 * @param dataSourceName
+	 * @return
+	 */
+	public static boolean actuatorEnableFALSE(String dataSourceName) {
+		if (!SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)) {
+			return false;
+		}
+		
+		return Env.ENV == EnvEnum.ZFRAMEWORK && !ZContext
+				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE) ||
+				(Env.ENV == EnvEnum.SPRING && Env.ACTUATOR_ENABLE != true)
+		;
 	}
 
 	/**
@@ -2532,8 +2548,7 @@ public class ZRepositoryMain {
 		final String name = zidList.get(0).getName();
 
 		String dataSourceName = ze.dataSourceName();
-		if (SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)
-				&& !ZContext.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) {
+		if (actuatorEnableFALSE(dataSourceName)) {
 			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 					SqlInvocationLogsConfigurationProperties.NAME);
 			return;
