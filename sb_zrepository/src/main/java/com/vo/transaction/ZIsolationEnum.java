@@ -2,9 +2,6 @@ package com.vo.transaction;
 
 import java.sql.Connection;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 /**
  * 事务隔离级别 @see java.sql.Connection
  *
@@ -12,8 +9,6 @@ import lombok.Getter;
  * @date 2024年7月2日 下午11:02:51
  *
  */
-@Getter
-@AllArgsConstructor
 public enum ZIsolationEnum {
 
 	DEFAULT(-1),
@@ -48,5 +43,14 @@ public enum ZIsolationEnum {
 				|| (READ_COMMITTED.getIsolation() == isolation) || (READ_UNCOMMITTED.getIsolation() == isolation);
 	}
 
-	private int isolation;
+	private final int isolation;
+
+	public int getIsolation() {
+		return isolation;
+	}
+
+	private ZIsolationEnum(final int isolation) {
+		this.isolation = isolation;
+	}
+	
 }

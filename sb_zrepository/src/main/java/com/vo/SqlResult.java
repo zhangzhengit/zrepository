@@ -1,9 +1,5 @@
 package com.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-
 /**
  *
  *
@@ -11,9 +7,6 @@ import lombok.Getter;
  * @date 2023年9月5日
  *
  */
-@Getter
-@AllArgsConstructor
-@Data
 public class SqlResult {
 
 	/**
@@ -30,4 +23,24 @@ public class SqlResult {
 	 * 最终生成的sql，如 select * from user where user_id = ?
 	 */
 	private final String sqlFinal;
+
+	public SqlResult(final String zRepositorySubClassName, final String methodName, final String sqlFinal) {
+		super();
+		this.zRepositorySubClassName = zRepositorySubClassName;
+		this.methodName = methodName;
+		this.sqlFinal = sqlFinal;
+	}
+
+	public String getZRepositorySubClassName() {
+		return zRepositorySubClassName;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public String getSqlFinal() {
+		return sqlFinal;
+	}
+	
 }

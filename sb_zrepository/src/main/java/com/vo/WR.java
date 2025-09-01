@@ -1,9 +1,5 @@
 package com.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * ZRWrapper 组装所有条件后生成的结果
  *
@@ -11,9 +7,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年6月30日 下午2:58:25
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class WR {
 
 	/**
@@ -51,4 +44,57 @@ public class WR {
 	 */
 	private String limit;
 
+	public WR(final String sql, final String fullWhere, final String where, final String orderBy, final String limit) {
+		super();
+		this.sql = sql;
+		this.fullWhere = fullWhere;
+		this.where = where;
+		this.orderBy = orderBy;
+		this.limit = limit;
+	}
+
+	public String getSql() {
+		return sql;
+	}
+
+	public void setSql(final String sql) {
+		this.sql = sql;
+	}
+
+	public String getFullWhere() {
+		return fullWhere;
+	}
+
+	public void setFullWhere(final String fullWhere) {
+		this.fullWhere = fullWhere;
+	}
+
+	public String getWhere() {
+		return where;
+	}
+
+	public void setWhere(final String where) {
+		this.where = where;
+	}
+
+	public String getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(final String orderBy) {
+		this.orderBy = orderBy;
+	}
+
+	public String getLimit() {
+		return limit;
+	}
+
+	public void setLimit(final String limit) {
+		this.limit = limit;
+	}
+
+	public WR() {
+		super();
+	}
+	
 }

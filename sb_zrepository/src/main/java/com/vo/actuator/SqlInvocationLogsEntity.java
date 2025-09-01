@@ -8,10 +8,6 @@ import com.vo.ZDateFormatEnum;
 import com.vo.ZID;
 import com.vo.anno.ZEntity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  *
  *
@@ -19,9 +15,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年6月2日 下午9:37:48
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZEntity(tableName = "sql_invocation_logs", dataSourceName = "zdatasource_actuator.properties")
 // FIXME 2025年8月25日 下午4:11:34 zhangzhen: 加入记录 sql的参数值 
 public class SqlInvocationLogsEntity {
@@ -65,4 +58,86 @@ public class SqlInvocationLogsEntity {
 	 * SQL 的参数值，多个的话用,分隔开
 	 */
 	String value;
+
+	public SqlInvocationLogsEntity(final Integer id, final String zrSubClassName, final String methodName, final String sql,
+			final Integer timeConsuming, final Date invokeTime, final String tableName, final String value) {
+		super();
+		this.id = id;
+		this.zrSubClassName = zrSubClassName;
+		this.methodName = methodName;
+		this.sql = sql;
+		this.timeConsuming = timeConsuming;
+		this.invokeTime = invokeTime;
+		this.tableName = tableName;
+		this.value = value;
+	}
+
+	public SqlInvocationLogsEntity() {
+		super();
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(final Integer id) {
+		this.id = id;
+	}
+
+	public String getZrSubClassName() {
+		return zrSubClassName;
+	}
+
+	public void setZrSubClassName(final String zrSubClassName) {
+		this.zrSubClassName = zrSubClassName;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public void setMethodName(final String methodName) {
+		this.methodName = methodName;
+	}
+
+	public String getSql() {
+		return sql;
+	}
+
+	public void setSql(final String sql) {
+		this.sql = sql;
+	}
+
+	public Integer getTimeConsuming() {
+		return timeConsuming;
+	}
+
+	public void setTimeConsuming(final Integer timeConsuming) {
+		this.timeConsuming = timeConsuming;
+	}
+
+	public Date getInvokeTime() {
+		return invokeTime;
+	}
+
+	public void setInvokeTime(final Date invokeTime) {
+		this.invokeTime = invokeTime;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(final String tableName) {
+		this.tableName = tableName;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(final String value) {
+		this.value = value;
+	}
+	
 }

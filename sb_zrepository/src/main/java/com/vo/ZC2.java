@@ -6,9 +6,6 @@ import java.util.List;
 import com.vo.conn.ZConnection;
 import com.vo.transaction.ZIsolationEnum;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  *
  *
@@ -16,13 +13,11 @@ import lombok.Data;
  * @date 2024年6月15日 上午10:10:52
  *
  */
-@Data
-@AllArgsConstructor
 public class ZC2 {
 
-	private final ZConnection zConnection;
+	private ZConnection zConnection;
 
-	private final ZCSourceEnum sourceEnum;
+	private ZCSourceEnum sourceEnum;
 
 	private ZIsolationEnum isolationEnum;
 
@@ -47,4 +42,46 @@ public class ZC2 {
 		this.transactionId = transactionId;
 	}
 
+	public ZIsolationEnum getIsolationEnum() {
+		return isolationEnum;
+	}
+
+	public void setIsolationEnum(final ZIsolationEnum isolationEnum) {
+		this.isolationEnum = isolationEnum;
+	}
+
+	public String getTransactionId() {
+		return transactionId;
+	}
+
+	public void setTransactionId(final String transactionId) {
+		this.transactionId = transactionId;
+	}
+
+	public List<String> getKeyList() {
+		return keyList;
+	}
+
+	public void setKeyList(final List<String> keyList) {
+		this.keyList = keyList;
+	}
+
+	public ZConnection getZConnection() {
+		return zConnection;
+	}
+
+	public ZCSourceEnum getSourceEnum() {
+		return sourceEnum;
+	}
+
+	public ZC2(final ZConnection zConnection, final ZCSourceEnum sourceEnum, final ZIsolationEnum isolationEnum, final String transactionId,
+			final List<String> keyList) {
+		super();
+		this.zConnection = zConnection;
+		this.sourceEnum = sourceEnum;
+		this.isolationEnum = isolationEnum;
+		this.transactionId = transactionId;
+		this.keyList = keyList;
+	}
+	
 }

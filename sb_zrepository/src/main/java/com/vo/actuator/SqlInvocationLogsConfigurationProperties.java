@@ -5,10 +5,6 @@ import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  *
  *
@@ -16,9 +12,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年6月8日 下午8:25:24
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ZConfigurationProperties(prefix = "repository.actuator")
 public class SqlInvocationLogsConfigurationProperties {
 
@@ -47,4 +40,40 @@ public class SqlInvocationLogsConfigurationProperties {
 	@ZMax(max = 60)
 	private Integer saveIntervalSeconds = 5;
 
+	public Boolean getEnable() {
+		return enable;
+	}
+
+	public void setEnable(final Boolean enable) {
+		this.enable = enable;
+	}
+
+	public Integer getQueueCapacity() {
+		return queueCapacity;
+	}
+
+	public void setQueueCapacity(final Integer queueCapacity) {
+		this.queueCapacity = queueCapacity;
+	}
+
+	public Integer getSaveIntervalSeconds() {
+		return saveIntervalSeconds;
+	}
+
+	public void setSaveIntervalSeconds(final Integer saveIntervalSeconds) {
+		this.saveIntervalSeconds = saveIntervalSeconds;
+	}
+
+	public SqlInvocationLogsConfigurationProperties(final Boolean enable, final Integer queueCapacity,
+			final Integer saveIntervalSeconds) {
+		super();
+		this.enable = enable;
+		this.queueCapacity = queueCapacity;
+		this.saveIntervalSeconds = saveIntervalSeconds;
+	}
+
+	public SqlInvocationLogsConfigurationProperties() {
+		super();
+	}
+	
 }

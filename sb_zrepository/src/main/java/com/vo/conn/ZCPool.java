@@ -19,7 +19,6 @@ import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
 
 import cn.hutool.core.util.StrUtil;
-import lombok.Getter;
 
 /**
  *
@@ -39,7 +38,6 @@ public class ZCPool {
 
 	private final AtomicInteger readI = new AtomicInteger();
 
-	@Getter
 	private String dataSourceName = null;
 
 	private final Object readLock = new Object();
@@ -90,7 +88,7 @@ public class ZCPool {
 
 		synchronized ("ZCPool.getInstance-" + dataSourceName) {
 			final ZCPool newPool = new ZCPool();
-			newPool.dataSourceName = dataSourceName;
+			newPool.setDataSourceName(dataSourceName);
 			newPool.initialize(dataSourceName);
 			poolMap.put(dataSourceName, newPool);
 			return newPool;
@@ -432,6 +430,14 @@ public class ZCPool {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public String getDataSourceName() {
+		return dataSourceName;
+	}
+
+	public void setDataSourceName(final String dataSourceName) {
+		this.dataSourceName = dataSourceName;
 	}
 
 }

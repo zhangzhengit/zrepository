@@ -1,9 +1,5 @@
 package com.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  *
  *
@@ -11,9 +7,6 @@ import lombok.NoArgsConstructor;
  * @date 2024年6月18日 下午3:42:01
  *
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class SUA {
 
 	Class<?> entityClass;
@@ -41,4 +34,90 @@ public class SUA {
 		this.arg = arg;
 	}
 
+	public SUA(final Class<?> entityClass, final Object entityObject, final Class<?> returnClass, final String sql, final Object[] arg, final ZC2 zc2,
+			final String zrSubClassName, final String callerMethodName, final String where) {
+		super();
+		this.entityClass = entityClass;
+		this.entityObject = entityObject;
+		this.returnClass = returnClass;
+		this.sql = sql;
+		this.arg = arg;
+		this.zc2 = zc2;
+		this.zrSubClassName = zrSubClassName;
+		this.callerMethodName = callerMethodName;
+		this.where = where;
+	}
+
+	public Class<?> getEntityClass() {
+		return entityClass;
+	}
+
+	public void setEntityClass(final Class<?> entityClass) {
+		this.entityClass = entityClass;
+	}
+
+	public Object getEntityObject() {
+		return entityObject;
+	}
+
+	public void setEntityObject(final Object entityObject) {
+		this.entityObject = entityObject;
+	}
+
+	public Class<?> getReturnClass() {
+		return returnClass;
+	}
+
+	public void setReturnClass(final Class<?> returnClass) {
+		this.returnClass = returnClass;
+	}
+
+	public String getSql() {
+		return sql;
+	}
+
+	public void setSql(final String sql) {
+		this.sql = sql;
+	}
+
+	public Object[] getArg() {
+		return arg;
+	}
+
+	public void setArg(final Object[] arg) {
+		this.arg = arg;
+	}
+
+	public ZC2 getZc2() {
+		return zc2;
+	}
+
+	public void setZc2(final ZC2 zc2) {
+		this.zc2 = zc2;
+	}
+
+	public String getZrSubClassName() {
+		return zrSubClassName;
+	}
+
+	public void setZrSubClassName(final String zrSubClassName) {
+		this.zrSubClassName = zrSubClassName;
+	}
+
+	public String getCallerMethodName() {
+		return callerMethodName;
+	}
+
+	public void setCallerMethodName(final String callerMethodName) {
+		this.callerMethodName = callerMethodName;
+	}
+
+	public String getWhere() {
+		return where;
+	}
+
+	public void setWhere(final String where) {
+		this.where = where;
+	}
+	
 }

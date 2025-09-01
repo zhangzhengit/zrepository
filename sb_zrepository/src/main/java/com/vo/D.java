@@ -3,10 +3,6 @@ package com.vo;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  *
  * 解析声明式方法名称的中间结果
@@ -15,9 +11,6 @@ import lombok.NoArgsConstructor;
  * @data 2024年5月3日 下午7:36:42
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class D {
 
 	/**
@@ -52,4 +45,59 @@ public class D {
 	public void addFiledName(final String filedName) {
 		this.getFiledName().add(filedName);
 	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public void setMethodName(final String methodName) {
+		this.methodName = methodName;
+	}
+
+	public List<String> getFiledName() {
+		return filedName;
+	}
+
+	public void setFiledName(final List<String> filedName) {
+		this.filedName = filedName;
+	}
+
+	public List<String> getFiledNameOriginalOrder() {
+		return filedNameOriginalOrder;
+	}
+
+	public void setFiledNameOriginalOrder(final List<String> filedNameOriginalOrder) {
+		this.filedNameOriginalOrder = filedNameOriginalOrder;
+	}
+
+	public List<String> getFiledNameMethodNameOrder() {
+		return filedNameMethodNameOrder;
+	}
+
+	public void setFiledNameMethodNameOrder(final List<String> filedNameMethodNameOrder) {
+		this.filedNameMethodNameOrder = filedNameMethodNameOrder;
+	}
+
+	public String getSqlKeyword() {
+		return sqlKeyword;
+	}
+
+	public void setSqlKeyword(final String sqlKeyword) {
+		this.sqlKeyword = sqlKeyword;
+	}
+
+	public D(final String methodName, final List<String> filedName, final List<String> filedNameOriginalOrder,
+			final List<String> filedNameMethodNameOrder, final String sqlKeyword) {
+		super();
+		this.methodName = methodName;
+		this.filedName = filedName;
+		this.filedNameOriginalOrder = filedNameOriginalOrder;
+		this.filedNameMethodNameOrder = filedNameMethodNameOrder;
+		this.sqlKeyword = sqlKeyword;
+	}
+
+	public D() {
+		super();
+	}
+	
 }

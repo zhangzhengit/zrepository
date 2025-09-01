@@ -10,6 +10,7 @@ import java.time.LocalTime;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,9 +22,6 @@ import com.vo.conn.ZRepositoryMain;
 import com.vo.core.Sort;
 import com.vo.core.ZRC;
 import com.vo.exception.ZRepositoryException;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
 /**
  * 查询条件,使用方法引用来动态构造查询条件.
@@ -150,7 +148,6 @@ import lombok.Getter;
 // 即使支持这种最简单的函数，本类也要大改，因为支持了or操作。哪怕支持稍复杂一点的avg函数，都很可能
 // [avg(integer) 结果是double] 这种情况导致 entityClass 赋值异常，ZR.find 又是固定的返回类型，不好搞
 // 目前就只支持自定义 where / order by / limit
-@EqualsAndHashCode
 public class ZRWrapper<T> {
 
 	private static final int ONE = 1;
@@ -168,12 +165,10 @@ public class ZRWrapper<T> {
 	private final List<String> where = Lists.newArrayList();
 	private final List<String> orderBy = Lists.newArrayList(Sort.ORDER_BY);
 
-	@Getter
 	private final List<String> limit = Lists.newArrayList();
 
-	@Getter
 	private final Class<T> entityClass;
-
+	
 	/**
 	 * 构造一个本类对象，Class 为 @ZEntity 标记的类
 	 *
@@ -1334,4 +1329,33 @@ public class ZRWrapper<T> {
 		return pool.getDbEnum(Mode.WRITE);
 	}
 
+	public List<String> getLimit() {
+		return limit;
+	}
+
+	public Class<T> getEntityClass() {
+		return entityClass;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(entityClass, limit, orderBy, where);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final ZRWrapper other = (ZRWrapper) obj;
+		return Objects.equals(entityClass, other.entityClass) && Objects.equals(limit, other.limit)
+				&& Objects.equals(orderBy, other.orderBy) && Objects.equals(where, other.where);
+	}
+	
 }

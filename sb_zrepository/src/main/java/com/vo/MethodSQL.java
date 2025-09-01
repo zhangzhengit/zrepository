@@ -1,8 +1,5 @@
 package com.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 声明式/自定义方法 解析的SQL
@@ -11,9 +8,6 @@ import lombok.NoArgsConstructor;
  * @data 2024年5月5日 下午10:12:34
  *
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class MethodSQL {
 
 	/**
@@ -30,4 +24,40 @@ public class MethodSQL {
 	 * SQL模板/自定义SQL
 	 */
 	private String sqlTemplate;
+
+	public MethodSQL(final boolean isZQuery, final String methodName, final String sqlTemplate) {
+		super();
+		this.isZQuery = isZQuery;
+		this.methodName = methodName;
+		this.sqlTemplate = sqlTemplate;
+	}
+
+	public MethodSQL() {
+		super();
+	}
+
+	public boolean isZQuery() {
+		return isZQuery;
+	}
+
+	public void setZQuery(final boolean isZQuery) {
+		this.isZQuery = isZQuery;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public void setMethodName(final String methodName) {
+		this.methodName = methodName;
+	}
+
+	public String getSqlTemplate() {
+		return sqlTemplate;
+	}
+
+	public void setSqlTemplate(final String sqlTemplate) {
+		this.sqlTemplate = sqlTemplate;
+	}
+	
 }

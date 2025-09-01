@@ -3,8 +3,6 @@ package com.vo.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.Data;
-
 /**
  * 分页查询的结果
  *
@@ -12,7 +10,6 @@ import lombok.Data;
  * @date 2023年9月6日
  *
  */
-@Data
 public final class Page<T> {
 
 	/**
@@ -74,4 +71,44 @@ public final class Page<T> {
 		this.list = listAAA;
 	}
 
+	public Integer getSize() {
+		return size;
+	}
+
+	public void setSize(final Integer size) {
+		this.size = size;
+	}
+
+	public Long getPage() {
+		return page;
+	}
+
+	public void setPage(final Long page) {
+		this.page = page;
+	}
+
+	public Long getTotalPage() {
+		return totalPage;
+	}
+
+	public void setTotalPage(final Long totalPage) {
+		this.totalPage = totalPage;
+	}
+
+	public Long getTotalCount() {
+		return totalCount;
+	}
+
+	public void setTotalCount(final Long totalCount) {
+		this.totalCount = totalCount;
+	}
+
+	public List<T> getList() {
+		return list;
+	}
+
+	public void setList(final List<T> list) {
+		this.list = list;
+	}
+	
 }

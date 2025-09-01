@@ -18,8 +18,6 @@ import com.vo.exception.ZRWrapperTypeException;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.HexUtil;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /**
  *
@@ -29,8 +27,6 @@ import lombok.Getter;
  * @date 2024年6月12日 下午10:30:29
  *
  */
-@Getter
-@AllArgsConstructor
 public enum SQLOperatorEnum {
 
 	EQ("=", "等于") {
@@ -395,4 +391,26 @@ public enum SQLOperatorEnum {
 		final Object v2 = a[1] == null ? ZRWrapper.NULL : addAll (field, a[1], dbEnum);
 		return v1 + ZRWrapper.SPACE + MethodRegex.AND + ZRWrapper.SPACE + v2;
 	}
+
+	private SQLOperatorEnum(final String content, final String remark) {
+		this.content = content;
+		this.remark = remark;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(final String content) {
+		this.content = content;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(final String remark) {
+		this.remark = remark;
+	}
+	
 }

@@ -1,7 +1,5 @@
 package com.vo.exception;
 
-import lombok.Getter;
-
 /**
  *
  *
@@ -13,12 +11,16 @@ public class ZRepositoryException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	@Getter
 	private final String repositoryMessage;
+	
 
 	public ZRepositoryException(final String repositoryMessage) {
 		super(repositoryMessage);
 		this.repositoryMessage = repositoryMessage;
+	}
+
+	public String getRepositoryMessage() {
+		return repositoryMessage;
 	}
 
 }

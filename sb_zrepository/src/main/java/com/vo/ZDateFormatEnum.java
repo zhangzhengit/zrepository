@@ -1,7 +1,5 @@
 package com.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /**
  * 日期格式枚举
@@ -10,8 +8,6 @@ import lombok.Getter;
  * @date 2023年9月24日
  *
  */
-@Getter
-@AllArgsConstructor
 public enum ZDateFormatEnum {
 
 	// FIXME 2023年9月24日 下午3:41:59 zhanghen: TODO 添加各种格式
@@ -46,9 +42,15 @@ public enum ZDateFormatEnum {
 
 	;
 
-	private String format;
+	private final String format;
+	
 
-
+	private ZDateFormatEnum(final String format) {
+		this.format = format;
+	}
+	public String getFormat() {
+		return format;
+	}
 	public static int getMysqlColumnSizeBYTIME(final ZDateFormatEnum dateFormatEnum) {
 
 		if (HH_MM_SS == dateFormatEnum) {
