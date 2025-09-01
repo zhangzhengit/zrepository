@@ -332,7 +332,7 @@ public class ZRepositoryMain {
 					throw new IllegalArgumentException(m);
 				}
 
-				String dataSourceName = zEntity.dataSourceName();
+				final String dataSourceName = zEntity.dataSourceName();
 				if (actuatorEnableFALSE(dataSourceName)) {
 					LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 							SqlInvocationLogsConfigurationProperties.NAME);
@@ -353,7 +353,7 @@ public class ZRepositoryMain {
 	 * @param dataSourceName
 	 * @return
 	 */
-	public static boolean actuatorEnableFALSE(String dataSourceName) {
+	public static boolean actuatorEnableFALSE(final String dataSourceName) {
 		if (!SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)) {
 			return false;
 		}
@@ -723,7 +723,8 @@ public class ZRepositoryMain {
 		final ZClass zClass = new ZClass();
 
 		// FIXME 2023年8月26日 下午5:54:25 zhanghen: com.vo改为配置项
-		//		zClass.setPackage1(new ZPackage("com"));
+//				zClass.setPackage1(new ZPackage("com"));
+		zClass.setPackage1(new ZPackage("com.vo"));
 
 		//		userR.setImplementsSet(Sets.newHashSet(canonicalName + " <T, ID> "));
 		//		userR.setName(canonicalName + "_ZClass" + "<T,ID>");
@@ -2547,7 +2548,7 @@ public class ZRepositoryMain {
 
 		final String name = zidList.get(0).getName();
 
-		String dataSourceName = ze.dataSourceName();
+		final String dataSourceName = ze.dataSourceName();
 		if (actuatorEnableFALSE(dataSourceName)) {
 			LOG.debug("[repository.actuator.enable]配置为未配置为true,不加载{}数据源",
 					SqlInvocationLogsConfigurationProperties.NAME);
