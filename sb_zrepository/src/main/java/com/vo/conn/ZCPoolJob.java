@@ -9,8 +9,8 @@ import java.util.Collection;
 import com.google.common.collect.ImmutableList;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
-import com.votool.ze.ZE;
-import com.votool.ze.ZES;
+import com.vo.thread.ZE;
+import com.vo.thread.ZES;
 
 /**
  * 连接的定时任务 1、验证连接还是否可用，可用则保留，不可用则剔除 2、判断一个连接是否超过最大存储时间，超过则关闭并剔除
