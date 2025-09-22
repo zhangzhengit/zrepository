@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.vo.core.CU;
 import com.vo.core.SCU;
 
@@ -68,12 +68,12 @@ public class ZE {
 	/**
 	 * <关键字，执行此关键字任务的 ZEThread>
 	 */
-	private final ConcurrentMap<String, ZEThread> nameMap = Maps.newConcurrentMap();
+	private final ConcurrentMap<String, ZEThread> nameMap = new ConcurrentHashMap<>();
 
 	/**
 	 * 存放线程对象
 	 */
-	private final List<ZEThread> zetList = Lists.newArrayList();
+	private final List<ZEThread> zetList = new ArrayList<>();
 
 	private final int threadSize;
 	private final String groupName;
@@ -158,7 +158,7 @@ public class ZE {
 	 */
 	public synchronized <V> List<ZETaskResult<V>> submitImmediately(final List<AbstractZETask<V>> abstractZETaskList) {
 
-		final ArrayList<ZETaskResult<V>> r = Lists.newArrayList();
+		final List<ZETaskResult<V>> r = new ArrayList<>();
 
 		for (final AbstractZETask<V> abstractZETask : abstractZETaskList) {
 			r.add(this.submitImmediately(abstractZETask));
@@ -181,7 +181,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final ArrayList<ZETaskResult<V>> vl = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final List<ZETaskResult<V>> vl = new ArrayList<>(abstractZETaskList.size());
 
 		synchronized (this) {
 			for (final AbstractZETask<V> abstractZETask : abstractZETaskList) {
@@ -190,7 +190,7 @@ public class ZE {
 			}
 		}
 
-		final ArrayList<V> r = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final ArrayList<V> r = new ArrayList<>(abstractZETaskList.size());
 		for (int i = 0; i < vl.size(); i++) {
 			final ZETaskResult<V> taskResult = vl.get(i);
 			if (!taskResult.isArranged()) {
@@ -258,7 +258,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final List<ZETaskResult<V>> r = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final List<ZETaskResult<V>> r = new ArrayList<>(abstractZETaskList.size());
 		for (int i = 0; i < abstractZETaskList.size(); i++) {
 			r.add(this.submitInQueue(abstractZETaskList.get(i)));
 		}
@@ -280,7 +280,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final ArrayList<ZETaskResult<V>> vl = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final ArrayList<ZETaskResult<V>> vl = new ArrayList<>(abstractZETaskList.size());
 
 		synchronized (this) {
 			for (final AbstractZETask<V> abstractZETask : abstractZETaskList) {
@@ -289,7 +289,7 @@ public class ZE {
 			}
 		}
 
-		final ArrayList<V> r = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final ArrayList<V> r = new ArrayList<>(abstractZETaskList.size());
 		for (int i = 0; i < vl.size(); i++) {
 			final ZETaskResult<V> taskResult = vl.get(i);
 			if (!taskResult.isArranged()) {
@@ -382,7 +382,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final ArrayList<ZETaskResult<V>> vl = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final ArrayList<ZETaskResult<V>> vl = new ArrayList(abstractZETaskList.size());
 
 		synchronized (this) {
 			for (final AbstractZETask<V> abstractZETask : abstractZETaskList) {
@@ -391,7 +391,7 @@ public class ZE {
 			}
 		}
 
-		final ArrayList<V> r = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final ArrayList<V> r = new ArrayList<>(abstractZETaskList.size());
 		for (int i = 0; i < vl.size(); i++) {
 			final ZETaskResult<V> taskResult = vl.get(i);
 			if (!taskResult.isArranged()) {
@@ -463,7 +463,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final List<ZERunnableResult> r = Lists.newArrayListWithCapacity(zeRunnableList.size());
+		final List<ZERunnableResult> r = new ArrayList<>(zeRunnableList.size());
 		for (int i = 0; i < zeRunnableList.size(); i++) {
 
 			final boolean executeRunnableImmediately = this.executeImmediately(zeRunnableList.get(i));
@@ -495,7 +495,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final List<ZERunnableResult> r = Lists.newArrayListWithCapacity(zeRunnableList.size());
+		final List<ZERunnableResult> r = new ArrayList<>(zeRunnableList.size());
 		for (int i = 0; i < zeRunnableList.size(); i++) {
 
 			final ZERunnableResult result = new ZERunnableResult(i, this.executeInQueue(zeRunnableList.get(i)));
@@ -526,7 +526,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final List<ZERunnableResult> r = Lists.newArrayListWithCapacity(zeRunnableList.size());
+		final List<ZERunnableResult> r = new ArrayList<>(zeRunnableList.size());
 		for (int i = 0; i < zeRunnableList.size(); i++) {
 
 			final boolean executeRunnableInQueuePriority = this.executeInQueuePriority(zeRunnableList.get(i));
@@ -576,7 +576,7 @@ public class ZE {
 	public synchronized <V> List<ZERunnableResult> executeAllByNameInASpecificThread(final String keyword,
 			final List<ZERunnable<V>> zeRunnableList) {
 
-		final List<ZERunnableResult> a = Lists.newArrayList();
+		final List<ZERunnableResult> a = new ArrayList<>();
 		for (int i = 0; i < zeRunnableList.size(); i++) {
 			final ZERunnable<V> r = zeRunnableList.get(i);
 			// 可以直接复用executeByNameInASpecificThread，因为executeByNameInASpecificThread的实现是putInQueue为true的，
@@ -627,7 +627,7 @@ public class ZE {
 	public synchronized <V> List<ZERunnableResult> executeAllByNameInASpecificThreadPriority(final String keyword,
 			final List<ZERunnable<V>> zeRunnableList) {
 
-		final List<ZERunnableResult> a = Lists.newArrayList();
+		final List<ZERunnableResult> a = new ArrayList<>();
 		for (int i = 0; i < zeRunnableList.size(); i++) {
 			final ZERunnable<V> r = zeRunnableList.get(i);
 			final boolean ex = this.executeByNameInASpecificThreadPriority(keyword, r);
@@ -685,7 +685,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final List<ZETaskResult<V>> r = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final List<ZETaskResult<V>> r = new ArrayList<>(abstractZETaskList.size());
 		for (int i = 0; i < abstractZETaskList.size(); i++) {
 
 			final ZETaskResult<V> taskResult = this.submitByNameInASpecificThread(keyword,
@@ -747,7 +747,7 @@ public class ZE {
 			return Collections.emptyList();
 		}
 
-		final List<ZETaskResult<V>> r = Lists.newArrayListWithCapacity(abstractZETaskList.size());
+		final List<ZETaskResult<V>> r = new ArrayList<>(abstractZETaskList.size());
 		for (int i = 0; i < abstractZETaskList.size(); i++) {
 
 			final ZETaskResult<V> taskResult = this.submitByNameInASpecificThreadPriority(keyword,

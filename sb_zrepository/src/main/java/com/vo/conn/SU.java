@@ -22,7 +22,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,9 +36,6 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.vo.DBEnum;
 import com.vo.MethodRegex;
 import com.vo.SQLEMode;
@@ -167,7 +166,7 @@ public class SU {
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			final int count = metaData.getColumnCount();
-			final List rL = Lists.newArrayList();
+			final List<Object> rL = new ArrayList<>();
 			while (rs.next()) {
 				final Object tR = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				rL.add(tR);
@@ -210,7 +209,7 @@ public class SU {
 	 *
 	 */
 	private static <T> Map<String, Object> getNotNullFieldMap(final Object t) {
-		final Map<String, Object> fMap = Maps.newLinkedHashMap();
+		final Map<String, Object> fMap = new LinkedHashMap<>();
 		final Field[] fs = t.getClass().getDeclaredFields();
 		for (final Field f : fs) {
 			f.setAccessible(true);
@@ -237,9 +236,9 @@ public class SU {
 		}
 
 		final Field[] fs = t.getClass().getDeclaredFields();
-
-		final Optional<Field> zidO = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
-				.findAny();
+		final List<Field> aa = new ArrayList<>();
+		Collections.addAll(aa, fs);
+		final Optional<Field> zidO = aa.stream().filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
 		if (!zidO.isPresent()) {
 			throw new IllegalArgumentException(
 					"无 " + ZID.class.getSimpleName() + " 标记的属性，t = " + t.getClass().getName());
@@ -386,7 +385,7 @@ public class SU {
 			return false;
 		}
 
-		final HashSet<Object> idSet = Sets.newHashSet(idList);
+		final Set<Object> idSet = new HashSet<>(idList);
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final ZC2 zc = getZCAndSetAutoCommitFALSEIfPG(mode, dataSourceName);
@@ -482,7 +481,7 @@ public class SU {
 	public static <T> Map<Object, Boolean> existByIdIn(final String zrSubClassName, final String callerMethodName,
 			final Mode mode, final Object idList, final Class<T> entityClass, final String sql) {
 
-		final Map<Object, Boolean> v = Maps.newHashMap();
+		final Map<Object, Boolean> v = new HashMap<>();
 		if (idList == null) {
 			v.put(null, false);
 			return v;
@@ -630,7 +629,7 @@ public class SU {
 			final ZConnection zc = zc2.getZConnection();
 			final Connection connection = zc.getConnection();
 
-			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tl2.size());
+			final List<Object> idl = new ArrayList<>(tl2.size());
 			for (final Object t : tl2) {
 				try {
 					final Object[] a = save0(zrSubClassName, callerMethodName, zc.getDbEnum(), cls, t, sql, connection, null);
@@ -667,7 +666,9 @@ public class SU {
 			final Class<T> entityClass, final String sqlParam, final List<T> tList) {
 
 		final Field[] declaredFields = entityClass.getDeclaredFields();
-		final Optional<Field> zid = Lists.newArrayList(declaredFields).stream()
+		final ArrayList<Field> aa = new ArrayList<>();
+		Collections.addAll(aa, declaredFields);
+		final Optional<Field> zid = aa.stream()
 				.filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
 		if (!zid.isPresent()) {
 			throw new IllegalArgumentException(
@@ -1035,7 +1036,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
@@ -1087,7 +1088,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
@@ -1151,7 +1152,7 @@ public class SU {
 			final List<Object> idList, final Class<T> entityClass, final String sql, final ZC2 zc2) {
 
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
-		final HashSet<Object> idSet = Sets.newHashSet(idList);
+		final Set<Object> idSet = new HashSet<>(idList);
 
 		final Date invokeTime = new Date();
 
@@ -1186,7 +1187,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList rList = Lists.newArrayListWithCapacity(idSet.size());
+			final List rList = new ArrayList<>(idSet.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				rList.add(newT(zc2.getZConnection().getDbEnum(), entityClass, rs, metaData, count));
@@ -1693,7 +1694,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -1799,7 +1800,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -1861,7 +1862,14 @@ public class SU {
 		}
 
 		// FIXME 2024年7月16日 下午7:22:05 zhangzhen : 这个判断要待定，是否就是查询null的
-		final Set set = (Set) (Lists.newArrayList((Iterable) value)).stream().filter(e -> e != null)
+		
+		final ArrayList<Object> arrayList = new ArrayList<>();
+		final Iterable iterable = (Iterable) value;
+		for (final Object object : iterable) {
+			arrayList.add(object);
+		}
+		
+		final Set set = (arrayList).stream().filter(e -> e != null)
 				.collect(Collectors.toSet());
 		if (set.isEmpty()) {
 			return Collections.emptyList();
@@ -1904,7 +1912,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				r.add(newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count));
@@ -1952,7 +1960,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
@@ -2000,7 +2008,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
@@ -2051,7 +2059,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2106,7 +2114,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2165,7 +2173,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2223,7 +2231,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
@@ -2279,7 +2287,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2332,7 +2340,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2384,7 +2392,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2431,7 +2439,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2523,7 +2531,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2576,7 +2584,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2662,7 +2670,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
@@ -2714,7 +2722,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -2765,7 +2773,7 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList r = Lists.newArrayList();
+			final List r = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
@@ -3125,11 +3133,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final List ra = Lists.newArrayList();
+			final List ra = new ArrayList<>();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
 				final Object t = newT(zc.getZConnection().getDbEnum(), returnClass, rs, metaData, count);
-//				final Object t = (T) newT(zc.getZConnection().getDbEnum(), returnClass, rs, metaData, count);
 				ra.add(t);
 			}
 

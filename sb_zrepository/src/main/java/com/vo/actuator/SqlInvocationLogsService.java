@@ -1,10 +1,10 @@
 package com.vo.actuator;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.google.common.collect.Lists;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 
@@ -41,7 +41,7 @@ public class SqlInvocationLogsService extends Thread {
 
 		while (true) {
 
-			final ArrayList<SqlInvocationLogsEntity> list = Lists.newArrayList(this.queue);
+			final List<SqlInvocationLogsEntity> list = new ArrayList<>(this.queue);
 			final SqlInvocationLogsRepository r = ZContext.getBean(SqlInvocationLogsRepository.class);
 			try {
 				r.saveAll(list);

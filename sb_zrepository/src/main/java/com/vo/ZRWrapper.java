@@ -7,13 +7,13 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.vo.anno.ZEntity;
 import com.vo.conn.Mode;
 import com.vo.conn.SU;
@@ -162,12 +162,13 @@ public class ZRWrapper<T> {
 	/**
 	 * 存放由各个方法传值而来构造的WHERE条件
 	 */
-	private final List<String> where = Lists.newArrayList();
-	private final List<String> orderBy = Lists.newArrayList(Sort.ORDER_BY);
+	private final List<String> where = new ArrayList<>();
+	private final List<String> orderBy = new ArrayList<>();
 
-	private final List<String> limit = Lists.newArrayList();
+	private final List<String> limit = new ArrayList<>();
 
 	private final Class<T> entityClass;
+
 	
 	/**
 	 * 构造一个本类对象，Class 为 @ZEntity 标记的类
@@ -191,6 +192,7 @@ public class ZRWrapper<T> {
 	}
 
 	private ZRWrapper(final Class<T> entityClass) {
+		orderBy.add(Sort.ORDER_BY);
 		this.entityClass = entityClass;
 	}
 

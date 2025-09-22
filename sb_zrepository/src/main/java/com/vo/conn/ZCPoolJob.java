@@ -5,8 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
 import com.vo.thread.ZE;
@@ -43,7 +43,7 @@ public class ZCPoolJob {
 
 			final Collection<ZCPool> ps = ZCPool.getAllInstance();
 			for (final ZCPool pool : ps) {
-				final ImmutableList<ZConnection> cList = pool.getAll();
+				final List<ZConnection> cList = pool.getAll();
 				for (final ZConnection cR : cList) {
 
 					try {

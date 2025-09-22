@@ -1,14 +1,12 @@
 package com.vo.conn;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.google.common.collect.Lists;
-import com.vo.actuator.SqlInvocationLogsConfigurationProperties;
 import com.vo.common.STU;
 import com.vo.conn.ZDatasourceProperties.P;
-import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZRC;
 
@@ -67,7 +65,7 @@ public class ZDatasourcePropertiesLoader {
 			zDatasourceProperties.setShowSql(false);
 		}
 
-		final List<P> readList = Lists.newArrayList();
+		final List<P> readList = new ArrayList<>();
 		try {
 			final P read1 = newReadDP(0, dataSourceName);
 			readList.add(read1);

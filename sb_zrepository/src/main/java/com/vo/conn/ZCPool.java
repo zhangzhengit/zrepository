@@ -2,18 +2,18 @@ package com.vo.conn;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.vo.DBEnum;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
@@ -70,7 +70,7 @@ public class ZCPool {
 
 	}
 
-	static HashMap<String, ZCPool> poolMap = Maps.newHashMap();
+	static Map<String, ZCPool> poolMap = new HashMap<>();
 
 	public static Collection<ZCPool> getAllInstance() {
 		return poolMap.values();
@@ -344,10 +344,10 @@ public class ZCPool {
 	 * @return
 	 *
 	 */
-	public ImmutableList<ZConnection> getAll() {
-		final List<ZConnection> r = Lists.newArrayList(this.writeVector);
+	public List<ZConnection> getAll() {
+		final List<ZConnection> r = new ArrayList<>(this.writeVector);
 		r.addAll(this.readVector);
-		return ImmutableList.copyOf(r);
+		return Collections.unmodifiableList(r);
 	}
 
 	private void create(final String dataSourceName) {

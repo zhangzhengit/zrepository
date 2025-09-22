@@ -27,18 +27,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.vo.ClassMap;
 import com.vo.D;
 import com.vo.DBEnum;
@@ -144,7 +141,7 @@ public class ZRepositoryMain {
 
 		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getName());
 
-		final Map<Class, ZClass> map = Maps.newConcurrentMap();
+		final Map<Class, ZClass> map = new ConcurrentHashMap<>();
 
 		//		final Set<ZClass> zrsubIZClass = Sets.newHashSet();
 		for (final Class<?> cls : zrSubclassSet) {
@@ -170,7 +167,7 @@ public class ZRepositoryMain {
 
 		//		LOG.info("开始给[{}]的子接口生成实现类", ZRepository.class.getName());
 
-		final Map<Class, ZClass> map = Maps.newHashMap();
+		final Map<Class, ZClass> map = new HashMap<>();
 
 		for (final Class<?> cls : zrSubclassSet) {
 			//			LOG.info("开始给[{}]的子接口[{}]生成实现类", ZRepository.class.getName(), cls.getName());
@@ -197,7 +194,7 @@ public class ZRepositoryMain {
 	 */
 	public static Set<Class<?>> scanZRepositorySubinterface(final String packageName) {
 
-		final Set<Class<?>> zrSubclassSet = Sets.newHashSet();
+		final Set<Class<?>> zrSubclassSet = new HashSet<>();
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		for (final Class<?> cls : clsSet) {
 
@@ -221,7 +218,7 @@ public class ZRepositoryMain {
 			throw new IllegalArgumentException(ScanPackage.class.getName() + " 扫描的包名未设置！");
 		}
 
-		final Set<Class<?>> r = Sets.newHashSet();
+		final Set<Class<?>> r = new HashSet<>();
 		for (final String p : set) {
 			final Set<Class<?>> clsSet = ClassMap.scanPackage(p);
 			r.addAll(clsSet);
@@ -303,7 +300,7 @@ public class ZRepositoryMain {
 	 * @return
 	 */
 	private static List<Object> extractedZEntity(final Set<Class<?>> zrClassSet) {
-		final List<Object> x = Lists.newArrayList();
+		final List<Object> x = new ArrayList<>();
 		for (final Class<?> class1 : zrClassSet) {
 			final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(class1);
 			final String type = typeArray[0];
@@ -377,7 +374,7 @@ public class ZRepositoryMain {
 
 		//		LOG.info("ZRepositoryStarter开始生成[{}]的子接口的SQL模板", ZRepository.class.getName());
 
-		final List<SqlResult> sqlResultlist = Lists.newArrayList();
+		final List<SqlResult> sqlResultlist = new ArrayList<>();
 
 		for (final Class<?> zrSubClass : zrClassSet) {
 			//			LOG.info("ZRepositoryStarter开始生成[{}]的SQL模板", zrSubClass.getName());
@@ -487,7 +484,7 @@ public class ZRepositoryMain {
 		final HashSet<String> sqlKeyword = SqlPattern.SQL_KEYWORD;
 
 		// SQL关键字按从长到短排序，防止出现 Or优先于Order被替换掉，剩余 der
-		final ArrayList<String> skList = Lists.newArrayList(sqlKeyword);
+		final ArrayList<String> skList = new ArrayList<>(sqlKeyword);
 		skList.sort(Comparator.comparing(String::length).reversed());
 
 		final D d = findFieldName(entityClass, methodName);
@@ -530,7 +527,7 @@ public class ZRepositoryMain {
 
 		final List<String> fieldNameArray = d.getFiledName();
 
-		final List<String> fieldNameList = Lists.newArrayList(fieldNameArray)
+		final List<String> fieldNameList = new ArrayList<>(fieldNameArray)
 				.stream()
 				.filter(StrUtil::isNotBlank)
 				.map(x -> x.length() == 1 ? x.toLowerCase() : Character.toLowerCase(x.charAt(0)) + x.substring(1))
@@ -693,7 +690,7 @@ public class ZRepositoryMain {
 		}
 
 		final char[] ch = zRepositoryMethodName.toCharArray();
-		final List<String> aL = Lists.newArrayList();
+		final List<String> aL = new ArrayList<>();
 		int from = 0;
 		for (int i = 1; i < ch.length; i++) {
 			final boolean isDaxie = SqlPattern.daxie.contains(ch[i]);
@@ -732,8 +729,12 @@ public class ZRepositoryMain {
 		//		userR.setImplementsSet(Sets.newHashSet(canonicalName + " <T, ID> "));
 		//		userR.setName(canonicalName + "_ZClass" + "<T,ID>");
 
-		zClass.setImportSet(Sets.newHashSet(myZRClass.getName()));
-		zClass.setImplementsSet(Sets.newHashSet(myZRClass.getSimpleName()));
+		final Set<String> nameset = new HashSet<>();
+		nameset.add(myZRClass.getName());
+		zClass.setImportSet(nameset);
+		final Set<String> imset = new HashSet<>();
+		imset.add(myZRClass.getSimpleName());
+		zClass.setImplementsSet(imset);
 		zClass.setName(myZRClass.getSimpleName() + _Z_CLASS);
 
 
@@ -741,7 +742,9 @@ public class ZRepositoryMain {
 
 		final ZField zField = new ZField("Class<" + typeArray[0] + ">", "classType",typeArray[0] + ".class");
 
-		zClass.setFieldSet(Sets.newHashSet(zField));
+		final Set<ZField> zfs = new HashSet<>();
+		zfs.add(zField);
+		zClass.setFieldSet(zfs);
 
 		final Set<ZMethod> zmSet = new LinkedHashSet<>();
 
@@ -2394,7 +2397,7 @@ public class ZRepositoryMain {
 
 		Arrays.sort(argOrderArray);
 
-		final HashSet<Integer> set = Sets.newHashSet();
+		final Set<Integer> set = new HashSet<>();
 		for (final Integer x : argOrderArray) {
 			if (!set.add(x)) {
 				throw new IllegalArgumentException(
@@ -2759,7 +2762,7 @@ public class ZRepositoryMain {
 				if (fieldNameList.size() != columnsCount) {
 					final List<String> cnl = columnNameList.stream().map(ZFieldConverter::toJavaField)
 							.collect(Collectors.toList());
-					final HashSet<String> cns = Sets.newHashSet(cnl);
+					final Set<String> cns = new HashSet<>(cnl);
 					if (cnl.size() != cns.size()) {
 						final DBEnum dbEnum = ZCPool.getInstance(dataSourceName).getDbEnum(Mode.WRITE);
 						final List<Entry<String, Long>> collect = cnl.stream().collect(Collectors.groupingBy(e -> e, Collectors.counting())).entrySet().stream().filter(e-> e.getValue().longValue() > 1).collect(Collectors.toList());
@@ -3068,7 +3071,7 @@ public class ZRepositoryMain {
 		}
 	}
 
-	static HashSet<Class> cc = Sets.newHashSet();
+	static Set<Class> cc = new HashSet<>();
 
 	private static void checkZEntityPrimaryKey(final Class<?> typeClass, final String name, final ZConnection zConnection, final String dataSourceName) {
 		final Connection connection = zConnection.getConnection();

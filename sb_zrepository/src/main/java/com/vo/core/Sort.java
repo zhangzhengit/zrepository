@@ -1,9 +1,9 @@
 package com.vo.core;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.vo.ReflectionUtil;
 import com.vo.SerializableFunction;
 import com.vo.ZFieldConverter;
@@ -25,7 +25,7 @@ public class Sort<T> {
 
 	public static final String ORDER_BY = "ORDER BY";
 
-	private final List<String> x = Lists.newArrayList();
+	private final List<String> x = new ArrayList<>();
 
 	public static <T> Sort<T> create(final Class<T> entityClass) {
 		if (entityClass == null) {
