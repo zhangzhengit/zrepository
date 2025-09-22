@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +30,8 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -740,7 +743,7 @@ public class ZRepositoryMain {
 
 		zClass.setFieldSet(Sets.newHashSet(zField));
 
-		final Set<ZMethod> zmSet = new HashSet<>();
+		final Set<ZMethod> zmSet = new LinkedHashSet<>();
 
 		final Set<ZMethod> zmSet1 = addZMethod(myZRClass);
 		zmSet.addAll(zmSet1);
@@ -756,7 +759,8 @@ public class ZRepositoryMain {
 		final String[] typeArray = UserRepositoryTest1.findZRSubclassFanxing(myZRClass);
 		//		System.out.println("typeArray = " + Arrays.toString(typeArray));
 
-		final Set<ZMethod> zmSet = new HashSet<>();
+		final Set<ZMethod> zmSet = new LinkedHashSet<>();
+	
 		for (final Method method : ms) {
 
 			// FIXME 2024年5月19日 下午6:13:44 zhangzhen: debug 代码记得删除
@@ -814,8 +818,21 @@ public class ZRepositoryMain {
 			final String methodS = getSuMethod(method, entityT, myZRClass, forName(entityT));
 
 			final String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
+			// FIXME 2025年9月22日 下午6:26:06 zhangzhen: debug
+			if(method.getName().equals("save")) {
+				final int d = 0;
+			}
+			
 			zm.setBody(x);
 		}
+		
+		// 2025年9月16日 上午11:13:44 zhangzhen: 从groovy改用janino而新增的方法
+		zmSet.add(JM.addDeleteById(typeArray[1]));
+		zmSet.add(JM.addUpdate(typeArray[0]));
+		zmSet.add(JM.addSave(typeArray[0]));
+		zmSet.add(JM.addFindById(typeArray[1]));
+		zmSet.add(JM.addExistByIdById(typeArray[1]));
+		
 		return zmSet;
 	}
 
@@ -836,7 +853,7 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 		switch (method.getName()) {
 		case "findById":
-			return "return " + SU.class.getName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
+			return "return (" + entityTName + ")" + SU.class.getName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "findByIdIn":
 			return "return " + SU.class.getName() + ".findByIdIn(" + className1 + "," + methodName1 + "," + modeString + " ,idList,classType,sql);";
@@ -851,7 +868,7 @@ public class ZRepositoryMain {
 			return "return " + SU.class.getName() + ".update(" + className1 + "," + methodName1 + "," + modeString + ", classType,t,sql);";
 
 		case "save":
-			return "return " + SU.class.getName() + ".save(" + className1 + "," + methodName1 + ","
+			return "return (" + entityTName + ")" + SU.class.getName() + ".save(" + className1 + "," + methodName1 + ","
 			+ modeString + "," + " classType," + entityTName + ".class" + ",t,sql);";
 
 		case "page":
@@ -1853,12 +1870,12 @@ public class ZRepositoryMain {
 			throw new IllegalArgumentException(m1);
 		}
 
-		final StringJoiner joiner = getParameterNameFromMethod(method);
+//		final StringJoiner joiner = getParameterNameFromMethod(method);
 		final String modeString = modeString(method);
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
 		return "return " + SU.class.getName() + ".findByXXNotNull(" + className1 + "," + methodName1 + "," + modeString + ",classType,"
-		+ returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
+		+ returnType.getName()+ ".class"  + ",sql);";
 	}
 
 	private static String findByXXNotLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
@@ -2268,11 +2285,15 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		final Class<?> returnType2 = getReturnType(method);
+		
+		final String l = joiner.length()==0 ? "new  Object[]{}" : "new  Object[]{"+joiner+"}";
+//		final String l = joiner.length()==0 ? "new  Object[]{}" : joiner + ",new  Object[]{}";
+		
 
 		return "return " + SU.class.getName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
-				+ entityTName + ","
-				+ returnType2.getName() +".class" + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ joiner.toString() + ");";
+				+ entityTName + ".class" + ","
+				+ returnType2.getName() +".class" + ",\""+SQLEMode.GENERATE.name()+"\",\"" +  sa.get() +  "\","+ l+ ");";
 	}
 
 	private static void checkZQueryUpdateDeleteInsert(final Class<?> myZRClass, final Method method,

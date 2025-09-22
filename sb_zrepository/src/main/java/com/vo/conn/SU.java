@@ -167,9 +167,9 @@ public class SU {
 			final ResultSetMetaData metaData = rs.getMetaData();
 
 			final int count = metaData.getColumnCount();
-			final List<T> rL = Lists.newArrayList();
+			final List rL = Lists.newArrayList();
 			while (rs.next()) {
-				final T tR = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object tR = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				rL.add(tR);
 			}
 
@@ -209,7 +209,7 @@ public class SU {
 	 * @return
 	 *
 	 */
-	private static <T> Map<String, Object> getNotNullFieldMap(final T t) {
+	private static <T> Map<String, Object> getNotNullFieldMap(final Object t) {
 		final Map<String, Object> fMap = Maps.newLinkedHashMap();
 		final Field[] fs = t.getClass().getDeclaredFields();
 		for (final Field f : fs) {
@@ -230,7 +230,7 @@ public class SU {
 	}
 
 	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class entityClass, final T t, final String sql) {
+			final Class entityClass, final Object t, final String sql) {
 
 		if (t == null) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".update方法: t 参数不能为null");
@@ -311,7 +311,7 @@ public class SU {
 		return false;
 	}
 
-	private static <T> SUA updateHandler(final Class<T> entityClass, final T t, final String sqlF, final ZC2 zc2) {
+	private static <T> SUA updateHandler(final Class<T> entityClass, final Object t, final String sqlF, final ZC2 zc2) {
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
 		sua.setZc2(zc2);
@@ -320,7 +320,7 @@ public class SU {
 		return sua;
 	}
 
-	private static <T> Object getUpdateIdValue(final T t, final Optional<Field> zidO) {
+	private static <T> Object getUpdateIdValue(final Object t, final Optional<Field> zidO) {
 		final Field idField = zidO.get();
 
 		idField.setAccessible(true);
@@ -631,7 +631,7 @@ public class SU {
 			final Connection connection = zc.getConnection();
 
 			final ArrayList<Object> idl = Lists.newArrayListWithCapacity(tl2.size());
-			for (final T t : tl2) {
+			for (final Object t : tl2) {
 				try {
 					final Object[] a = save0(zrSubClassName, callerMethodName, zc.getDbEnum(), cls, t, sql, connection, null);
 					final ResultSet rs = (ResultSet) a[0];
@@ -796,7 +796,7 @@ public class SU {
 
 	public static <T> T save(final String zrSubClassName, final String callerMethodName,
 			final Mode mode, final Class<T> entityClass,
-			final Class<?> entityTName, final T t, final String sql) {
+			final Class<?> entityTName, final Object t, final String sql) {
 
 		if (t == null) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".save方法: t 参数不能为null");
@@ -841,7 +841,7 @@ public class SU {
 	}
 
 	private static <T> Object[] save0(final String zrSubClassName, final String callerMethodName, final DBEnum dbEunum, final Class<T> entityClass,
-			final T t, final String sql, final Connection connection, final ZC2 zc2) throws SQLException {
+			final Object t, final String sql, final Connection connection, final ZC2 zc2) throws SQLException {
 
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = entityClass.getDeclaredFields();
@@ -893,7 +893,7 @@ public class SU {
 	}
 
 
-	private static <T> boolean addPS(final DBEnum dbEnum, final T t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
+	private static <T> boolean addPS(final DBEnum dbEnum, final Object t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
 			throws SQLException {
 
 		try {
@@ -1003,7 +1003,7 @@ public class SU {
 		return zc2;
 	}
 
-	public static <T> List<T> find(final String zrSubClassName, final String callerMethodName, final Mode mode,
+	public static List find(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Class entityClass,final Class returnType, final String sql, final Object wrapper) {
 
 
@@ -1035,10 +1035,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = (T) newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
 			return r;
@@ -1087,10 +1087,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
 			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
@@ -1186,11 +1186,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> rList = Lists.newArrayListWithCapacity(idSet.size());
+			final ArrayList rList = Lists.newArrayListWithCapacity(idSet.size());
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc2.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
-				rList.add(t);
+				rList.add(newT(zc2.getZConnection().getDbEnum(), entityClass, rs, metaData, count));
 			}
 
 			saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, start, s2,
@@ -1215,7 +1214,7 @@ public class SU {
 
 	// FIXME 2024年6月8日 下午9:15:32 zhangzhen : 各个方法都加入
 	private static void saveSQLInvokeTime(final String zrSubClassName, final String callerMethodName,
-			final Date invokeTime, final long start, final String sql, final String tableName, Object... value) {
+			final Date invokeTime, final long start, final String sql, final String tableName, final Object... value) {
 		final SqlInvocationLogsConfigurationProperties cp = ZContext
 				.getBean(SqlInvocationLogsConfigurationProperties.class);
 		if ((cp != null) && cp.getEnable()) {
@@ -1230,8 +1229,8 @@ public class SU {
 				if (value.length == 1) {
 					entity.setValue(String.valueOf(value[0]));
 				} else {
-					StringJoiner vj = new StringJoiner(",");
-					for (Object v : value) {
+					final StringJoiner vj = new StringJoiner(",");
+					for (final Object v : value) {
 						vj.add(String.valueOf(v));
 					}
 					entity.setValue(vj.toString());
@@ -1332,8 +1331,8 @@ public class SU {
 	}
 
 	// FIXME 2024年7月2日 下午11:01:31 zhangzhen : 当前只有本方法支持了事务内缓存，其他select操作的方法继续加
-	public static <T> T findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
-			final Object id, final Class<T> entityClass, final String sql) {
+	public static Object findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Object id, final Class entityClass, final String sql) {
 
 		if (id == null) {
 			return null;
@@ -1342,21 +1341,21 @@ public class SU {
 		return findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
 	}
 
-	private static <T> T findById1(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Object id, final Class<T> entityClass, final String sql) {
+	private static Object findById1(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Object id, final Class entityClass, final String sql) {
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
 		final Date invokeTime = new Date();
 		final ZC2 zc = getZCAndSetAutoCommitFALSEIfPG(mode, dataSourceName);
 
-		final Supplier<T> supplier = () -> {
+		final Supplier<Object> supplier = () -> {
 			final SUA sua = excludedDeletedHandler(entityClass, null, null, sql, null, zc);
 			final String sql2 = sua.getSql();
 
 			try {
-				final T t = findById0(zrSubClassName, callerMethodName, zc.getZConnection().getDbEnum(), mode, id,
+				final Object t = findById0(zrSubClassName, callerMethodName, zc.getZConnection().getDbEnum(), mode, id,
 						entityClass, sql2, zc.getZConnection());
 				saveSQLInvokeTime(zrSubClassName, callerMethodName, invokeTime, invokeTime.getTime(), sql,
-						entityClass.getAnnotation(ZEntity.class).tableName(), id);
+						((ZEntity) entityClass.getAnnotation(ZEntity.class)).tableName(), id);
 				return t;
 			} finally {
 				returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
@@ -1372,7 +1371,7 @@ public class SU {
 						+ id.getClass().getName() + "@"
 						+ id;
 
-		return (T) selectFromCacheIfZT(cachekey, zc, supplier);
+		return selectFromCacheIfZT(cachekey, zc, supplier);
 	}
 
 	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,
@@ -1435,10 +1434,10 @@ public class SU {
 
 	}
 
-	private static <T> T newT2(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
+	private static Object newT2(final DBEnum dbEnum, final Class returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int fieldCount,final FI fi) {
 
-		final T object = newInstance(returnType);
+		final Object object = newInstance(returnType);
 
 		for (int i = 0; i < fi.getFieldCount(); i++) {
 			final Object columValue = getColumnValue(rs, i, fi.getFieldArray()[i]);
@@ -1452,10 +1451,11 @@ public class SU {
 		return object;
 	}
 
-	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
+	private static Object newT(final DBEnum dbEnum, final Class returnType, final ResultSet rs,
+//	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int fieldCount) {
 
-		final T object = newInstance(returnType);
+		final Object object = newInstance(returnType);
 
 
 		for (int i = 0; i < fieldCount; i++) {
@@ -1630,8 +1630,8 @@ public class SU {
 		}
 	}
 
-	private static <T> T newInstance(final Class<T> returnType) {
-		T object = null;
+	private static Object newInstance(final Class returnType) {
+		Object object = null;
 		try {
 			object = returnType.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -1693,10 +1693,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1799,10 +1799,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -1904,11 +1904,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
-				r.add(t);
+				r.add(newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count));
 			}
 
 			return r;
@@ -1953,11 +1952,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
-				r.add(t);
+				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
 			}
 
 			return r;
@@ -2002,11 +2000,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
-				r.add(t);
+				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
 			}
 
 			return r;
@@ -2054,10 +2051,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2109,10 +2106,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2168,10 +2165,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2226,11 +2223,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
-				r.add(t);
+				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
 			}
 
 			return r;
@@ -2283,10 +2279,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2336,10 +2332,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2388,10 +2384,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2435,10 +2431,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2527,10 +2523,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2580,10 +2576,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2666,11 +2662,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
-				r.add(t);
+				r.add(newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count));
 			}
 
 			return r;
@@ -2719,10 +2714,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2770,10 +2765,10 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final ArrayList<T> r = Lists.newArrayList();
+			final ArrayList r = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
 				r.add(t);
 			}
 
@@ -2969,12 +2964,12 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final List<T> r = new  ArrayList<>();
+			final List r = new  ArrayList<>();
 
 			final int count = metaData.getColumnCount();
 			final FI tcInfo = getTCInfo(returnType, metaData, count);
 			while (rs.next()) {
-				final T t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count, tcInfo);
+				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count, tcInfo);
 				r.add(t);
 			}
 
@@ -3016,7 +3011,7 @@ public class SU {
 	 * @param fs
 	 * @return
 	 */
-	private static <T> String gUpdateColumn(final T t, final Field[] fs) {
+	private static <T> String gUpdateColumn(final Object t, final Field[] fs) {
 		final StringBuilder column =new StringBuilder();
 		for (int i = 0; i < fs.length; i++) {
 			final Field f = fs[i];
@@ -3044,7 +3039,8 @@ public class SU {
 	}
 
 	// FIXME 2024年7月2日 下午3:07:28 zhangzhen : where xx in 这种形式还不支持
-	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName, final Mode mode,
+	public static List zQuerySelect(final String zrSubClassName, final String callerMethodName, final Mode mode,
+//	public static <T> List<T> zQuerySelect(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Object entityTClassName, final Object returnTypeClassName, final String sqleModeName,
 			final String sqlT, final Object... arg) {
 
@@ -3129,10 +3125,11 @@ public class SU {
 
 			final ResultSetMetaData metaData = rs.getMetaData();
 
-			final List<T> ra = Lists.newArrayList();
+			final List ra = Lists.newArrayList();
 			while (rs.next()) {
 				final int count = metaData.getColumnCount();
-				final T t = (T) newT(zc.getZConnection().getDbEnum(), returnClass, rs, metaData, count);
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnClass, rs, metaData, count);
+//				final Object t = (T) newT(zc.getZConnection().getDbEnum(), returnClass, rs, metaData, count);
 				ra.add(t);
 			}
 
@@ -3153,12 +3150,12 @@ public class SU {
 	}
 
 	public static Integer zQueryUpdate(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName ,final Object object, final String sqleModeName,
-			final String sql, final Object... arg) throws IllegalAccessException {
+			final String sql, final Object... arg) {
 
-		return (Integer) updateOrDeleteOrInsert(zrSubClassName, callerMethodName, mode, entityTName, object, sql, SUEnum.UPDATE, arg);
+		return updateOrDeleteOrInsert(zrSubClassName, callerMethodName, mode, entityTName, object, sql, SUEnum.UPDATE, arg);
 	}
 
-	private static Object updateOrDeleteOrInsert(final String zrSubClassName, final String callerMethodName, final Mode mode, final Object entityTName, final Object object, final String sql, final SUEnum suEnum, final Object... arg) {
+	private static int updateOrDeleteOrInsert(final String zrSubClassName, final String callerMethodName, final Mode mode, final Object entityTName, final Object object, final String sql, final SUEnum suEnum, final Object... arg) {
 
 		final Class cls = (Class) object;
 
@@ -3186,7 +3183,11 @@ public class SU {
 			if (suEnum == SUEnum.INSERT) {
 				final ResultSet rs = prepareStatement.getGeneratedKeys();
 				if (rs.next()) {
-					return rs.getObject(1);
+					
+					// FIXME 2025年9月22日 下午7:42:48 zhangzhen: 注意类型，转换为int
+					final int int1 = rs.getInt(1);
+					return int1;
+//					return (int) rs.getObject(1);
 				}
 			}
 			return executeUpdate;
@@ -3205,14 +3206,14 @@ public class SU {
 		return NO_DELETE_OR_DELETE;
 	}
 
-	public static <T> Integer zQueryDelete(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName, final Object object,
+	public static int zQueryDelete(final String zrSubClassName, final String callerMethodName,final Mode mode, final Object entityTName, final Object object,
 			final String sqleModeName, final String sql, final Object... arg) {
 
-		return (Integer) updateOrDeleteOrInsert(zrSubClassName, callerMethodName, mode, entityTName, object, sql, SUEnum.DELETE, arg);
+		return updateOrDeleteOrInsert(zrSubClassName, callerMethodName, mode, entityTName, object, sql, SUEnum.DELETE, arg);
 	}
 
-	public static <T> Object zQueryInsert(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Object entityTName, final Class<T> cls, final String sqleModeName, final String sql, final Object... arg) {
+	public static int zQueryInsert(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Object entityTName, final Class cls, final String sqleModeName, final String sql, final Object... arg) {
 		return updateOrDeleteOrInsert(zrSubClassName, callerMethodName, mode, entityTName, cls, sql, SUEnum.INSERT, arg);
 	}
 
@@ -3255,7 +3256,7 @@ public class SU {
 	 * @param t
 	 * @return
 	 */
-	private static <T> Object hTBlob(final Class<T> entityClass, final T t) {
+	private static <T> Object hTBlob(final Class<T> entityClass, final Object t) {
 		final boolean e = entityClass.isAnnotationPresent(ZEntity.class);
 		if (!e) {
 			return t;
