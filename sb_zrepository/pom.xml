@@ -11,7 +11,7 @@
 
 	<groupId>com.vo</groupId>
 	<artifactId>sb_zrepository</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT-jdk21</version>
 	<name>sb_zrepository</name>
 	<description>sb_zrepository</description>
 
