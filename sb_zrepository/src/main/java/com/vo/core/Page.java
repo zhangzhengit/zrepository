@@ -15,22 +15,22 @@ public final class Page<T> {
 	/**
 	 * 每页的条数
 	 */
-	private Integer size;
+	private int size;
 
 	/**
 	 * 当前第几页
 	 */
-	private Long page;
+	private long page;
 
 	/**
 	 * 总页数
 	 */
-	private Long totalPage;
+	private long totalPage;
 
 	/**
 	 * 总条数
 	 */
-	private Long totalCount;
+	private long totalCount;
 
 	/**
 	 * 本页内容
@@ -63,7 +63,7 @@ public final class Page<T> {
 		return this.getList().size() > 0;
 	}
 
-	public Page(final Integer size, final Long page, final Long totalPage, final Long totalCount, final List<T> listAAA) {
+	public Page(final int size, final long page, final long totalPage, final long totalCount, final List<T> listAAA) {
 		this.size = size;
 		this.page = page;
 		this.totalPage = totalPage;
@@ -71,40 +71,40 @@ public final class Page<T> {
 		this.list = listAAA;
 	}
 
-	public Integer getSize() {
-		return size;
+	public int getSize() {
+		return this.size;
 	}
 
-	public void setSize(final Integer size) {
+	public void setSize(final int size) {
 		this.size = size;
 	}
 
-	public Long getPage() {
-		return page;
+	public long getPage() {
+		return this.page;
 	}
 
-	public void setPage(final Long page) {
+	public void setPage(final long page) {
 		this.page = page;
 	}
 
-	public Long getTotalPage() {
-		return totalPage;
+	public long getTotalPage() {
+		return this.totalPage;
 	}
 
-	public void setTotalPage(final Long totalPage) {
+	public void setTotalPage(final long totalPage) {
 		this.totalPage = totalPage;
 	}
 
-	public Long getTotalCount() {
-		return totalCount;
+	public long getTotalCount() {
+		return this.totalCount;
 	}
 
-	public void setTotalCount(final Long totalCount) {
+	public void setTotalCount(final long totalCount) {
 		this.totalCount = totalCount;
 	}
 
 	public List<T> getList() {
-		return list;
+		return this.list; 
 	}
 
 	public void setList(final List<T> list) {

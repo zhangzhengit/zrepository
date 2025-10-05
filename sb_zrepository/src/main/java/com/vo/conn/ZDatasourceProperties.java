@@ -11,11 +11,11 @@ import java.util.List;
  */
 public class ZDatasourceProperties {
 
-	private Boolean showSql;
+	private boolean showSql;
 
 	private P write;
 
-	private Integer datasourceReadUrlCount;
+	private int datasourceReadUrlCount;
 
 	private List<P> readList;
 
@@ -24,47 +24,46 @@ public class ZDatasourceProperties {
 		private String datasourceUsername;
 		private String datasourcePassword;
 		private String datasourceDriverClass;
-		private Integer datasourceMinConnection;
-		private Integer datasourceMaxConnection;
+		private int datasourceMinConnection;
+		private int datasourceMaxConnection;
 		public String getDatasourceUrl() {
-			return datasourceUrl;
-		}
+			return this.datasourceUrl;
+		} 
 		public void setDatasourceUrl(final String datasourceUrl) {
 			this.datasourceUrl = datasourceUrl;
 		}
 		public String getDatasourceUsername() {
-			return datasourceUsername;
+			return this.datasourceUsername;
 		}
 		public void setDatasourceUsername(final String datasourceUsername) {
 			this.datasourceUsername = datasourceUsername;
 		}
 		public String getDatasourcePassword() {
-			return datasourcePassword;
+			return this.datasourcePassword;
 		}
 		public void setDatasourcePassword(final String datasourcePassword) {
 			this.datasourcePassword = datasourcePassword;
 		}
 		public String getDatasourceDriverClass() {
-			return datasourceDriverClass;
+			return this.datasourceDriverClass;
 		}
 		public void setDatasourceDriverClass(final String datasourceDriverClass) {
 			this.datasourceDriverClass = datasourceDriverClass;
 		}
-		public Integer getDatasourceMinConnection() {
-			return datasourceMinConnection;
+		public int getDatasourceMinConnection() {
+			return this.datasourceMinConnection;
 		}
-		public void setDatasourceMinConnection(final Integer datasourceMinConnection) {
+		public void setDatasourceMinConnection(final int datasourceMinConnection) {
 			this.datasourceMinConnection = datasourceMinConnection;
 		}
-		public Integer getDatasourceMaxConnection() {
-			return datasourceMaxConnection;
+		public int getDatasourceMaxConnection() {
+			return this.datasourceMaxConnection;
 		}
-		public void setDatasourceMaxConnection(final Integer datasourceMaxConnection) {
+		public void setDatasourceMaxConnection(final int datasourceMaxConnection) {
 			this.datasourceMaxConnection = datasourceMaxConnection;
 		}
 		public P(final String datasourceUrl, final String datasourceUsername, final String datasourcePassword,
-				final String datasourceDriverClass, final Integer datasourceMinConnection, final Integer datasourceMaxConnection) {
-			super();
+				final String datasourceDriverClass, final int datasourceMinConnection, final int datasourceMaxConnection) {
 			this.datasourceUrl = datasourceUrl;
 			this.datasourceUsername = datasourceUsername;
 			this.datasourcePassword = datasourcePassword;
@@ -73,45 +72,43 @@ public class ZDatasourceProperties {
 			this.datasourceMaxConnection = datasourceMaxConnection;
 		}
 		public P() {
-			super();
 		}
 		
 	}
 
-	public Boolean getShowSql() {
-		return showSql;
+	public boolean getShowSql() {
+		return this.showSql;
 	}
 
-	public void setShowSql(final Boolean showSql) {
+	public void setShowSql(final boolean showSql) {
 		this.showSql = showSql;
 	}
 
 	public P getWrite() {
-		return write;
+		return this.write;
 	}
 
 	public void setWrite(final P write) {
 		this.write = write;
 	}
 
-	public Integer getDatasourceReadUrlCount() {
-		return datasourceReadUrlCount;
+	public int getDatasourceReadUrlCount() {
+		return this.datasourceReadUrlCount;
 	}
 
-	public void setDatasourceReadUrlCount(final Integer datasourceReadUrlCount) {
+	public void setDatasourceReadUrlCount(final int datasourceReadUrlCount) {
 		this.datasourceReadUrlCount = datasourceReadUrlCount;
 	}
 
 	public List<P> getReadList() {
-		return readList;
+		return this.readList;
 	}
 
 	public void setReadList(final List<P> readList) {
 		this.readList = readList;
 	}
 
-	public ZDatasourceProperties(final Boolean showSql, final P write, final Integer datasourceReadUrlCount, final List<P> readList) {
-		super();
+	public ZDatasourceProperties(final boolean showSql, final P write, final int datasourceReadUrlCount, final List<P> readList) {
 		this.showSql = showSql;
 		this.write = write;
 		this.datasourceReadUrlCount = datasourceReadUrlCount;
@@ -119,7 +116,6 @@ public class ZDatasourceProperties {
 	}
 
 	public ZDatasourceProperties() {
-		super();
 	}
 	
 }
