@@ -359,8 +359,8 @@ public class ZRepositoryMain {
 		}
 		
 		return Env.ENV == EnvEnum.ZFRAMEWORK && !ZContext
-				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE) ||
-				(Env.ENV == EnvEnum.SPRING && Env.ACTUATOR_ENABLE != true)
+				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable() ||
+				(Env.ENV == EnvEnum.SPRING && !Env.ACTUATOR_ENABLE)
 		;
 	}
 
@@ -611,7 +611,8 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							;
 			throw new ParameterCountDeclarationException(x1);
-		}else if (filedNameMethodNameOrder.size() < ps.length) {
+		}
+		if (filedNameMethodNameOrder.size() < ps.length) {
 			final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
 
 			final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
@@ -822,7 +823,7 @@ public class ZRepositoryMain {
 
 			final String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
 			// FIXME 2025年9月22日 下午6:26:06 zhangzhen: debug
-			if(method.getName().equals("save")) {
+			if("save".equals(method.getName())) {
 				final int d = 0;
 			}
 			
