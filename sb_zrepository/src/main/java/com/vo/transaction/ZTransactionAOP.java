@@ -121,7 +121,7 @@ public class ZTransactionAOP implements ZIAOP {
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
-			ZRC.clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
+			ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
 
 			clear();
 		}
@@ -212,7 +212,7 @@ public class ZTransactionAOP implements ZIAOP {
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
 
-			ZRC.clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
+			ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
 
 			clear();
 		}

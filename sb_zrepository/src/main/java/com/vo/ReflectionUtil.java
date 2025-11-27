@@ -22,7 +22,7 @@ public class ReflectionUtil {
 
 	public static <T, R> Field getField(final SerializableFunction<T, R> function) {
 		final Supplier<Field> supplier = () -> findField(function);
-		return ZRC.computeIfAbsent(function, supplier);
+		return ZRC.singleton().computeIfAbsent(function, supplier);
 	}
 
 	public static <T, R> Field findField(final SerializableFunction<T, R> function) {

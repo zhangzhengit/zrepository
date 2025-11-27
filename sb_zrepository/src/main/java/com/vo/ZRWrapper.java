@@ -1322,7 +1322,7 @@ public class ZRWrapper<T> {
 
 	private DBEnum getDBEnum() {
 		final String key = this.entityClass.getName();
-		return ZRC.computeIfAbsent(key, this::getDBEnum0);
+		return ZRC.singleton().computeIfAbsent(key, this::getDBEnum0);
 	}
 
 	private DBEnum getDBEnum0() {
