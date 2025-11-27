@@ -2332,7 +2332,7 @@ public class ZRepositoryMain {
 		}
 
 		final String k = method.getName() + "@" + sqlTemplate;
-		return ZRC.computeIfAbsent(k, () -> checkZQuerySelect0(myZRClass, method, sqlTemplate, k));
+		return ZRC.singleton().computeIfAbsent(k, () -> checkZQuerySelect0(myZRClass, method, sqlTemplate, k));
 	}
 
 	private static int[] checkZQuerySelect0(final Class<?> myZRClass, final Method method, final String sqlTemplate, final String k) {
@@ -3196,7 +3196,7 @@ public class ZRepositoryMain {
 	 */
 	public static DataSourceDTO findCatalog(final String url) {
 		final String key = "findCatalog" + "@" + url;
-		return ZRC.computeIfAbsent(key, () -> findCatalog0(url));
+		return ZRC.singleton().computeIfAbsent(key, () -> findCatalog0(url));
 	}
 
 	private static DataSourceDTO findCatalog0(final String url) {

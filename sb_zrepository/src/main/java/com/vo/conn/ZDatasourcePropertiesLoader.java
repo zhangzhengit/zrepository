@@ -34,7 +34,7 @@ public class ZDatasourcePropertiesLoader {
 	public static final String DATASOURCE_PROPERTIES_PATH_4 = "src/main/resources/config/";
 
 	public static ZDatasourceProperties getInstance(final String dataSourceName) {
-		return ZRC.computeIfAbsent(dataSourceName, () ->initialize(dataSourceName));
+		return ZRC.singleton().computeIfAbsent(dataSourceName, () ->initialize(dataSourceName));
 	}
 
 	private static ZDatasourceProperties initialize(final String dataSourceName) {
@@ -240,7 +240,7 @@ public class ZDatasourcePropertiesLoader {
 	}
 
 	private static Properties getProperties(final String dataSourceName) {
-		return ZRC.computeIfAbsent(dataSourceName, () -> getProperties0(dataSourceName));
+		return ZRC.singleton().computeIfAbsent(dataSourceName, () -> getProperties0(dataSourceName));
 	}
 
 	private static Properties getProperties0(final String dataSourceName) {

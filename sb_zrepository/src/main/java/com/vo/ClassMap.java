@@ -26,7 +26,7 @@ public class ClassMap {
 
 	public synchronized static Set<Class<?>> scanPackage(final String packageName) {
 		final Supplier<Set<Class<?>>> supplier = () -> ClassUtil.scanPackage(packageName);
-		return ZRC.computeIfAbsent(packageName, supplier);
+		return ZRC.singleton().computeIfAbsent(packageName, supplier);
 	}
 }
 

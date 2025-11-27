@@ -792,7 +792,7 @@ public class SU {
 
 		final String key = cls.getName() + "@" + sql;
 
-		return ZRC.computeIfAbsent(key, supplier);
+		return ZRC.singleton().computeIfAbsent(key, supplier);
 	}
 
 	public static <T> T save(final String zrSubClassName, final String callerMethodName,
@@ -1327,7 +1327,7 @@ public class SU {
 		zc2.addKey(key);
 
 		synchronized (key) {
-			return ZRC.computeIfAbsent(key, supplier, true);
+			return ZRC.singleton().computeIfAbsent(key, supplier, true);
 		}
 	}
 
@@ -1720,7 +1720,7 @@ public class SU {
 	public static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
 		final Supplier<String> supplier = () -> gSelectFromReturnType0(entityClass, returnType);
 		final String key = "gSelectFromReturnType" + entityClass.getComponentType() +"@" + returnType.getName();
-		return ZRC.computeIfAbsent(key, supplier);
+		return ZRC.singleton().computeIfAbsent(key, supplier);
 	}
 
 	private static String gSelectFromReturnType0(final Class entityClass, final Class returnType) {
