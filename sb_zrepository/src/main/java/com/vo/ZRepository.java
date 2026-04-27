@@ -33,7 +33,7 @@ public interface ZRepository<T, ID> {
 	 * @return
 	 *
 	 */
-	Long count();
+	long count();
 
 	/**
 	 * 根据 @ZID 字段查询一个对象
