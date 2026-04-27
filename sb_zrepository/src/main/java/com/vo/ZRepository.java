@@ -2,6 +2,7 @@ package com.vo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.vo.core.Page;
 
@@ -42,6 +43,15 @@ public interface ZRepository<T, ID> {
 	 *
 	 */
 	T findById(ID id);
+
+	/**
+	 * 根据 @ZID 字段查询一个对象
+	 *
+	 * @param id
+	 * @return 返回 Optional
+	 *
+	 */
+	Optional<T> findOptionalById(ID id);
 
 	/**
 	 * 根据 @ZID 字段值来update一个对象，字段是什么就update为什么包括null， @ZID 字段不能为空，否则抛异常

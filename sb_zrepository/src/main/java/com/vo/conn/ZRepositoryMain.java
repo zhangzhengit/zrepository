@@ -349,7 +349,7 @@ public class ZRepositoryMain {
 
 	/**
 	 * 是否数据源是[存储SQL执行监控信息的数据源]，并且 repository.actuator.enable 没有配置为true
-	 * 
+	 *
 	 * @param dataSourceName
 	 * @return
 	 */
@@ -357,10 +357,10 @@ public class ZRepositoryMain {
 		if (!SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)) {
 			return false;
 		}
-		
-		return Env.ENV == EnvEnum.ZFRAMEWORK && !ZContext
-				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable() ||
-				(Env.ENV == EnvEnum.SPRING && !Env.ACTUATOR_ENABLE)
+
+		return ((Env.ENV == EnvEnum.ZFRAMEWORK) && !ZContext
+				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable()) ||
+				((Env.ENV == EnvEnum.SPRING) && !Env.ACTUATOR_ENABLE)
 		;
 	}
 
@@ -764,7 +764,7 @@ public class ZRepositoryMain {
 		//		System.out.println("typeArray = " + Arrays.toString(typeArray));
 
 		final Set<ZMethod> zmSet = new LinkedHashSet<>();
-	
+
 		for (final Method method : ms) {
 
 			// FIXME 2024年5月19日 下午6:13:44 zhangzhen: debug 代码记得删除
@@ -826,17 +826,18 @@ public class ZRepositoryMain {
 			if("save".equals(method.getName())) {
 				final int d = 0;
 			}
-			
+
 			zm.setBody(x);
 		}
-		
+
 		// 2025年9月16日 上午11:13:44 zhangzhen: 从groovy改用janino而新增的方法
 		zmSet.add(JM.addDeleteById(typeArray[1]));
 		zmSet.add(JM.addUpdate(typeArray[0]));
 		zmSet.add(JM.addSave(typeArray[0]));
 		zmSet.add(JM.addFindById(typeArray[1]));
+		zmSet.add(JM.addFindOptionalById(typeArray[1]));
 		zmSet.add(JM.addExistByIdById(typeArray[1]));
-		
+
 		return zmSet;
 	}
 
@@ -858,6 +859,9 @@ public class ZRepositoryMain {
 		switch (method.getName()) {
 		case "findById":
 			return "return (" + entityTName + ")" + SU.class.getName() + ".findById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
+		case "findOptionalById":
+			return "return " + SU.class.getName() + ".findOptionalById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
+//			return "return (" + entityTName + ")" + SU.class.getName() + ".findOptionalById(" + className1 + "," + methodName1 + "," + modeString + ", id,classType,sql);";
 
 		case "findByIdIn":
 			return "return " + SU.class.getName() + ".findByIdIn(" + className1 + "," + methodName1 + "," + modeString + " ,idList,classType,sql);";
@@ -2289,10 +2293,10 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		final Class<?> returnType2 = getReturnType(method);
-		
+
 		final String l = joiner.length()==0 ? "new  Object[]{}" : "new  Object[]{"+joiner+"}";
 //		final String l = joiner.length()==0 ? "new  Object[]{}" : joiner + ",new  Object[]{}";
-		
+
 
 		return "return " + SU.class.getName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
@@ -2579,7 +2583,7 @@ public class ZRepositoryMain {
 					SqlInvocationLogsConfigurationProperties.NAME);
 			return;
 		}
-		
+
 		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(dataSourceName).getZConnection(Mode.WRITE), dataSourceName);
 		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(dataSourceName).getZConnection(Mode.READ), dataSourceName);
 

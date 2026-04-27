@@ -179,7 +179,7 @@ public class SU {
 			final Long countR = pscRS.getLong(1);
 			final long pages = (countR.longValue() % size) == 0 ? countR.longValue() / size
 					: (countR.longValue() / size) + 1;
-			return new Page(size, Long.valueOf(String.valueOf(page)), pages, countR, rL);
+			return new Page(size, Long.parseLong(String.valueOf(page)), pages, countR, rL);
 
 		} catch (final SQLException | IllegalArgumentException  e1) {
 			e1.printStackTrace();
@@ -193,7 +193,7 @@ public class SU {
 			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
 		}
 
-		return new Page(size, Long.valueOf(String.valueOf(page)), 0L, 0L, new ArrayList<>());
+		return new Page(size, Long.parseLong(String.valueOf(page)), 0L, 0L, new ArrayList<>());
 	}
 
 	private static Boolean isShowSQL(final String dataSourceName) {
@@ -1331,7 +1331,17 @@ public class SU {
 		}
 	}
 
-	// FIXME 2024年7月2日 下午11:01:31 zhangzhen : 当前只有本方法支持了事务内缓存，其他select操作的方法继续加
+	public static Optional<Object> findOptionalById(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Object id, final Class entityClass, final String sql) {
+
+		if (id == null) {
+			return Optional.empty();
+		}
+
+		final Object v = findById1(zrSubClassName, callerMethodName, mode, id, entityClass, sql);
+		return Optional.ofNullable(v);
+	}
+
 	public static Object findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Object id, final Class entityClass, final String sql) {
 
@@ -1862,13 +1872,13 @@ public class SU {
 		}
 
 		// FIXME 2024年7月16日 下午7:22:05 zhangzhen : 这个判断要待定，是否就是查询null的
-		
+
 		final ArrayList<Object> arrayList = new ArrayList<>();
 		final Iterable iterable = (Iterable) value;
 		for (final Object object : iterable) {
 			arrayList.add(object);
 		}
-		
+
 		final Set set = (arrayList).stream().filter(e -> e != null)
 				.collect(Collectors.toSet());
 		if (set.isEmpty()) {
@@ -3190,7 +3200,7 @@ public class SU {
 			if (suEnum == SUEnum.INSERT) {
 				final ResultSet rs = prepareStatement.getGeneratedKeys();
 				if (rs.next()) {
-					
+
 					// FIXME 2025年9月22日 下午7:42:48 zhangzhen: 注意类型，转换为int
 					final int int1 = rs.getInt(1);
 					return int1;

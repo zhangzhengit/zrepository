@@ -108,6 +108,7 @@ public class MethodRegex {
 	public static final String save = GROUP_SAVE;
 	public static final String findAll = GROUP_FINDALL;
 	public static final String findByXX = GROUP_findByXX;
+	public static final String findOptionalByXX = "findOptionalBy.+";
 
 	public static final String GROUP_findByXXAndXX = "findBy.+(?=And.).+";
 	public static final String findByXXAndYY = "findBy.+(?=And.).+";
@@ -208,6 +209,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_UPDATE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDOptionalBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsEmpty = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmptyAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmpty = new LinkedHashMap<>();
@@ -369,6 +371,10 @@ public class MethodRegex {
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ?");
+
+		// Optional
+		REGEX_MAP_FINDOptionalBYXX.put(findOptionalByXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ?");
+
 		// findByXXXEndingWith
 		REGEX_MAP_findByXXXEndingWith.put(findByXXXEndingWith, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ?");
 		// findByXXXStartingWith
@@ -437,6 +443,10 @@ public class MethodRegex {
 		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
 		R_M.put(GROUP_findByXXAndXX, REGEX_MAP_FINDBYXX);
 		R_M.put(GROUP_findByXX, REGEX_MAP_FINDBYXX);
+
+		R_M.put(findOptionalByXX, REGEX_MAP_FINDOptionalBYXX);
+//		REGEX_MAP_FINDOptionalBYXX
+
 		R_M.put(GROUP_FINDALL, REGEX_MAP_FINDALL);
 		R_M.put(GROUP_SAVEALL, REGEX_MAP_SAVEALL);
 		R_M.put(GROUP_QUERY, REGEX_MAP_QUERY);
