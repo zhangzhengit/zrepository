@@ -85,7 +85,7 @@ import com.vo.exception.ParameterTypeDeclarationException;
 import com.vo.exception.ZRepositoryException;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 
 /**
  *
@@ -349,7 +349,7 @@ public class ZRepositoryMain {
 
 	/**
 	 * 是否数据源是[存储SQL执行监控信息的数据源]，并且 repository.actuator.enable 没有配置为true
-	 * 
+	 *
 	 * @param dataSourceName
 	 * @return
 	 */
@@ -357,10 +357,10 @@ public class ZRepositoryMain {
 		if (!SqlInvocationLogsConfigurationProperties.NAME.equals(dataSourceName)) {
 			return false;
 		}
-		
-		return Env.ENV == EnvEnum.ZFRAMEWORK && !ZContext
-				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE) ||
-				(Env.ENV == EnvEnum.SPRING && Env.ACTUATOR_ENABLE != true)
+
+		return ((Env.ENV == EnvEnum.ZFRAMEWORK) && !ZContext
+				.getBean(SqlInvocationLogsConfigurationProperties.class).getEnable().equals(Boolean.TRUE)) ||
+				((Env.ENV == EnvEnum.SPRING) && !Env.ACTUATOR_ENABLE)
 		;
 	}
 
@@ -529,7 +529,8 @@ public class ZRepositoryMain {
 
 		final List<String> fieldNameList = new ArrayList<>(fieldNameArray)
 				.stream()
-				.filter(StrUtil::isNotBlank)
+				.filter(x -> (x != null) && (x
+						.length() > 0))
 				.map(x -> x.length() == 1 ? x.toLowerCase() : Character.toLowerCase(x.charAt(0)) + x.substring(1))
 				.collect(Collectors.toList());
 
@@ -611,7 +612,8 @@ public class ZRepositoryMain {
 							+ "\r\n\t"
 							;
 			throw new ParameterCountDeclarationException(x1);
-		}else if (filedNameMethodNameOrder.size() < ps.length) {
+		}
+		if (filedNameMethodNameOrder.size() < ps.length) {
 			final List<String> pnl = Arrays.stream(ps).map(Parameter::getName).collect(Collectors.toList());
 
 			final String collect = d.getFiledNameMethodNameOrder().stream().map(ff -> {
@@ -685,7 +687,7 @@ public class ZRepositoryMain {
 	 *
 	 */
 	private static List<String> splitMethodNameToArray(final String zRepositoryMethodName) {
-		if (StrUtil.isEmpty(zRepositoryMethodName)) {
+		if (CharSequenceUtil.isEmpty(zRepositoryMethodName)) {
 			return Collections.emptyList();
 		}
 
@@ -763,7 +765,7 @@ public class ZRepositoryMain {
 		//		System.out.println("typeArray = " + Arrays.toString(typeArray));
 
 		final Set<ZMethod> zmSet = new LinkedHashSet<>();
-	
+
 		for (final Method method : ms) {
 
 			// FIXME 2024年5月19日 下午6:13:44 zhangzhen: debug 代码记得删除
@@ -822,20 +824,20 @@ public class ZRepositoryMain {
 
 			final String x = "\t" +body + "\n\t" + body2  + "\n\t" + methodS;
 			// FIXME 2025年9月22日 下午6:26:06 zhangzhen: debug
-			if(method.getName().equals("save")) {
+			if("save".equals(method.getName())) {
 				final int d = 0;
 			}
-			
+
 			zm.setBody(x);
 		}
-		
+
 		// 2025年9月16日 上午11:13:44 zhangzhen: 从groovy改用janino而新增的方法
 		zmSet.add(JM.addDeleteById(typeArray[1]));
 		zmSet.add(JM.addUpdate(typeArray[0]));
 		zmSet.add(JM.addSave(typeArray[0]));
 		zmSet.add(JM.addFindById(typeArray[1]));
 		zmSet.add(JM.addExistByIdById(typeArray[1]));
-		
+
 		return zmSet;
 	}
 
@@ -1171,7 +1173,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		final String methodNameF = StrUtil.count(joiner.toString(), DELIMITER) == 0
+		final String methodNameF = CharSequenceUtil.count(joiner.toString(), DELIMITER) == 0
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
 		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
@@ -1203,7 +1205,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		final String methodNameF = StrUtil.count(joiner.toString(), DELIMITER) == 0
+		final String methodNameF = CharSequenceUtil.count(joiner.toString(), DELIMITER) == 0
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
 		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
@@ -1311,7 +1313,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
-		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
+		final int ac = CharSequenceUtil.count(joiner.toString(), DELIMITER);
 
 		final String suMethodName =
 				ac == 0 ? "findByXXIsNullAndXX" : "findByXXIsNullAndXXAndXX";
@@ -1621,7 +1623,7 @@ public class ZRepositoryMain {
 		}
 		final String modeString = modeString(method);
 
-		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
+		final int ac = CharSequenceUtil.count(joiner.toString(), DELIMITER);
 
 		// FIXME 2024年5月18日 下午3:32:25 zhangzhen: byte[] 类型引起的问题 : 很多方法都有此问题，都要好好再测试byte[] 类型
 		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
@@ -2288,10 +2290,10 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		final Class<?> returnType2 = getReturnType(method);
-		
+
 		final String l = joiner.length()==0 ? "new  Object[]{}" : "new  Object[]{"+joiner+"}";
 //		final String l = joiner.length()==0 ? "new  Object[]{}" : joiner + ",new  Object[]{}";
-		
+
 
 		return "return " + SU.class.getName() + "." + subClassMethodName
 				+ "(" + className1 + "," + methodName1 + "," + modeString + ","
@@ -2378,7 +2380,7 @@ public class ZRepositoryMain {
 					);
 		}
 
-		final int c = StrUtil.count(sqlTemplate, "?");
+		final int c = CharSequenceUtil.count(sqlTemplate, "?");
 		if (c != method.getParameterCount()) {
 			throw new IllegalArgumentException(
 					"\r\n\t"
@@ -2529,7 +2531,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
+		final String methodName = CharSequenceUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
@@ -2578,7 +2580,7 @@ public class ZRepositoryMain {
 					SqlInvocationLogsConfigurationProperties.NAME);
 			return;
 		}
-		
+
 		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(dataSourceName).getZConnection(Mode.WRITE), dataSourceName);
 		checkZEntityPrimaryKey(typeClass, name, getPoolInstance(dataSourceName).getZConnection(Mode.READ), dataSourceName);
 
