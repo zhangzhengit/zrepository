@@ -914,7 +914,7 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByIdAndChar1AndNameLike".equals(method.getName())) {
+			if("findByIdAndChar1AndNameLikeAndMd5Like".equals(method.getName())) {
 				final int  x = 1;
 			}
 
@@ -1057,12 +1057,15 @@ public class ZRepositoryMain {
 			}
 
 
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLikeAndXXLike)) {
+				final int x
+				=1;
+				return findByXXAndXXAndXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXAndXXLikeAndXXLike);
+			}
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLike)) {
 				return findByXXAndXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXLikeAndXXLike);
 			}
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLike)) {
-				final int x
-				=1;
 				return findByXXAndXXAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXAndXXLike);
 			}
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXXLike)) {
@@ -2727,6 +2730,22 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByXXAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
+		+ joiner.toString() + ");";
+	}
+
+	private static String findByXXAndXXAndXXLikeAndXXLike(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getName() + ".findByXXAndXXAndXXLikeAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
 		+ joiner.toString() + ");";
 	}
 
