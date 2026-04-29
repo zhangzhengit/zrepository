@@ -661,12 +661,12 @@ public class ZRWrapper<T> {
 	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final String string) {
-		return this.addValue0(function, string, SQLOperatorEnum.LIKE);
+	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LIKE);
 	}
 
-	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final Character character) {
-		return this.addValue0(function, character, SQLOperatorEnum.LIKE);
+	public ZRWrapper<T> like(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.LIKE);
 	}
 
 	/**
@@ -678,15 +678,15 @@ public class ZRWrapper<T> {
 	 * 		wrapper.notLike(MyEntity::getName(),"张三李四");
 	 *
 	 * @param function
-	 * @param string
+	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final String string) {
-		return this.addValue0(function, string, SQLOperatorEnum.NOT_LIKE);
+	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NOT_LIKE);
 	}
 
-	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final Character character) {
-		return this.addValue0(function, character, SQLOperatorEnum.NOT_LIKE);
+	public ZRWrapper<T> notLike(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.NOT_LIKE);
 	}
 
 	/**
@@ -726,15 +726,15 @@ public class ZRWrapper<T> {
 	 * 		wrapper.endingWith(MyEntity::getName(),"张三李四");
 	 *
 	 * @param function
-	 * @param string
+	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final String string) {
-		return this.addValue0(function, string, SQLOperatorEnum.ENDING_WITH);
+	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.ENDING_WITH);
 	}
 
-	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final Character character) {
-		return this.addValue0(function, character, SQLOperatorEnum.ENDING_WITH);
+	public ZRWrapper<T> endingWith(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.ENDING_WITH);
 	}
 
 	/**
@@ -746,15 +746,15 @@ public class ZRWrapper<T> {
 	 * 		wrapper.startingWith(MyEntity::getName(),"张三李四");
 	 *
 	 * @param function
-	 * @param string
+	 * @param value
 	 * @return
 	 */
-	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final String string) {
-		return this.addValue0(function, string, SQLOperatorEnum.STARTING_WITH);
+	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final String value) {
+		return this.addValue0(function, value, SQLOperatorEnum.STARTING_WITH);
 	}
 
-	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final Character character) {
-		return this.addValue0(function, character, SQLOperatorEnum.STARTING_WITH);
+	public ZRWrapper<T> startingWith(final SerializableFunction<T, Object> function, final Character value) {
+		return this.addValue0(function, value, SQLOperatorEnum.STARTING_WITH);
 	}
 
 	/**
