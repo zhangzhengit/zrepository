@@ -914,7 +914,7 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByIdAndChar1AndNameLikeAndMd5Like".equals(method.getName())) {
+			if("findByIdAndF1AndChar1LikeAndMd5LikeAndNameLike".equals(method.getName())) {
 				final int  x = 1;
 			}
 
@@ -1052,14 +1052,18 @@ public class ZRepositoryMain {
 				return findByXXNotLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXNotLike);
 			}
 
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLikeAndXXLikeAndXXLike)) {
+				final int x = 1;
+				return findByXXAndXXAndXXLikeAndXXLikeAndXXLike(myZRClass, entityClass, className1, method,
+						MethodRegex.ByXXAndXXAndXXLikeAndXXLikeAndXXLike);
+			}
+
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLikeAndXXLike)) {
 				return findByXXAndXXLikeAndXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXLikeAndXXLikeAndXXLike);
 			}
 
 
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLikeAndXXLike)) {
-				final int x
-				=1;
 				return findByXXAndXXAndXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXAndXXLikeAndXXLike);
 			}
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLike)) {
@@ -2730,6 +2734,22 @@ public class ZRepositoryMain {
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + ".findByXXAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
+		+ joiner.toString() + ");";
+	}
+
+	private static String findByXXAndXXAndXXLikeAndXXLikeAndXXLike(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getName() + ".findByXXAndXXAndXXLikeAndXXLikeAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
 		+ joiner.toString() + ");";
 	}
 
