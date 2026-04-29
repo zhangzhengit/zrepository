@@ -48,6 +48,9 @@ public class MethodRegex {
 	public static final String GROUP_CountingByXXX = "countingBy.+";
 	public static final String GROUP_CountingByXXXNot = "countingBy.+Not";
 	public static final String GROUP_EXISTBYId = "existById";
+	/**
+	 * delete where id = ?
+	 */
 	public static final String GROUP_DeleteById = "deleteById";
 	public static final String GROUP_DeleteByIdIn = "deleteByIdIn";
 	public static final String GROUP_SAVEALL = "saveAll";
@@ -56,28 +59,78 @@ public class MethodRegex {
 	public static final String GROUP_FIND = "find";
 
 	public static final String GROUP_UPDATE = "update";
+
 	public static final String GROUP_FINDALL = "findAll";
 
+	/**
+	 * where a = ?
+	 */
 	public static final String GROUP_findByXX = "findBy.+";
+
+	/**
+	 * where a != ?
+	 */
 	public static final String GROUP_findByxxNot = "findBy.+Not";
 
+	/**
+	 * where a != ? and b = ? and c = ?
+	 */
 	public static final String GROUP_findByxxNotAndXXAndXX = "findBy.+NotAnd.+And.+";
+
+	/**
+	 * where a != ? and b = ?
+	 */
 	public static final String GROUP_findByxxNotAndXX = "findBy.+NotAnd.+";
+
+	/**
+	 * where a is not null
+	 */
 	public static final String GROUP_findByxxNotNull = "findBy.+NotNull";
+
+
+	// FIXME 2026年4月29日 10:18:49 zhangzhen : in 还没支持好
 	public static final String GROUP_findByxx_in = "findBy.+In";
 
-	public static final String GROUP_findByXXXEndingWith= "findBy.+EndingWith";
-	public static final String GROUP_findByXXXStartingWith= "findBy.+StartingWith";
+	/**
+	 * * where a like ? 这个?会组装为 %v的形式，前面带%
+	 */
+	public static final String GROUP_findByXXXEndingWith = "findBy.+EndingWith";
 
+	/**
+	 * where a like ? 这个?会组装为 v%的形式，后面带%
+	 */
+	public static final String GROUP_findByXXXStartingWith = "findBy.+StartingWith";
+
+	/**
+	 * where a >= ?
+	 */
 	public static final String GROUP_findByXXGreaterThanEquals = "findBy.+GreaterThanEquals";
 
+	/**
+	 * where a > ?
+	 */
 	public static final String GROUP_findByXXGreaterThan = "findBy.+GreaterThan";
+
+	/**
+	 * where a <= ?
+	 */
 	public static final String GROUP_findByXXLessThanEquals = "findBy.+LessThanEquals";
+
+	/**
+	 * where a < ?
+	 */
 	public static final String GROUP_findByXXLessThan = "findBy.+LessThan";
 
+	/**
+	 * where a like ?
+	 */
 	public static final String GROUP_findByXXLike = "findBy.+Like";
-	public static final String GROUP_findByXXLikeAndXXLike = "findBy.+LikeAnd.+Like";
 
+	/**
+	 * 两个LIKE
+	 * where a like ? and b like ?
+	 */
+	public static final String GROUP_findByXXLikeAndXXLike = "findBy.+LikeAnd.+Like";
 
 	public static final String GROUP_findByXXLikeAndXX = "findBy.+LikeAnd.+";
 	public static final String GROUP_findByXXLikeAndXXAndXX = "findBy.+LikeAnd.+And.+";
