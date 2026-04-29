@@ -909,13 +909,15 @@ public class ZRepositoryMain {
 
 		default:
 
-			if("findByNameLikeAndMd5Like".equals(method.getName())) {
-				final int  x = 1;
-			}
 
 			// default  ZR的子类声明的方法
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
+
+			if("findByIdAndNameLike".equals(method.getName())) {
+				final int  x = 1;
+			}
+
 
 			if (methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
 					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
@@ -1054,6 +1056,13 @@ public class ZRepositoryMain {
 				return findByXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLikeAndXXLike);
 			}
 
+
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLike)) {
+				final int x
+				=1;
+				return findByXXAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXX);
+			}
+
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLike)) {
 				return findByXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLike);
 			}
@@ -1132,8 +1141,9 @@ public class ZRepositoryMain {
 			if (methodNameRegex.matches(MethodRegex.findByXXAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYY);
 			}
-			if (methodNameRegex.matches(MethodRegex.GROUP_findByXX)) {
-				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXX);
+
+			if (methodNameRegex.matches(MethodRegex.ByXX)) {
+				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.ByXX);
 			}
 
 			// 最后面是@ZQuery自定义方法
@@ -2585,6 +2595,22 @@ public class ZRepositoryMain {
 		return method.getReturnType();
 	}
 
+	private static String findByXXAndXXLike(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getName() + ".findByXXAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
+		+ joiner.toString() + ");";
+	}
+
 	private static String findByXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
 			final Method method, final String methodRegex) {
 
@@ -3417,7 +3443,7 @@ public class ZRepositoryMain {
 		}
 
 		switch (methodRegex) {
-		case MethodRegex.findByXX:
+		case MethodRegex.ByXX:
 			final Map<Field, Integer> sMap = fl.stream().collect(Collectors.toMap(f -> f, f -> S.apply(f.getName(), sk2.get())));
 			final Set<Entry<Field, Integer>> entrySet = sMap.entrySet();
 			final ArrayList<Entry<Field, Integer>> l = Lists.newArrayList(entrySet);
@@ -3428,7 +3454,7 @@ public class ZRepositoryMain {
 					.collect(Collectors.toList());
 
 			final List<String> possibleML = ml.stream().map(
-					e -> MethodRegex.findByXX.replaceAll("\\.\\+", ZFieldConverter.toMethodName(e.getKey().getName())))
+					e -> MethodRegex.ByXX.replaceAll("\\.\\+", ZFieldConverter.toMethodName(e.getKey().getName())))
 					.collect(Collectors.toList());
 
 			return possibleML;
