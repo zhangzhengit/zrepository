@@ -1672,6 +1672,64 @@ public class SU {
 		return null;
 	}
 
+	public static <T> List<T> findByXXAndXXAndXXLike(final String zrSubClassName, final String callerMethodName,final Mode mode,
+			final Class<T> entityClass, final Class<T> returnType,final String sql,
+			final Object... fieldArray) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
+		final ZC2 zc = getZCAndSetAutoCommitFALSEIfPG(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+
+			final String select = gSelectFromReturnType(entityClass, returnType);
+			final String s = sql.replace ( MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, s, fieldArray, zc);
+			final String s2 = sua.getSql();
+
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}.{}：{}],[{}]", zrSubClassName, callerMethodName, s2,
+						fieldArray[0] + ","
+								+ fieldArray[1] +','
+								+ "%" + fieldArray[2] + "%"
+						);
+			}
+
+			ps = connection.prepareStatement(s2);
+
+			setXX_fieldValue(fieldArray[0], ps, 1);
+			setXX_fieldValue(fieldArray[1], ps, 2);
+			setXX_fieldValue("%" + fieldArray[2] + "%", ps, 3);
+
+
+			rs = ps.executeQuery();
+
+			final ResultSetMetaData metaData = rs.getMetaData();
+
+			final List r = new ArrayList<>();
+			while (rs.next()) {
+				final int count = metaData.getColumnCount();
+				final Object t = newT(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count);
+				r.add(t);
+			}
+
+			return r;
+		} catch (SQLException | SecurityException e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			close(rs, ps);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+		}
+
+		return Collections.emptyList();
+	}
 	public static <T> List<T> findByXXAndXX(final String zrSubClassName, final String callerMethodName,final Mode mode,
 			final Class<T> entityClass, final Class<T> returnType,final String sql, final Object... fieldArray) {
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);

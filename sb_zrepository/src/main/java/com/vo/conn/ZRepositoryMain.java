@@ -914,7 +914,7 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByIdAndMd5LikeAndNameLike".equals(method.getName())) {
+			if("findByIdAndChar1AndNameLike".equals(method.getName())) {
 				final int  x = 1;
 			}
 
@@ -1053,12 +1053,17 @@ public class ZRepositoryMain {
 			}
 
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLikeAndXXLike)) {
-				final int x
-				=1;
 				return findByXXAndXXLikeAndXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXLikeAndXXLikeAndXXLike);
 			}
+
+
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLike)) {
 				return findByXXAndXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXLikeAndXXLike);
+			}
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLike)) {
+				final int x
+				=1;
+				return findByXXAndXXAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXAndXXLike);
 			}
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXXLike)) {
 				return findByXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLikeAndXXLike);
@@ -1078,8 +1083,6 @@ public class ZRepositoryMain {
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXX)) {
 				return findByXXLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXLikeAndXX);
 			}
-
-
 
 			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1,
@@ -1143,6 +1146,7 @@ public class ZRepositoryMain {
 			if (methodNameRegex.matches(MethodRegex.findByXXAndYYAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYYAndYY);
 			}
+
 			if (methodNameRegex.matches(MethodRegex.findByXXAndYY)) {
 				return findByXX(myZRClass, entityClass, className1, method, MethodRegex.findByXXAndYY);
 			}
@@ -2726,6 +2730,21 @@ public class ZRepositoryMain {
 		+ joiner.toString() + ");";
 	}
 
+	private static String findByXXAndXXAndXXLike(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getName() + ".findByXXAndXXAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
+		+ joiner.toString() + ");";
+	}
 	private static String findByXX(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
 			final Method method, final String methodRegex) {
 

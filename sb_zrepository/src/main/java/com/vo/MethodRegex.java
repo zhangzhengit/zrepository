@@ -78,7 +78,6 @@ public class MethodRegex {
 	 * where a = ? and b like ? and c like ?
 	 */
 	public static final String ByXXAndXXLikeAndXXLike = "findBy.+And.+LikeAnd.+Like";
-	// FIXME 2026年4月29日 10:21:52 zhangzhen : 写这个
 
 	/**
 	 * 一个=和三个like
@@ -86,6 +85,16 @@ public class MethodRegex {
 	 *
 	 */
 	public static final String ByXXAndXXLikeAndXXLikeAndXXLike = "findBy.+And.+LikeAnd.+LikeAnd.+Like";
+
+	// FIXME 2026年4月29日 10:21:52 zhangzhen : 写这个
+
+	/**
+	 * 两个=和一个like
+	 * where a = ? and b = ? and c like ?
+	 */
+	public static final String ByXXAndXXAndXXLike = "findBy.+And.+And.+Like";
+
+
 
 	/**
 	 * where a != ?
@@ -285,6 +294,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXLikeAndXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXAndXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDOptionalBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsEmpty = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmptyAndXX = new LinkedHashMap<>();
@@ -449,6 +459,9 @@ public class MethodRegex {
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ? AND @5 = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ?)");
+
+		REGEX_MAP_FINDBYXXAndXXAndXXLike.put(ByXXAndXXAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 = ? AND @3 LIKE ?");
+
 		REGEX_MAP_FINDBYXX.put(findByXXAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ?)");
 
 		REGEX_MAP_FINDBYXXAndXXLikeAndXXLikeAndXXLike.put(ByXXAndXXLikeAndXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 LIKE ? AND @3 LIKE ? AND @4 LIKE ?");
@@ -519,6 +532,7 @@ public class MethodRegex {
 		R_M.put(ByXXAndXXLikeAndXXLike, REGEX_MAP_FINDBYXXAndXXLikeAndXXLike);
 		R_M.put(GROUP_findByXXLikeAndXXLike, REGEX_MAP_findByXXXLikeAndXXLike);
 		R_M.put(GROUP_findByXXLikeAndXX, REGEX_MAP_findByXXXLikeAndXX);
+		R_M.put(ByXXAndXXAndXXLike, REGEX_MAP_FINDBYXXAndXXAndXXLike);
 		R_M.put(ByXXAndXXLike, REGEX_MAP_FINDBYXXAndXXLike);
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
@@ -530,6 +544,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByxxNotAndXX, REGEX_MAP_findByXXNotAndXX);
 		R_M.put(GROUP_findByxxNot, REGEX_MAP_findByXXNot);
 		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
+
 		R_M.put(GROUP_findByXXAndXX, REGEX_MAP_FINDBYXX);
 
 		R_M.put(ByXX, REGEX_MAP_FINDBYXX);
@@ -651,6 +666,7 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(existById);
 
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXGreaterThan);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXAndXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXLikeAndXXLikeAndXXLike);
