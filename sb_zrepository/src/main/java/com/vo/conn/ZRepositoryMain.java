@@ -918,11 +918,11 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByF1AndNameLikeOrderByIdDescLimit".equals(method.getName())) {
+			if("findByF1AndNameLikeAndMd5LikeOrderByCreateTimeLimit".equals(method.getName())) {
 				final int  x = 1;
 			}
 
-			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLikeOrderByXXLimit)) {
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLikeOrderByXXDescLimit) || methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLikeOrderByXXLimit)) {
 				return findByXXAndXXLikeAndXXLikeOrderByXXLimit
 						(myZRClass, entityClass, className1, method, "findByXXAndXXLikeAndXXLikeOrderByXXLimit");
 			}
