@@ -914,7 +914,7 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByIdAndF1AndChar1LikeAndMd5LikeAndNameLike".equals(method.getName())) {
+			if("findByF1AndIdAndChar1AndMd5Like".equals(method.getName())) {
 				final int  x = 1;
 			}
 
@@ -1052,8 +1052,12 @@ public class ZRepositoryMain {
 				return findByXXNotLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXNotLike);
 			}
 
-			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLikeAndXXLikeAndXXLike)) {
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXAndXXLike)) {
 				final int x = 1;
+				return findByXXAndXXAndXXAndXXLike(myZRClass, entityClass, className1, method,
+						MethodRegex.ByXXAndXXAndXXAndXXLike);
+			}
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXAndXXLikeAndXXLikeAndXXLike)) {
 				return findByXXAndXXAndXXLikeAndXXLikeAndXXLike(myZRClass, entityClass, className1, method,
 						MethodRegex.ByXXAndXXAndXXLikeAndXXLikeAndXXLike);
 			}
@@ -2737,6 +2741,21 @@ public class ZRepositoryMain {
 		+ joiner.toString() + ");";
 	}
 
+	private static String findByXXAndXXAndXXAndXXLike(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
+			final Method method, final String methodRegex) {
+
+		checkParameterTypeAndName(myZRClass, entityClass, method, methodRegex);
+
+		final StringJoiner joiner = getParameterNameFromMethod(method);
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getName() + ".findByXXAndXXAndXXAndXXLike(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
+		+ joiner.toString() + ");";
+	}
 	private static String findByXXAndXXAndXXLikeAndXXLikeAndXXLike(final Class<?> myZRClass, final Class<?> entityClass, final String className1,
 			final Method method, final String methodRegex) {
 
