@@ -909,6 +909,10 @@ public class ZRepositoryMain {
 
 		default:
 
+			if("findByNameLikeAndMd5Like".equals(method.getName())) {
+				final int  x = 1;
+			}
+
 			// default  ZR的子类声明的方法
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
@@ -1046,6 +1050,14 @@ public class ZRepositoryMain {
 				return findByXXNotLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXNotLike);
 			}
 
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXXLike)) {
+				return findByXXLikeAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLikeAndXXLike);
+			}
+
+			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLike)) {
+				return findByXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLike);
+			}
+
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLikeAndXXAndXX)) {
 				return findByXXLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXLikeAndXXAndXX);
 			}
@@ -1053,9 +1065,7 @@ public class ZRepositoryMain {
 				return findByXXLikeAndXX(myZRClass, entityClass, className1, methodName1, method, MethodRegex.GROUP_findByXXLikeAndXX);
 			}
 
-			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLike)) {
-				return findByXXLike(myZRClass, entityClass, className1, method, MethodRegex.GROUP_findByXXLike);
-			}
+
 
 			if (methodNameRegex.matches(MethodRegex.findByXXOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYYOrYY)) {
 				return findByXXOrYY(myZRClass, entityClass, className1,
@@ -1924,8 +1934,28 @@ public class ZRepositoryMain {
 		+ modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
+	private static String findByXXLikeAndXXLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
+		return findByXXLikeAndXXLike0(myZRClass, entityClass, className1, method, methodRegex);
+	}
 	private static String findByXXLike(final Class<?> myZRClass, final Class entityClass, final String className1, final Method method, final String methodRegex) {
 		return findByXXLike0(myZRClass, entityClass, className1, method, methodRegex);
+	}
+
+	private static String findByXXLikeAndXXLike0(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
+		checkFindByXXLikeAndXXLike(myZRClass, method, methodRegex);
+
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+
+		final String modeString = modeString(method);
+
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+
+		return "return " + SU.class.getName() + ".findByXXLikeAndXXLike(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
 	private static String findByXXLike0(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method, final String methodRegex) {
@@ -1945,6 +1975,37 @@ public class ZRepositoryMain {
 		+ modeString + ",classType," + returnType.getName()+ ".class"  + ",sql," + joiner.toString() + ");";
 	}
 
+	private static void checkFindByXXLikeAndXXLike(final Class<?> myZRClass, final Method method, final String methodRegex) {
+		if ((!method.getParameters()[0].getType().equals(String.class)
+				&& !method.getParameters()[0].getType().equals(Character.class))
+			||
+
+			(!method.getParameters()[1].getType().equals(String.class)
+					&& !method.getParameters()[1].getType().equals(Character.class))
+
+				) {
+			final String xxx =
+
+					"\r\n\t"
+							+ methodRegex + " 声明式方法"
+							+ "\r\n\t"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName()
+							+ "] 参数类型必须为["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName()
+							+ "],"
+							+ "\r\n\t"
+							+ "当前为" + method.getParameters()[0].getType().getName()
+								+ " 和 " +  method.getParameters()[1].getType().getName()
+							+ "\r\n\t"
+							+ "请检查代码:修改参数类型为["
+							+ String.class.getSimpleName()
+							+ "/" + Character.class.getSimpleName() + "]"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(xxx);
+		}
+	}
 	private static void checkFindByXXLike(final Class<?> myZRClass, final Method method, final String methodRegex) {
 		if (!method.getParameters()[0].getType().equals(String.class) && !method.getParameters()[0].getType().equals(Character.class)) {
 			final String xxx =

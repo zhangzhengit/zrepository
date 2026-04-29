@@ -76,6 +76,8 @@ public class MethodRegex {
 	public static final String GROUP_findByXXLessThan = "findBy.+LessThan";
 
 	public static final String GROUP_findByXXLike = "findBy.+Like";
+	public static final String GROUP_findByXXLikeAndXXLike = "findBy.+LikeAnd.+Like";
+
 
 	public static final String GROUP_findByXXLikeAndXX = "findBy.+LikeAnd.+";
 	public static final String GROUP_findByXXLikeAndXXAndXX = "findBy.+LikeAnd.+And.+";
@@ -181,7 +183,6 @@ public class MethodRegex {
 	public static final String deleteByIdIn = GROUP_DeleteByIdIn;
 	public static final String deleteAll = "deleteAll";
 
-	public static final String findByXXLike = GROUP_findByXXLike;
 	// IsNull
 	public static final String findByXXIsNull = GROUP_findByXXIsNull;
 
@@ -224,6 +225,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_findByXXXNotLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLikeAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXLikeAndXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXEndingWith = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_StartingWith = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXNotAndXX = new LinkedHashMap<>();
@@ -357,7 +359,10 @@ public class MethodRegex {
 		REGEX_MAP_findByXXXLikeAndXX.put(GROUP_findByXXLikeAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 LIKE ? AND @2 = ?)");
 
 		// findByXXXLike
-		REGEX_MAP_findByXXXLike.put(findByXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ?");
+		REGEX_MAP_findByXXXLike.put(GROUP_findByXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ?");
+
+		// findByXXXLikeAndXXLike
+		REGEX_MAP_findByXXXLikeAndXXLike.put(GROUP_findByXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ? AND  @2 LIKE ?");
 
 		// finByXX
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ? AND @5 = ? AND @6 = ? AND @7 = ? AND @8 = ? AND @9 = ? AND @10 = ? AND @11 = ?)");
@@ -430,6 +435,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXNotLikeAndXXAndXX, REGEX_MAP_findByXXXNotLikeAndXXAndXX);
 		R_M.put(GROUP_findByXXNotLikeAndXX, REGEX_MAP_findByXXXNotLikeAndXX);
 		R_M.put(GROUP_findByXXNotLike, REGEX_MAP_findByXXXNotLike);
+		R_M.put(GROUP_findByXXLikeAndXXLike, REGEX_MAP_findByXXXLikeAndXXLike);
 		R_M.put(GROUP_findByXXLikeAndXX, REGEX_MAP_findByXXXLikeAndXX);
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
@@ -530,7 +536,7 @@ public class MethodRegex {
 		return false;
 	}
 
-	private final static Set<String> ANALYSIS_BY_METHOD_PARAMETERS = Sets.newConcurrentHashSet();
+	private final static Set<String> ANALYSIS_BY_METHOD_PARAMETERS = Sets.newLinkedHashSet();
 	private final static Set<String> ANALYSIS_BY_ZENTITY_FIELD =  Sets.newConcurrentHashSet();
 	static {
 		// FIXME 2024年5月14日 下午9:04:36 zhangzhen: 规则分两个组；一个是根据method.getps 的个数、类型、名称来解析的比如简单的findByXX
@@ -574,12 +580,13 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLikeAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLikeAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXX);
-		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThanEquals);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXStartingWith);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxxNotAndXXAndXX);
