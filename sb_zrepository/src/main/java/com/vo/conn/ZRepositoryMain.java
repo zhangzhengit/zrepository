@@ -922,7 +922,12 @@ public class ZRepositoryMain {
 				final int  x = 1;
 			}
 
-			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeOrderByXXDescLimit)) {
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeAndXXLikeOrderByXXLimit)) {
+				return findByXXAndXXLikeAndXXLikeOrderByXXLimit
+						(myZRClass, entityClass, className1, method, "findByXXAndXXLikeAndXXLikeOrderByXXLimit");
+			}
+
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeOrderByXXDescLimit) || methodNameRegex.matches(MethodRegex.ByXXAndXXLikeOrderByXXDescLimit)) {
 				return findByXXAndXXLikeOrderByXXLimit
 						(myZRClass, entityClass, className1, method, "findByXXAndXXLikeOrderByXXDescLimit");
 			}
@@ -1561,6 +1566,31 @@ public class ZRepositoryMain {
 				+ ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
+	private static String findByXXAndXXLikeAndXXLikeOrderByXXLimit(final Class<?> myZRClass,
+			final Class<?> entityClass, final String className1,
+			final Method method, final String suName) {
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+		checkLimit2PCOk(myZRClass, method);
+
+		final D d = findFieldName(entityClass, method.getName());
+
+		checkLimitPC(myZRClass, entityClass, method, d);
+
+		// 前面的除了OrderByXX和limit和offset之外的参数
+		checkLimitPTypeAndName(entityClass, method, d);
+
+		// 最后面必须是固定的 (Integer limit,Inetger offset)参数
+		checkLimitLast2Param(method);
+
+		final String modeString = modeString(method);
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getName() + "."+suName+"(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
+	}
 	private static String findByXXAndXXLikeOrderByXXLimit(final Class<?> myZRClass,
 			final Class<?> entityClass, final String className1,
 			final Method method, final String suName) {
@@ -1639,15 +1669,6 @@ public class ZRepositoryMain {
 								+ "\r\n\t"
 								+ "方法名[" + f.getName() + "]"
 									+ "和参数名[" + method.getParameters()[k].getName() + "]不匹配,请修改为一致"
-								+ "\r\n\t"
-								+ "按当前方法声明,第["+(k+1)+"]个参数类型必须为[" + f.getType().getSimpleName() + "]"
-								+ ",当前为[" + method.getParameters()[k].getType().getSimpleName() + "]"
-								+ "\r\n\t"
-								+ "请检查代码:替换掉方法声明中的["+fieldName+"],"
-								+ "或者修改参数列表中的["
-								+ method.getParameters()[k].getType().getSimpleName() + " " + method.getParameters()[k].getName()+ "]类型为"
-								+ "[" + f.getType().getSimpleName() + "]"
-								+ "\r\n\t"
 								;
 				throw new IllegalArgumentException(m1);
 
