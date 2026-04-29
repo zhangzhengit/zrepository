@@ -83,6 +83,11 @@ public class MethodRegex {
 	public static final String ByXXAndXXLikeOrderByXXLimit = "findBy.+And.+LikeOrderBy.+Limit";
 
 	/**
+	 * where a = ? and b like ? order by X desc limit n offset 0
+	 */
+	public static final String ByXXAndXXLikeOrderByXXDescLimit = "findBy.+And.+LikeOrderBy.+DescLimit";
+
+	/**
 	 * 一个=和两个like
 	 * where a = ? and b like ? and c like ?
 	 */
@@ -299,6 +304,7 @@ public class MethodRegex {
 
 	public final static HashMap<String, HashMap<String, String>> R_M = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXDescLimit = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXAndXXLikeOrderByXXDescLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXAndXXLikeOrderByXXLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_Count = new LinkedHashMap<>();
@@ -360,6 +366,9 @@ public class MethodRegex {
 
 	static {
 
+		// findByXXAndXXLikeOrderByXXDescLimit
+		REGEX_MAP_findByXXAndXXLikeOrderByXXDescLimit.put(ByXXAndXXLikeOrderByXXLimit, SELECT + " * " + FROM
+				+ " TABLE_NAME " + WHERE + " (@1 = ? AND @2 LIKE ?) ORDER BY @3 DESC LIMIT ? OFFSET ?");
 		// findByXXAndXXLikeOrderByXXLimit
 		REGEX_MAP_findByXXAndXXLikeOrderByXXLimit.put(ByXXAndXXLikeOrderByXXLimit, SELECT + " * " + FROM
 				+ " TABLE_NAME " + WHERE + " (@1 = ? AND @2 LIKE ?) ORDER BY @3 ASC LIMIT ? OFFSET ?");
@@ -550,6 +559,7 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXGreaterThanEquals, REGEX_MAP_GreaterThanEquals);
 		R_M.put(GROUP_findByXXGreaterThan, REGEX_MAP_GreaterThan);
 		R_M.put(GROUP_findByXXLessThanEquals, REGEX_MAP_LessThanEquals);
+		R_M.put(ByXXAndXXLikeOrderByXXDescLimit, REGEX_MAP_findByXXAndXXLikeOrderByXXDescLimit);
 		R_M.put(ByXXAndXXLikeOrderByXXLimit, REGEX_MAP_findByXXAndXXLikeOrderByXXLimit);
 		R_M.put(GROUP_findByXXOrderByXXDescLimit, REGEX_MAP_findByXXOrderByXXDescLimit);
 		R_M.put(findByXXAndXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
@@ -780,6 +790,7 @@ public class MethodRegex {
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXAndXXLikeOrderByXXDescLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXAndXXLikeOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXOrderByXXLimit);
 

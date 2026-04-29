@@ -918,13 +918,17 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByF1AndMd5LikeOrderByIdLimit".equals(method.getName())) {
+			if("findByF1AndNameLikeOrderByIdDescLimit".equals(method.getName())) {
 				final int  x = 1;
 			}
 
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeOrderByXXDescLimit)) {
+				return findByXXAndXXLikeOrderByXXLimit
+						(myZRClass, entityClass, className1, method, "findByXXAndXXLikeOrderByXXDescLimit");
+			}
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeOrderByXXLimit)) {
 				return findByXXAndXXLikeOrderByXXLimit
-						(myZRClass, entityClass, className1, method);
+						(myZRClass, entityClass, className1, method, "findByXXAndXXLikeOrderByXXLimit");
 			}
 
 			if (methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
@@ -1559,7 +1563,7 @@ public class ZRepositoryMain {
 
 	private static String findByXXAndXXLikeOrderByXXLimit(final Class<?> myZRClass,
 			final Class<?> entityClass, final String className1,
-			final Method method) {
+			final Method method, final String suName) {
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {
 			joiner.add(parameter.getName());
@@ -1579,7 +1583,7 @@ public class ZRepositoryMain {
 		final String modeString = modeString(method);
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final String methodName1 = "\"" + method.getName() + "\"";
-		return "return " + SU.class.getName() + ".findByXXAndXXLikeOrderByXXLimit(" + className1 + "," + methodName1 + ","
+		return "return " + SU.class.getName() + "."+suName+"(" + className1 + "," + methodName1 + ","
 		+ modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
