@@ -99,6 +99,10 @@ import cn.hutool.core.util.StrUtil;
 // findByNameIsEmtpyAndName 即：字段重复，这个例子是特殊情况，显然不可能查出来值，是否启动时提示来避免这种情况？
 public class ZRepositoryMain {
 
+	/**
+	 * OrderByXXLimit 的方法最小参数(2) (Integer limit,Integer offset)这两个
+	 */
+	private static final int OrderByXXLimit_MIN_P_C = 2;
 	private static final int findByXXIsNullAndXXIsNullAndXXAndXX_PARAMETER_SIZE = 2;
 	private static final int findByXXIsNullAndXXIsNullAndXX_PARAMETER_SIZE = 1;
 	private static final int findByXXIsNullAndXXAndXXAndXX_PARAMETER_SIZE = 3;
@@ -914,10 +918,14 @@ public class ZRepositoryMain {
 			final MethodSQL methodSQL = MethodRegex.check(method.getName(), method);
 			final String methodNameRegex = methodSQL.getMethodName();
 
-			if("findByF1AndChar1AndIdAndMd5LikeAndNameLike".equals(method.getName())) {
+			if("findByF1AndMd5LikeOrderByIdLimit".equals(method.getName())) {
 				final int  x = 1;
 			}
 
+			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLikeOrderByXXLimit)) {
+				return findByXXAndXXLikeOrderByXXLimit
+						(myZRClass, entityClass, className1, method);
+			}
 
 			if (methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
 					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit)
@@ -931,7 +939,7 @@ public class ZRepositoryMain {
 					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXAndXXOrderByXXLimit)
 					|| methodNameRegex.matches(MethodRegex.findByXXAndXXAndXXOrderByXXLimit)
 					|| methodNameRegex.matches(MethodRegex.findByXXAndXXOrderByXXLimit)
-					|| methodNameRegex.matches(MethodRegex.GROUP_findByXXOrderByXXLimit)) {
+					|| methodNameRegex.matches(MethodRegex.ByXXOrderByXXLimit)) {
 				return findByXXOrderByXXDescLimit(myZRClass, entityClass, className1, method);
 			}
 
@@ -1085,7 +1093,7 @@ public class ZRepositoryMain {
 			}
 
 			if (methodNameRegex.matches(MethodRegex.ByXXAndXXLike)) {
-				return findByXXAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXX);
+				return findByXXAndXXLike(myZRClass, entityClass, className1, method, MethodRegex.ByXXAndXXLike);
 			}
 
 			if (methodNameRegex.matches(MethodRegex.GROUP_findByXXLike)) {
@@ -1549,6 +1557,172 @@ public class ZRepositoryMain {
 				+ ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
 	}
 
+	private static String findByXXAndXXLikeOrderByXXLimit(final Class<?> myZRClass,
+			final Class<?> entityClass, final String className1,
+			final Method method) {
+		final StringJoiner joiner = new StringJoiner(DELIMITER);
+		for (final Parameter parameter : method.getParameters()) {
+			joiner.add(parameter.getName());
+		}
+		checkLimit2PCOk(myZRClass, method);
+
+		final D d = findFieldName(entityClass, method.getName());
+
+		checkLimitPC(myZRClass, entityClass, method, d);
+
+		// 前面的除了OrderByXX和limit和offset之外的参数
+		checkLimitPTypeAndName(entityClass, method, d);
+
+		// 最后面必须是固定的 (Integer limit,Inetger offset)参数
+		checkLimitLast2Param(method);
+
+		final String modeString = modeString(method);
+		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
+		final String methodName1 = "\"" + method.getName() + "\"";
+		return "return " + SU.class.getName() + ".findByXXAndXXLikeOrderByXXLimit(" + className1 + "," + methodName1 + ","
+		+ modeString + ",classType," + returnType.getName() + ".class" + ",sql," + joiner.toString() + ");";
+	}
+
+	private static void checkLimitPC(final Class<?> myZRClass, final Class<?> entityClass, final Method method,
+			final D d) {
+		if (((method.getParameters().length - 1)) != (d.getFiledNameMethodNameOrder().size())) {
+			final StringJoiner fnj = new StringJoiner(",");
+			for(int k =0;k<(d.getFiledNameMethodNameOrder().size()-1);k++) {
+				final String fieldName = d.getFiledNameMethodNameOrder().get(k);
+				final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+				final Field f = getDeclaredField(entityClass, javaFieldName);
+
+				fnj.add(f.getType().getSimpleName() + " " + javaFieldName);
+			}
+
+			final String m1 =
+					"\r\n\t"
+							+ "findByXXOrderByXXLimit/findByXXOrderByXXDescLimit 声明式方法"
+							+ "\r\n\t"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须有且只有["+((d.getFiledNameMethodNameOrder().size() + findByXXOrderByXXDescLimit_Basic_PSIZE) - 1)+"]个参数,"
+							+ "形式为"
+							+ "\r\n\t"
+							+ method.getName() + "("+fnj+",Integer limit,Integer offset)"
+							+ "\r\n\t"
+							+ "当前有[" + method.getParameterCount() + "]个,请检查代码"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+	}
+
+	private static void checkLimitPTypeAndName(final Class<?> entityClass, final Method method, final D d) {
+		for (int k = 0; k < (d.getFiledNameMethodNameOrder().size() - 1); k++) {
+			final String fieldName = d.getFiledNameMethodNameOrder().get(k);
+			final String javaFieldName = ZFieldConverter.toJavaField(ZFieldConverter.toDbField(fieldName));
+			final Field f = getDeclaredField(entityClass, javaFieldName);
+			if (!f.getName().equals(method.getParameters()[k].getName())) {
+
+				final int x = 20;
+
+				final StringJoiner fnj = new StringJoiner(",");
+				for(int kx =0;kx<(method.getParameters().length);kx++) {
+					final String fieldNamex = method.getParameters()[kx].getName();
+					fnj.add(method.getParameters()[kx].getType().getSimpleName() + " " + fieldNamex);
+				}
+
+				final String m1 =
+						"\r\n\t"
+								+ "明式方法参数名称错误:"
+								+ "\r\n\t"
+								+ method.getName() + "(" + fnj + ")"
+								+ "\r\n\t"
+								+ "方法名[" + f.getName() + "]"
+									+ "和参数名[" + method.getParameters()[k].getName() + "]不匹配,请修改为一致"
+								+ "\r\n\t"
+								+ "按当前方法声明,第["+(k+1)+"]个参数类型必须为[" + f.getType().getSimpleName() + "]"
+								+ ",当前为[" + method.getParameters()[k].getType().getSimpleName() + "]"
+								+ "\r\n\t"
+								+ "请检查代码:替换掉方法声明中的["+fieldName+"],"
+								+ "或者修改参数列表中的["
+								+ method.getParameters()[k].getType().getSimpleName() + " " + method.getParameters()[k].getName()+ "]类型为"
+								+ "[" + f.getType().getSimpleName() + "]"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m1);
+
+			}
+
+			if (!f.getType().equals(method.getParameters()[k].getType())) {
+
+				final StringJoiner fnj = new StringJoiner(",");
+				for(int kx =0;kx<(method.getParameters().length);kx++) {
+					final String fieldNamex = method.getParameters()[kx].getName();
+					fnj.add(method.getParameters()[kx].getType().getSimpleName() + " " + fieldNamex);
+				}
+
+				final String m1 =
+						"\r\n\t"
+								+ "findByXXOrderByXXLimit/findByXXOrderByXXDescLimit 声明式方法参数类型错误:"
+								+ "\r\n\t"
+								+ method.getName() + "(" + fnj + ")"
+								+ "\r\n\t"
+								+ "按当前方法声明,第["+(k+1)+"]个参数类型必须为[" + f.getType().getSimpleName() + "]"
+								+ ",当前为[" + method.getParameters()[k].getType().getSimpleName() + "]"
+								+ "\r\n\t"
+								+ "请检查代码:替换掉方法声明中的["+fieldName+"],"
+								+ "或者修改参数列表中的["
+								+ method.getParameters()[k].getType().getSimpleName() + " " + method.getParameters()[k].getName()+ "]类型为"
+								+ "[" + f.getType().getSimpleName() + "]"
+								+ "\r\n\t"
+								;
+				throw new IllegalArgumentException(m1);
+			}
+		}
+	}
+
+	private static void checkLimit2PCOk(final Class<?> myZRClass, final Method method) {
+		final int pC = method.getParameterCount();
+		if (pC < OrderByXXLimit_MIN_P_C) {
+			final String m1 =
+					"\r\n\t"
+							+ "声明式方法"
+							+ "\r\n\t"
+							+ "[" + myZRClass.getSimpleName() + "." + method.getName() + "]"
+							+ "\r\n\t"
+							+ "必须存在形式为 (Integer limit,Integer offset)的参数"
+							+ "\r\n\t"
+							+ "请修改代码："
+							+ "\r\n\t"
+							+ "添加(Integer limit,Integer offset)参数"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+	}
+
+	private static void checkLimitLast2Param(final Method method) {
+		if (!method.getParameters()[method.getParameters().length - 2].getType().equals(Integer.class)
+				|| !method.getParameters()[method.getParameters().length - 1].getType().equals(Integer.class)) {
+			final String m1 =
+					"\r\n\t"
+							+ "findByXXOrderByXXLimit/findByXXOrderByXXDescLimit 声明式方法参数类型错误:"
+							+ "\r\n\t"
+							+ method.getName()
+							+ "\r\n\t"
+							+ "最后面两个参数必须固定为(Integer limit,Integer offset)的形式,"
+							+ "\r\n\t"
+							+ "类型必须为[" + Integer.class.getSimpleName() + "],名称推荐统一为limit和offset"
+							+ ",当前为(" +
+							method.getParameters()[method.getParameters().length - 2].getType().getSimpleName()
+							+ " " + method.getParameters()[method.getParameters().length - 2].getName()
+							+ ","
+							+ method.getParameters()[method.getParameters().length - 1].getType().getSimpleName()
+							+ " "
+							+ method.getParameters()[method.getParameters().length - 1].getName()
+							+ ")"
+							+ "\r\n\t"
+							+ "请检查代码:修正类型为[" + Integer.class.getSimpleName() + "]"
+							+ "\r\n\t"
+							;
+			throw new IllegalArgumentException(m1);
+		}
+	}
 	private static String findByXXOrderByXXDescLimit(final Class<?> myZRClass, final Class<?> entityClass, final String className1, final Method method) {
 		final StringJoiner joiner = new StringJoiner(DELIMITER);
 		for (final Parameter parameter : method.getParameters()) {

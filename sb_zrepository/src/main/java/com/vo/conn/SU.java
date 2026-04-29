@@ -3482,7 +3482,68 @@ public class SU {
 		return 0L;
 	}
 
-	//	public static <T> List<T> findByXXOrderByXXLimit(final Mode mode, final Class<T> cls,
+	public static <T> List<T> findByXXAndXXLikeOrderByXXLimit(final String zrSubClassName, 
+			final String callerMethodName, final Mode mode, final Class<T> entityClass,
+			final Class<T> returnType, final String sql, final Object... fieldV) {
+		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
+		final ZC2 zc = getZCAndSetAutoCommitFALSEIfPG(mode, dataSourceName);
+		final Connection connection = zc.getZConnection().getConnection();
+		
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			
+			final String select = gSelectFromReturnType(entityClass, returnType);
+			final String sqlColumn = sql.replace(MethodRegex.SELECT + " *", MethodRegex.SELECT + Sort.SPACE + select);
+			
+			final SUA sua = excludedDeletedHandler(entityClass, null, returnType, sqlColumn, fieldV, zc);
+			final String s = sua.getSql();
+			
+			if (isShowSQL(dataSourceName)) {
+				LOG.info("[{}.{}：{}],[{}]", zrSubClassName, callerMethodName, s,
+						fieldV[0] + ","
+						+ "%" + fieldV[1] + "%,"
+						+ fieldV[2] + ","
+						+ fieldV[3]
+						);
+			}
+			
+			ps = connection.prepareStatement(s);
+			
+			setXX_fieldValue(fieldV[0], ps, 1);
+			setXX_fieldValue("%" + fieldV[1] + "%", ps, 2);
+			setXX_fieldValue(fieldV[2], ps, 3);
+			setXX_fieldValue(fieldV[3], ps, 4);
+			
+			rs = ps.executeQuery();
+			
+			final ResultSetMetaData metaData = rs.getMetaData();
+			
+			final List r = new  ArrayList<>();
+			
+			final int count = metaData.getColumnCount();
+			final FI tcInfo = getTCInfo(returnType, metaData, count);
+			while (rs.next()) {
+				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count, tcInfo);
+				r.add(t);
+			}
+			
+			return r;
+			
+		} catch (SQLException | SecurityException  e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (final SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			close(rs, ps);
+			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+		}
+		
+		return Collections.emptyList();
+	}
 	public static <T> List<T> findByXXOrderByXXLimit(final String zrSubClassName, final String callerMethodName, final Mode mode, final Class<T> entityClass,
 			final Class<T> returnType, final String sql, final Object... field) {
 		final String dataSourceName = getDataSourceNameFromClassType(entityClass);
