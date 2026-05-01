@@ -46,14 +46,17 @@ public class DBType {
 			.copyOf(Sets.newHashSet("byte", "short", "int", "long", "float", "double", "boolean", "char"));
 
 	public static Multimap<String, String> getAllSupportType(final DBEnum dbEnum) {
-		if (dbEnum == DBEnum.MYSQL) {
-			return JAVA_MYSQL;
-		}
-		if (dbEnum == DBEnum.POSTGRESQL) {
-			return JAVA_PGSQL;
-		}
-		if (dbEnum == DBEnum.SQLITE) {
-			return JAVA_SQLITE;
+		if (dbEnum != null) {
+			switch (dbEnum) {
+			case MYSQL:
+				return JAVA_MYSQL;
+			case POSTGRESQL:
+				return JAVA_PGSQL;
+			case SQLITE:
+				return JAVA_SQLITE;
+			default:
+				break;
+			}
 		}
 
 		return EMPTY_MAP;
@@ -108,14 +111,17 @@ public class DBType {
 	 * @return
 	 */
 	public static boolean match(final DBEnum dbEnum, final String javaType, final String dbType) {
-		if (dbEnum == DBEnum.MYSQL) {
-			return getMysqlType(javaType).contains(dbType);
-		}
-		if (dbEnum == DBEnum.POSTGRESQL) {
-			return getPGSqlType(javaType).contains(dbType);
-		}
-		if (dbEnum == DBEnum.SQLITE) {
-			return getSQLiteType(javaType).contains(dbType);
+		if (dbEnum != null) {
+			switch (dbEnum) {
+			case MYSQL:
+				return getMysqlType(javaType).contains(dbType);
+			case POSTGRESQL:
+				return getPGSqlType(javaType).contains(dbType);
+			case SQLITE:
+				return getSQLiteType(javaType).contains(dbType);
+			default:
+				break;
+			}
 		}
 
 		return false;
@@ -147,15 +153,16 @@ public class DBType {
 		JAVA_PGSQL.put("java.lang.Boolean", "bool");
 		JAVA_PGSQL.put("java.lang.Boolean", "boolean");
 		JAVA_PGSQL.put("java.sql.Date", "date");
-		JAVA_PGSQL.put("java.util.Date", "timestamp");
+		// FIXME 2026年5月1日 08:27:20 zhangzhen :
+		// 这个和java.sql.Timestamp要不要启动时提示设置下pg精度?
+		JAVA_PGSQL.put("java.util.Date", "timestamptz");
 		JAVA_PGSQL.put("java.time.LocalTime", "time");
 		JAVA_PGSQL.put("java.time.LocalDate", "date");
 		JAVA_PGSQL.put("java.time.LocalDateTime", "timestamp");
 		JAVA_PGSQL.put("java.sql.Time", "time");
-		JAVA_PGSQL.put("java.sql.Timestamp", "timestamp");
+		JAVA_PGSQL.put("java.sql.Timestamp", "timestamptz");
 		JAVA_PGSQL.put("byte[]", "bytea");
 		JAVA_PGSQL.put("java.lang.Object", "jsonb");
-
 
 		// java -> mysql
 		JAVA_MYSQL.put("java.lang.Byte", "TINYINT");
