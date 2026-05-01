@@ -11,10 +11,9 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.springframework.util.ResourceUtils;
 
+import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.exception.ZRepositoryException;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 读取xml文件
@@ -44,7 +43,7 @@ public class ZXML {
 			final Element root = document.getRootElement();
 
 			final List<Element> selectList = root.elements(SELECT);
-			if (CollUtil.isEmpty(selectList)) {
+			if (CU.isEmpty(selectList)) {
 				throw new ZRepositoryException("读取xml文件失败：文件[" + xmlFileName + "]不存在任何[select]内容");
 			}
 
@@ -55,12 +54,12 @@ public class ZXML {
 				}
 
 				final String idValue = id.getValue();
-				if (StrUtil.isBlank(idValue)) {
+				if (STU.isEmpty(idValue)) {
 					throw new ZRepositoryException("读取xml文件失败：文件[" + xmlFileName + "]所有[select]标签的[id]属性都不能为空");
 				}
 
 				final String sql = selectElement.getTextTrim();
-				if (StrUtil.isBlank(sql)) {
+				if (STU.isEmpty(sql)) {
 					throw new ZRepositoryException("读取xml文件失败：文件[" + xmlFileName + "]的[select]标签里的内容不能为空");
 				}
 				if (methodName.equals(idValue)) {

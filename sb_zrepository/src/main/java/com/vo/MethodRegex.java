@@ -10,8 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import cn.hutool.core.util.StrUtil;
+import com.vo.cache.STU;
 
 /**
  * ZRepository 方法命名规则的正则表达式
@@ -39,7 +38,6 @@ public class MethodRegex {
 	public static final String ZID = "ZID";
 	public static final String COLUMN_VALUES = "COLUMN_VALUES";
 
-	public static final String GROUP_findByXXOrderByXXLimit = "findBy.+OrderBy.+Limit";
 	public static final String GROUP_findByXXOrderByXXDescLimit = "findBy.+OrderBy.+DescLimit";
 	public static final String GROUP_count = "count";
 
@@ -48,6 +46,9 @@ public class MethodRegex {
 	public static final String GROUP_CountingByXXX = "countingBy.+";
 	public static final String GROUP_CountingByXXXNot = "countingBy.+Not";
 	public static final String GROUP_EXISTBYId = "existById";
+	/**
+	 * delete where id = ?
+	 */
 	public static final String GROUP_DeleteById = "deleteById";
 	public static final String GROUP_DeleteByIdIn = "deleteByIdIn";
 	public static final String GROUP_SAVEALL = "saveAll";
@@ -56,26 +57,153 @@ public class MethodRegex {
 	public static final String GROUP_FIND = "find";
 
 	public static final String GROUP_UPDATE = "update";
+
 	public static final String GROUP_FINDALL = "findAll";
 
-	public static final String GROUP_findByXX = "findBy.+";
-	public static final String GROUP_findByxxNot = "findBy.+Not";
+	/**
+	 * where a = ?
+	 */
+	public static final String ByXX = "findBy.+";
 
+	/**
+	 * where a = ? order by X asc limit n offset 0
+	 */
+	public static final String ByXXOrderByXXLimit = "findBy.+OrderBy.+Limit";
+
+	/**
+	 * 一个=和一个like
+	 * where a = ? and b like ?
+	 */
+	public static final String ByXXAndXXLike = "findBy.+And.+Like";
+
+	/**
+	 * where a = ? and b like ? order by X asc limit n offset 0
+	 */
+	public static final String ByXXAndXXLikeOrderByXXLimit = "findBy.+And.+LikeOrderBy.+Limit";
+
+	/**
+	 * where a = ? and b like ? order by X desc limit n offset 0
+	 */
+	public static final String ByXXAndXXLikeOrderByXXDescLimit = "findBy.+And.+LikeOrderBy.+DescLimit";
+
+	/**
+	 * 一个=和两个like
+	 * where a = ? and b like ? and c like ?
+	 */
+	public static final String ByXXAndXXLikeAndXXLike = "findBy.+And.+LikeAnd.+Like";
+
+	/**
+	 * where a = ? and b like ? and c like ? order by X asc limit n offset 0
+	 */
+	public static final String ByXXAndXXLikeAndXXLikeOrderByXXLimit = "findBy.+And.+LikeAnd.+LikeOrderBy.+Limit";
+
+	/**
+	 * where a = ? and b like ? and c like ? order by X desc limit n offset 0
+	 */
+	public static final String ByXXAndXXLikeAndXXLikeOrderByXXDescLimit = "findBy.+And.+LikeAnd.+LikeOrderBy.+DescLimit";
+
+
+	/**
+	 * 一个=和三个like
+	 * where a = ? and b like ? and c like ? and d like ?
+	 *
+	 */
+	public static final String ByXXAndXXLikeAndXXLikeAndXXLike = "findBy.+And.+LikeAnd.+LikeAnd.+Like";
+
+	/**
+	 * 两个=和一个like
+	 * where a = ? and b = ? and c like ?
+	 */
+	public static final String ByXXAndXXAndXXLike = "findBy.+And.+And.+Like";
+
+	/**
+	 * 两个=和两个like
+	 * where a = ? and b = ? and c like ? and d like ?
+	 */
+	public static final String ByXXAndXXAndXXLikeAndXXLike = "findBy.+And.+And.+LikeAnd.+Like";
+
+	/**
+	 * 两个=和三个like
+	 * where a = ? and b = ? and c like ? and d like ? and e like ?
+	 */
+	public static final String ByXXAndXXAndXXLikeAndXXLikeAndXXLike = "findBy.+And.+And.+LikeAnd.+LikeAnd.+Like";
+
+	/**
+	 * 三个=和一个like
+	 * where a = ? and b = ? and c = ? and d like ?
+	 */
+	public static final String ByXXAndXXAndXXAndXXLike = "findBy.+And.+And.+And.+Like";
+
+	// FIXME 2026年4月29日 11:44:23 zhangzhen : 写这个
+	/**
+	 * 三个=和两个like
+	 * where a = ? and b = ? and c = ? and d like ? and e like ?
+	 */
+	public static final String ByXXAndXXAndXXAndXXLikeAndXXLike = "findBy.+And.+And.+And.+LikeAnd.+Like";
+	/**
+	 * where a != ?
+	 */
+	public static final String ByXXNot = "findBy.+Not";
+
+	/**
+	 * where a != ? and b = ? and c = ?
+	 */
 	public static final String GROUP_findByxxNotAndXXAndXX = "findBy.+NotAnd.+And.+";
+
+	/**
+	 * where a != ? and b = ?
+	 */
 	public static final String GROUP_findByxxNotAndXX = "findBy.+NotAnd.+";
+
+	/**
+	 * where a is not null
+	 */
 	public static final String GROUP_findByxxNotNull = "findBy.+NotNull";
+
+
+	// FIXME 2026年4月29日 10:18:49 zhangzhen : in 还没支持好
 	public static final String GROUP_findByxx_in = "findBy.+In";
 
-	public static final String GROUP_findByXXXEndingWith= "findBy.+EndingWith";
-	public static final String GROUP_findByXXXStartingWith= "findBy.+StartingWith";
+	/**
+	 * * where a like ? 这个?会组装为 %v的形式，前面带%
+	 */
+	public static final String GROUP_findByXXXEndingWith = "findBy.+EndingWith";
 
+	/**
+	 * where a like ? 这个?会组装为 v%的形式，后面带%
+	 */
+	public static final String GROUP_findByXXXStartingWith = "findBy.+StartingWith";
+
+	/**
+	 * where a >= ?
+	 */
 	public static final String GROUP_findByXXGreaterThanEquals = "findBy.+GreaterThanEquals";
 
+	/**
+	 * where a > ?
+	 */
 	public static final String GROUP_findByXXGreaterThan = "findBy.+GreaterThan";
+
+	/**
+	 * where a <= ?
+	 */
 	public static final String GROUP_findByXXLessThanEquals = "findBy.+LessThanEquals";
+
+	/**
+	 * where a < ?
+	 */
 	public static final String GROUP_findByXXLessThan = "findBy.+LessThan";
 
+	/**
+	 * where a like ?
+	 */
 	public static final String GROUP_findByXXLike = "findBy.+Like";
+
+	/**
+	 * 两个LIKE
+	 * where a like ? and b like ?
+	 */
+	public static final String GROUP_findByXXLikeAndXXLike = "findBy.+LikeAnd.+Like";
 
 	public static final String GROUP_findByXXLikeAndXX = "findBy.+LikeAnd.+";
 	public static final String GROUP_findByXXLikeAndXXAndXX = "findBy.+LikeAnd.+And.+";
@@ -107,7 +235,7 @@ public class MethodRegex {
 	public static final String saveAll = GROUP_SAVEALL;
 	public static final String save = GROUP_SAVE;
 	public static final String findAll = GROUP_FINDALL;
-	public static final String findByXX = GROUP_findByXX;
+	public static final String findOptionalByXX = "findOptionalBy.+";
 
 	public static final String GROUP_findByXXAndXX = "findBy.+(?=And.).+";
 	public static final String findByXXAndYY = "findBy.+(?=And.).+";
@@ -123,7 +251,7 @@ public class MethodRegex {
 
 	public static final String findByXXXEndingWith = GROUP_findByXXXEndingWith;
 	public static final String findByXXXStartingWith = GROUP_findByXXXStartingWith;
-	public static final String findByXXNot = GROUP_findByxxNot;
+	public static final String findByXXNot = ByXXNot;
 	public static final String findByXXIn = GROUP_findByxx_in;
 	public static final String findByXXInAndYYIn = "findBy.+(?=InAnd.).+In";
 	public static final String findByXXInAndYYInAndYYIn = "findBy.+(?=InAnd.).+(?=InAnd.).+In";
@@ -156,7 +284,6 @@ public class MethodRegex {
 	public static final String findByXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+OrderBy.+DescLimit";
 	public static final String findByXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+OrderBy.+DescLimit";
 	public static final String findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit = "findBy.+And.+And.+And.+And.+And.+OrderBy.+DescLimit";
-	public static final String findByXXOrderByXXLimit = GROUP_findByXXOrderByXXLimit;
 	public static final String findByXXAndXXOrderByXXLimit = "findBy.+And.+OrderBy.+Limit";
 	public static final String findByXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+OrderBy.+Limit";
 	public static final String findByXXAndXXAndXXAndXXOrderByXXLimit = "findBy.+And.+And.+And.+OrderBy.+Limit";
@@ -180,7 +307,6 @@ public class MethodRegex {
 	public static final String deleteByIdIn = GROUP_DeleteByIdIn;
 	public static final String deleteAll = "deleteAll";
 
-	public static final String findByXXLike = GROUP_findByXXLike;
 	// IsNull
 	public static final String findByXXIsNull = GROUP_findByXXIsNull;
 
@@ -188,6 +314,10 @@ public class MethodRegex {
 
 	public final static HashMap<String, HashMap<String, String>> R_M = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXDescLimit = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXAndXXLikeAndXXLikeOrderByXXDescLimit = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXAndXXLikeAndXXLikeOrderByXXLimit = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXAndXXLikeOrderByXXDescLimit = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXAndXXLikeOrderByXXLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXOrderByXXLimit = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_Count = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_GROUP_pageByXX_orderByXX = new LinkedHashMap<>();
@@ -207,7 +337,16 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_SAVE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_UPDATE = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXLikeAndXXLikeAndXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXLikeAndXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_FINDBYXX = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXAndXXAndXXLikeAndXXLike= new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXAndXXAndXXLike= new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXAndXXLikeAndXXLikeAndXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXAndXXLikeAndXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDBYXXAndXXAndXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_FINDOptionalBYXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsEmpty = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmptyAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXIsNullOrEmpty = new LinkedHashMap<>();
@@ -222,6 +361,7 @@ public class MethodRegex {
 	public final static HashMap<String, String> REGEX_MAP_findByXXXNotLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLikeAndXX = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXLike = new LinkedHashMap<>();
+	public final static HashMap<String, String> REGEX_MAP_findByXXXLikeAndXXLike = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXXEndingWith = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_StartingWith = new LinkedHashMap<>();
 	public final static HashMap<String, String> REGEX_MAP_findByXXNotAndXX = new LinkedHashMap<>();
@@ -238,6 +378,19 @@ public class MethodRegex {
 
 	static {
 
+		REGEX_MAP_findByXXAndXXLikeAndXXLikeOrderByXXDescLimit
+		.put(ByXXAndXXLikeAndXXLikeOrderByXXDescLimit,
+				SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 LIKE ? AND @3 LIKE ? ORDER BY @4 DESC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXAndXXLikeAndXXLikeOrderByXXLimit
+		.put(ByXXAndXXLikeAndXXLikeOrderByXXLimit,
+				 SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 LIKE ? AND @3 LIKE ? ORDER BY @4 ASC LIMIT ? OFFSET ?");
+
+		// findByXXAndXXLikeOrderByXXDescLimit
+		REGEX_MAP_findByXXAndXXLikeOrderByXXDescLimit.put(ByXXAndXXLikeOrderByXXLimit, SELECT + " * " + FROM
+				+ " TABLE_NAME " + WHERE + " (@1 = ? AND @2 LIKE ?) ORDER BY @3 DESC LIMIT ? OFFSET ?");
+		// findByXXAndXXLikeOrderByXXLimit
+		REGEX_MAP_findByXXAndXXLikeOrderByXXLimit.put(ByXXAndXXLikeOrderByXXLimit, SELECT + " * " + FROM
+				+ " TABLE_NAME " + WHERE + " (@1 = ? AND @2 LIKE ?) ORDER BY @3 ASC LIMIT ? OFFSET ?");
 		// findByXXOrderByXXLimit
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM
 				+ " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ? AND @5 = ? AND @6 = ?) ORDER BY @7 ASC LIMIT ? OFFSET ?");
@@ -245,7 +398,7 @@ public class MethodRegex {
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ?) ORDER BY @5 ASC LIMIT ? OFFSET ?");
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ?) ORDER BY @4 ASC LIMIT ? OFFSET ?");
 		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXAndXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ?) ORDER BY @3 ASC LIMIT ? OFFSET ?");
-		REGEX_MAP_findByXXOrderByXXLimit.put(findByXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? ORDER BY @2 ASC LIMIT ? OFFSET ?");
+		REGEX_MAP_findByXXOrderByXXLimit.put(ByXXOrderByXXLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? ORDER BY @2 ASC LIMIT ? OFFSET ?");
 
 		// findByXXOrderByXXDescLimit
 		REGEX_MAP_findByXXOrderByXXDescLimit.put(findByXXAndXXAndXXAndXXAndXXAndXXOrderByXXDescLimit, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ? AND @5 = ? AND @6 = ?) ORDER BY @7 DESC LIMIT ? OFFSET ?");
@@ -355,7 +508,10 @@ public class MethodRegex {
 		REGEX_MAP_findByXXXLikeAndXX.put(GROUP_findByXXLikeAndXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 LIKE ? AND @2 = ?)");
 
 		// findByXXXLike
-		REGEX_MAP_findByXXXLike.put(findByXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ?");
+		REGEX_MAP_findByXXXLike.put(GROUP_findByXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ?");
+
+		// findByXXXLikeAndXXLike
+		REGEX_MAP_findByXXXLikeAndXXLike.put(GROUP_findByXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ? AND  @2 LIKE ?");
 
 		// finByXX
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ? AND @5 = ? AND @6 = ? AND @7 = ? AND @8 = ? AND @9 = ? AND @10 = ? AND @11 = ?)");
@@ -367,8 +523,24 @@ public class MethodRegex {
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ? AND @5 = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ? AND @4 = ?)");
 		REGEX_MAP_FINDBYXX.put(findByXXAndYYAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ? AND @3 = ?)");
+
+		REGEX_MAP_FINDBYXXAndXXAndXXAndXXLikeAndXXLike.put(ByXXAndXXAndXXAndXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 = ? AND @3 = ? AND @4 LIKE ? AND @5 LIKE ?");
+		REGEX_MAP_FINDBYXXAndXXAndXXAndXXLike.put(ByXXAndXXAndXXAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 = ? AND @3 = ? AND @4 LIKE ?");
+		REGEX_MAP_FINDBYXXAndXXAndXXLikeAndXXLikeAndXXLike.put(ByXXAndXXAndXXLikeAndXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 = ? AND @3 LIKE ? AND @4 LIKE ? AND @5 LIKE ?");
+		REGEX_MAP_FINDBYXXAndXXAndXXLikeAndXXLike.put(ByXXAndXXAndXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 = ? AND @3 LIKE ? AND @4 LIKE ?");
+		REGEX_MAP_FINDBYXXAndXXAndXXLike.put(ByXXAndXXAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 = ? AND @3 LIKE ?");
+
 		REGEX_MAP_FINDBYXX.put(findByXXAndYY, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " (@1 = ? AND @2 = ?)");
-		REGEX_MAP_FINDBYXX.put(findByXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ?");
+
+		REGEX_MAP_FINDBYXXAndXXLikeAndXXLikeAndXXLike.put(ByXXAndXXLikeAndXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 LIKE ? AND @3 LIKE ? AND @4 LIKE ?");
+		REGEX_MAP_FINDBYXXAndXXLikeAndXXLike.put(ByXXAndXXLikeAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 LIKE ? AND @3 LIKE ?");
+		REGEX_MAP_FINDBYXXAndXXLike.put(ByXXAndXXLike, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ? AND @2 LIKE ?");
+
+		REGEX_MAP_FINDBYXX.put(ByXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ?");
+
+		// Optional
+		REGEX_MAP_FINDOptionalBYXX.put(findOptionalByXX, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 = ?");
+
 		// findByXXXEndingWith
 		REGEX_MAP_findByXXXEndingWith.put(findByXXXEndingWith, SELECT + " * " + FROM + " TABLE_NAME " + WHERE + " @1 LIKE ?");
 		// findByXXXStartingWith
@@ -406,9 +578,18 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXGreaterThanEquals, REGEX_MAP_GreaterThanEquals);
 		R_M.put(GROUP_findByXXGreaterThan, REGEX_MAP_GreaterThan);
 		R_M.put(GROUP_findByXXLessThanEquals, REGEX_MAP_LessThanEquals);
+
+		R_M.put(ByXXAndXXLikeAndXXLikeOrderByXXDescLimit, REGEX_MAP_findByXXAndXXLikeAndXXLikeOrderByXXDescLimit);
+
+		R_M.put(ByXXAndXXLikeAndXXLikeOrderByXXLimit, REGEX_MAP_findByXXAndXXLikeAndXXLikeOrderByXXLimit);
+
+		R_M.put(ByXXAndXXLikeOrderByXXDescLimit, REGEX_MAP_findByXXAndXXLikeOrderByXXDescLimit);
+		R_M.put(ByXXAndXXLikeOrderByXXLimit, REGEX_MAP_findByXXAndXXLikeOrderByXXLimit);
+
+
 		R_M.put(GROUP_findByXXOrderByXXDescLimit, REGEX_MAP_findByXXOrderByXXDescLimit);
 		R_M.put(findByXXAndXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
-		R_M.put(GROUP_findByXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
+		R_M.put(ByXXOrderByXXLimit, REGEX_MAP_findByXXOrderByXXLimit);
 		R_M.put(GROUP_findByXXXEndingWith, REGEX_MAP_findByXXXEndingWith);
 		R_M.put(GROUP_findByXXXStartingWith, REGEX_MAP_StartingWith);
 		R_M.put(GROUP_findByXXIsNullAndXXIsNullAndXXAndXX, REGEX_MAP_findByXXIsNullAndXXIsNullAndXXAndXX);
@@ -424,7 +605,16 @@ public class MethodRegex {
 		R_M.put(GROUP_findByXXNotLikeAndXXAndXX, REGEX_MAP_findByXXXNotLikeAndXXAndXX);
 		R_M.put(GROUP_findByXXNotLikeAndXX, REGEX_MAP_findByXXXNotLikeAndXX);
 		R_M.put(GROUP_findByXXNotLike, REGEX_MAP_findByXXXNotLike);
+		R_M.put(ByXXAndXXAndXXLikeAndXXLikeAndXXLike, REGEX_MAP_FINDBYXXAndXXAndXXLikeAndXXLikeAndXXLike);
+		R_M.put(ByXXAndXXAndXXAndXXLikeAndXXLike, REGEX_MAP_FINDBYXXAndXXAndXXAndXXLikeAndXXLike);
+		R_M.put(ByXXAndXXAndXXAndXXLike, REGEX_MAP_FINDBYXXAndXXAndXXAndXXLike);
+		R_M.put(ByXXAndXXLikeAndXXLikeAndXXLike, REGEX_MAP_FINDBYXXAndXXLikeAndXXLikeAndXXLike);
+		R_M.put(ByXXAndXXAndXXLikeAndXXLike, REGEX_MAP_FINDBYXXAndXXAndXXLikeAndXXLike);
+		R_M.put(ByXXAndXXAndXXLike, REGEX_MAP_FINDBYXXAndXXAndXXLike);
+		R_M.put(ByXXAndXXLikeAndXXLike, REGEX_MAP_FINDBYXXAndXXLikeAndXXLike);
+		R_M.put(GROUP_findByXXLikeAndXXLike, REGEX_MAP_findByXXXLikeAndXXLike);
 		R_M.put(GROUP_findByXXLikeAndXX, REGEX_MAP_findByXXXLikeAndXX);
+		R_M.put(ByXXAndXXLike, REGEX_MAP_FINDBYXXAndXXLike);
 		R_M.put(GROUP_findByXXLike, REGEX_MAP_findByXXXLike);
 		R_M.put(GROUP_findByXXLessThan, REGEX_MAP_LessThan);
 		R_M.put(GROUP_findByxx_in, REGEX_MAP_FINDBYXXIN);
@@ -433,10 +623,16 @@ public class MethodRegex {
 		R_M.put(findByXXBetween, REGEX_MAP_findByXXBetween);
 		R_M.put(GROUP_findByxxNotNull, REGEX_MAP_findByXXNotNull);
 		R_M.put(GROUP_findByxxNotAndXX, REGEX_MAP_findByXXNotAndXX);
-		R_M.put(GROUP_findByxxNot, REGEX_MAP_findByXXNot);
+		R_M.put(ByXXNot, REGEX_MAP_findByXXNot);
 		R_M.put(findByXXOrYY, REGEX_MAP_findByXXOrYY);
+
 		R_M.put(GROUP_findByXXAndXX, REGEX_MAP_FINDBYXX);
-		R_M.put(GROUP_findByXX, REGEX_MAP_FINDBYXX);
+
+		R_M.put(ByXX, REGEX_MAP_FINDBYXX);
+
+		R_M.put(findOptionalByXX, REGEX_MAP_FINDOptionalBYXX);
+//		REGEX_MAP_FINDOptionalBYXX
+
 		R_M.put(GROUP_FINDALL, REGEX_MAP_FINDALL);
 		R_M.put(GROUP_SAVEALL, REGEX_MAP_SAVEALL);
 		R_M.put(GROUP_QUERY, REGEX_MAP_QUERY);
@@ -459,7 +655,7 @@ public class MethodRegex {
 		final ZQuery zQuery = method.getAnnotation(ZQuery.class);
 		if (zQuery != null) {
 			final String sql = zQuery.sql();
-			if (StrUtil.isBlank(sql)) {
+			if (STU.isEmpty(sql)) {
 				final String m = "@" + ZQuery.class.getSimpleName() + "方法 [" + methodName
 						+ "] "
 						+ "sql属性必须设置，当前未设置，当前值为 ["
@@ -520,7 +716,7 @@ public class MethodRegex {
 		return false;
 	}
 
-	private final static Set<String> ANALYSIS_BY_METHOD_PARAMETERS = Sets.newConcurrentHashSet();
+	private final static Set<String> ANALYSIS_BY_METHOD_PARAMETERS = Sets.newLinkedHashSet();
 	private final static Set<String> ANALYSIS_BY_ZENTITY_FIELD =  Sets.newConcurrentHashSet();
 	static {
 		// FIXME 2024年5月14日 下午9:04:36 zhangzhen: 规则分两个组；一个是根据method.getps 的个数、类型、名称来解析的比如简单的findByXX
@@ -551,9 +747,17 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(existById);
 
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXGreaterThan);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXAndXXLikeAndXXLikeAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXAndXXAndXXLikeAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXAndXXAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXAndXXLikeAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXAndXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxx_in);
-		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXLikeAndXXLikeAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXLikeAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXXAndXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(ByXX);
 
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXNotAndXXXNotAndXXXNotAndXXXNot);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXNotAndXXXNotAndXXXNot);
@@ -564,12 +768,13 @@ public class MethodRegex {
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(countingByXXX);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLikeAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLikeAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXNotLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXXAndXX);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLikeAndXX);
-		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLike);
+		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByXXLike);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXLessThanEquals);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(findByXXXStartingWith);
 		ANALYSIS_BY_METHOD_PARAMETERS.add(GROUP_findByxxNotAndXXAndXX);
@@ -611,7 +816,12 @@ public class MethodRegex {
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXAndXXOrderByXXLimit);
 		ANALYSIS_BY_ZENTITY_FIELD.add(findByXXAndXXOrderByXXLimit);
-		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByXXOrderByXXLimit);
+
+		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXAndXXLikeAndXXLikeOrderByXXDescLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXAndXXLikeAndXXLikeOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXAndXXLikeOrderByXXDescLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXAndXXLikeOrderByXXLimit);
+		ANALYSIS_BY_ZENTITY_FIELD.add(ByXXOrderByXXLimit);
 
 		ANALYSIS_BY_ZENTITY_FIELD.add(GROUP_findByxx_in);
 

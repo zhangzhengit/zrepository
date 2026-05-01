@@ -2,6 +2,7 @@ package com.vo.conn;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
@@ -11,7 +12,7 @@ import com.vo.core.ZMethodArg;
  *
  * @author zhangzhen
  * @date 2025年9月16日
- * 
+ *
  */
 class JM {
 
@@ -73,6 +74,21 @@ class JM {
 		mm.add(new ZMethodArg(Object.class, "x"));
 		method.setMethodArgList(mm);
 		method.setBody("return this.findById((" + pT + ")x);");
+		method.setgReturn(false);
+
+		return method;
+
+	}
+	public static ZMethod addFindOptionalById(final String pT) {
+
+		final ZMethod method = new ZMethod();
+
+		method.setName("findOptionalById");
+		method.setReturnType(Optional.class.getCanonicalName());
+		final List<ZMethodArg> mm = new ArrayList<>();
+		mm.add(new ZMethodArg(Object.class, "x"));
+		method.setMethodArgList(mm);
+		method.setBody("return this.findOptionalById((" + pT + ")x);");
 		method.setgReturn(false);
 
 		return method;

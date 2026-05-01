@@ -13,8 +13,6 @@ import com.vo.cache.STU;
 import com.vo.core.ZLog2;
 import com.vo.transaction.ZIsolationEnum;
 
-import cn.hutool.core.util.StrUtil;
-
 /**
  *
  * 数据库连接对象
@@ -28,7 +26,7 @@ public class ZConnection {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	private Boolean busy;
+	private boolean busy;
 	private Mode mode;
 	private DBEnum dbEnum;
 
@@ -170,11 +168,11 @@ public class ZConnection {
 		return stringWriter.toString();
 	}
 
-	public Boolean getBusy() {
+	public boolean getBusy() {
 		return this.busy;
 	}
 
-	public void setBusy(final Boolean busy) {
+	public void setBusy(final boolean busy) {
 		this.busy = busy;
 	}
 

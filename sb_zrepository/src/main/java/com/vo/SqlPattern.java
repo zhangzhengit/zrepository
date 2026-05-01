@@ -71,6 +71,8 @@ public class SqlPattern {
 		SQL_KEYWORD.addAll(keyword);
 		SQL_KEYWORD.addAll(methodPrefix);
 
+		SQL_KEYWORD.add("Optional");
+
 		SQL_KEYWORD.add("Between");
 		SQL_KEYWORD.add("All");
 		SQL_KEYWORD.add("Less");

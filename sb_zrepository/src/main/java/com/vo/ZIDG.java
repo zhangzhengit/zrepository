@@ -1,6 +1,6 @@
 package com.vo;
 
-import cn.hutool.core.lang.UUID;
+import java.util.UUID;
 
 /**
  * ID 生成器

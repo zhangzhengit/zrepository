@@ -59,12 +59,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>cn.hutool</groupId>
-			<artifactId>hutool-all</artifactId>
-			<version>5.8.44</version>
-		</dependency>
-
-		<dependency>
 			<groupId>com.vo</groupId>
 			<artifactId>sb_zlog2</artifactId>
 			<version>1.0-SNAPSHOT</version>
@@ -73,7 +67,7 @@
 		<dependency>
 			<groupId>com.vo</groupId>
 			<artifactId>sb_zclass</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0-SNAPSHOT-jdk21</version>
 		</dependency>
 
 	</dependencies>

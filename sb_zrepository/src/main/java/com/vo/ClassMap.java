@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 
 import com.vo.core.ZRC;
 
-import cn.hutool.core.util.ClassUtil;
-
 /**
  *
  * 暂存扫描的结果
@@ -25,7 +23,10 @@ public class ClassMap {
 	}
 
 	public synchronized static Set<Class<?>> scanPackage(final String packageName) {
-		final Supplier<Set<Class<?>>> supplier = () -> ClassUtil.scanPackage(packageName);
+		final Supplier<Set<Class<?>>> supplier = () ->  
+		com.vo.scanner.
+		ClassMap.scanPackage(packageName);
+//		final Supplier<Set<Class<?>>> supplier = () -> ClassUtil.scanPackage(packageName);
 		return ZRC.singleton().computeIfAbsent(packageName, supplier);
 	}
 }
