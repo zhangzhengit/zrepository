@@ -36,6 +36,8 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.vo.DBEnum;
 import com.vo.MethodRegex;
 import com.vo.SQLEMode;
@@ -61,6 +63,9 @@ import com.vo.actuator.SqlInvocationLogsEntity;
 import com.vo.actuator.SqlInvocationLogsService;
 import com.vo.anno.ZEntity;
 import com.vo.anno.ZTransient;
+import com.vo.cache.AU;
+import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.core.Page;
 import com.vo.core.RU;
 import com.vo.core.Sort;
@@ -70,10 +75,6 @@ import com.vo.core.ZRC;
 import com.vo.exception.ZRepositoryException;
 import com.vo.transaction.ZIsolationEnum;
 import com.vo.transaction.ZTransactionAOP;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * @see ZRepository 接口和其子接口里的方法的具体实现
@@ -489,12 +490,12 @@ public class SU {
 
 		final List idX = (List) ((List) idList).stream()
 				.distinct().collect(Collectors.toList());
-		if (CollUtil.isEmpty(idX)) {
+		if (CU.isEmpty(idX)) {
 			return v;
 		}
 
 		final List idNullList = (List) idX.stream().filter(x -> x == null).collect(Collectors.toList());
-		if (CollUtil.isNotEmpty(idNullList)) {
+		if (CU.isNotEmpty(idNullList)) {
 			v.put(null, false);
 		}
 		final List idNotNullList = (List) idX.stream().filter(x -> x != null).collect(Collectors.toList());
@@ -610,7 +611,7 @@ public class SU {
 	public static <T> List<Object> saveAll(final String zrSubClassName, final String callerMethodName,final Mode mode, final Class<T> cls, final String sql,
 			final List<T> tList) {
 
-		if (CollUtil.isEmpty(tList)) {
+		if (CU.isEmpty(tList)) {
 			return Collections.emptyList();
 		}
 
@@ -3721,7 +3722,7 @@ public class SU {
 			final Object entityTClassName, final Object returnTypeClassName, final String sqleModeName,
 			final String sqlT, final Object... arg) {
 
-		if (StrUtil.isEmpty(sqlT)) {
+		if (STU.isEmpty(sqlT)) {
 			throw new ZRepositoryException(zrSubClassName + "." + callerMethodName + " " + " SQL不能为空");
 		}
 
@@ -3739,7 +3740,7 @@ public class SU {
 		ResultSet rs = null;
 		try {
 
-			final int argcount = StrUtil.count(sqlT, '?');
+			final int argcount = StringUtils.countMatches(sqlT, '?');
 			if (argcount != arg.length) {
 				final String message = "@" + ZQuery.class.getName() + " 自定义SQL参数个数[" + argcount
 						+ "]和方法传入的参数个数[" + arg.length + "]不匹配";
@@ -3762,7 +3763,7 @@ public class SU {
 							: sql;
 
 			if (isShowSQL(dataSourceName)) {
-				if (ArrayUtil.isEmpty(arg)) {
+				if (AU.isEmpty(arg)) {
 					LOG.info("[{}.{}：{}]", zrSubClassName, callerMethodName, s2);
 				} else {
 					LOG.info("[{}.{}：{}],[{}]", zrSubClassName, callerMethodName, s2, Arrays.toString(arg));

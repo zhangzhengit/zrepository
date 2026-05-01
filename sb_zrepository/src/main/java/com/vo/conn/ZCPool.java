@@ -15,10 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.vo.DBEnum;
+import com.vo.cache.STU;
 import com.vo.conn.ZDatasourceProperties.P;
 import com.vo.core.ZLog2;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -77,7 +76,7 @@ public class ZCPool {
 	}
 
 	public static ZCPool getInstance(final String dataSourceName) {
-		if (StrUtil.isEmpty(dataSourceName)) {
+		if (STU.isEmpty(dataSourceName)) {
 			throw new IllegalArgumentException("dataSourceName 不能为空");
 		}
 		

@@ -9,10 +9,9 @@ import java.util.Objects;
 
 import com.vo.DBEnum;
 import com.vo.DataSourceDTO;
+import com.vo.cache.STU;
 import com.vo.core.ZLog2;
 import com.vo.transaction.ZIsolationEnum;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -126,7 +125,7 @@ public class ZConnection {
 		final String pwd = p.getDatasourcePassword();
 		try {
 			final Connection connection =
-					StrUtil.isEmpty(userName) ? DriverManager.getConnection(url)
+					STU.isEmpty(userName) ? DriverManager.getConnection(url)
 							: DriverManager.getConnection(url, userName, pwd);
 
 			final int transactionIsolation = connection.getTransactionIsolation();

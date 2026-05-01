@@ -32,6 +32,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -69,6 +71,8 @@ import com.vo.anno.ZEntity;
 import com.vo.anno.ZRead;
 import com.vo.anno.ZTransient;
 import com.vo.anno.ZWrite;
+import com.vo.cache.CU;
+import com.vo.cache.STU;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
 import com.vo.core.ZField;
@@ -83,9 +87,6 @@ import com.vo.exception.ParameterCountDeclarationException;
 import com.vo.exception.ParameterNameDeclarationException;
 import com.vo.exception.ParameterTypeDeclarationException;
 import com.vo.exception.ZRepositoryException;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -218,7 +219,7 @@ public class ZRepositoryMain {
 
 		final Set<String> set = ScanPackage.get();
 
-		if (CollUtil.isEmpty(set)) {
+		if (CU.isEmpty(set)) {
 			throw new IllegalArgumentException(ScanPackage.class.getName() + " 扫描的包名未设置！");
 		}
 
@@ -250,7 +251,7 @@ public class ZRepositoryMain {
 	 */
 	public synchronized static void showCreateTable(final Set<Class<?>> zrClassSet) {
 		final List<Object> zel = extractedZEntity(zrClassSet);
-		if (CollUtil.isEmpty(zel)) {
+		if (CU.isEmpty(zel)) {
 			return;
 		}
 
@@ -533,7 +534,7 @@ public class ZRepositoryMain {
 
 		final List<String> fieldNameList = new ArrayList<>(fieldNameArray)
 				.stream()
-				.filter(StrUtil::isNotBlank)
+				.filter(STU::isNotEmpty)
 				.map(x -> x.length() == 1 ? x.toLowerCase() : Character.toLowerCase(x.charAt(0)) + x.substring(1))
 				.collect(Collectors.toList());
 
@@ -690,7 +691,7 @@ public class ZRepositoryMain {
 	 *
 	 */
 	private static List<String> splitMethodNameToArray(final String zRepositoryMethodName) {
-		if (StrUtil.isEmpty(zRepositoryMethodName)) {
+		if (STU.isEmpty(zRepositoryMethodName)) {
 			return Collections.emptyList();
 		}
 
@@ -1237,7 +1238,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		final String methodNameF = StrUtil.count(joiner.toString(), DELIMITER) == 0
+		final String methodNameF = StringUtils.countMatches(joiner.toString(), DELIMITER) == 0
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
 		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
@@ -1269,7 +1270,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		final String methodNameF = StrUtil.count(joiner.toString(), DELIMITER) == 0
+		final String methodNameF = StringUtils.countMatches(joiner.toString(), DELIMITER) == 0
 				? "findByXXIsEmptyAndXX" : "findByXXIsEmptyAndXXAndXX";
 
 		return "return " + SU.class.getName() + "."+methodNameF+"(" + className1 + "," + methodName1
@@ -1377,7 +1378,7 @@ public class ZRepositoryMain {
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 		final StringJoiner joiner = getParameterNameFromMethod(method);
 
-		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
+		final int ac = StringUtils.countMatches(joiner.toString(), DELIMITER);
 
 		final String suMethodName =
 				ac == 0 ? "findByXXIsNullAndXX" : "findByXXIsNullAndXXAndXX";
@@ -1869,7 +1870,7 @@ public class ZRepositoryMain {
 		}
 		final String modeString = modeString(method);
 
-		final int ac = StrUtil.count(joiner.toString(), DELIMITER);
+		final int ac = StringUtils.countMatches(joiner.toString(), DELIMITER);
 
 		// FIXME 2024年5月18日 下午3:32:25 zhangzhen: byte[] 类型引起的问题 : 很多方法都有此问题，都要好好再测试byte[] 类型
 		// countBy多个条件的不能把countByXX单个的参数改为Object... a 然后复用，因为一个条件并且为byte[]类型的话，a会被认为是byte[]
@@ -2787,7 +2788,7 @@ public class ZRepositoryMain {
 					);
 		}
 
-		final int c = StrUtil.count(sqlTemplate, "?");
+		final int c = StringUtils.countMatches(sqlTemplate, "?");
 		if (c != method.getParameterCount()) {
 			throw new IllegalArgumentException(
 					"\r\n\t"
@@ -3032,7 +3033,7 @@ public class ZRepositoryMain {
 
 		final Class<?> returnType = getReturnTypeAndCheckTFields(myZRClass, entityClass, method);
 
-		final String methodName = StrUtil.count(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
+		final String methodName = StringUtils.countMatches(joiner.toString(), DELIMITER) == 0 ? "findByXX" : "findByXXAndXX";
 		final String methodName1 = "\"" + method.getName() + "\"";
 
 		return "return " + SU.class.getName() + "." + methodName + "(" + className1 + "," + methodName1 + "," + modeString + ",classType,"+returnType.getName()+".class"+",sql,"
@@ -3062,7 +3063,7 @@ public class ZRepositoryMain {
 		final List<Field> zidList = Lists.newArrayList(fs).stream().filter(f -> f.isAnnotationPresent(ZID.class))
 				.collect(Collectors.toList());
 
-		if (CollUtil.isEmpty(zidList)) {
+		if (CU.isEmpty(zidList)) {
 			throw new IllegalArgumentException(ZEntity.class.getSimpleName() + " 类型 " + typeClass.getSimpleName()
 			+ " 必须有 " + ZID.class.getSimpleName() + " 字段");
 		}

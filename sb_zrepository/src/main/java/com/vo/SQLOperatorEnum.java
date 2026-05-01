@@ -3,6 +3,7 @@ package com.vo;
 import java.lang.reflect.Field;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,9 +16,6 @@ import org.apache.commons.codec.binary.Hex;
 
 import com.google.common.collect.Sets;
 import com.vo.exception.ZRWrapperTypeException;
-
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.HexUtil;
 
 /**
  *
@@ -287,7 +285,8 @@ public enum SQLOperatorEnum {
 				final ZDateFormat zdf = field.getAnnotation(ZDateFormat.class);
 				if (zdf != null) {
 					final ZDateFormatEnum format = zdf.format();
-					final String v = DateUtil.format((Date) value, format.getFormat());
+					SimpleDateFormat sdf = new SimpleDateFormat(format.getFormat());
+					String v = sdf.format((Date) value);
 					return "'" + v + "'";
 				}
 				return "'" + value + "'";
@@ -320,7 +319,7 @@ public enum SQLOperatorEnum {
 	private static Object checkArray(final Object value) {
 
 		if (value.getClass().isArray()) {
-			final String encodeHexStr = HexUtil.encodeHexStr((byte[]) value);
+			String encodeHexStr = Hex.encodeHexString((byte[]) value);
 			final String encodeHexString = Hex.encodeHexString((byte[]) value);
 			// final int x = 10;
 			// return "'" + encodeHexString + "'";

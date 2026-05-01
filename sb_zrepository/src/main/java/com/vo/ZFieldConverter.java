@@ -2,8 +2,7 @@ package com.vo;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import cn.hutool.core.util.StrUtil;
+import com.vo.cache.STU;
 
 /**
  * 数据库字段 <> java对象字段转换, 如： order_count <> orderCount
@@ -57,7 +56,7 @@ public class ZFieldConverter {
 	}
 
 	public static String toDbField(final String javaFieldName) {
-		if (StrUtil.isEmpty(javaFieldName)) {
+		if (STU.isEmpty(javaFieldName)) {
 			throw new IllegalArgumentException("javaFieldName 不能为空");
 		}
 		if (javaFieldName.length() == 1) {

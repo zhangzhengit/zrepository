@@ -10,8 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import cn.hutool.core.util.StrUtil;
+import com.vo.cache.STU;
 
 /**
  * ZRepository 方法命名规则的正则表达式
@@ -656,7 +655,7 @@ public class MethodRegex {
 		final ZQuery zQuery = method.getAnnotation(ZQuery.class);
 		if (zQuery != null) {
 			final String sql = zQuery.sql();
-			if (StrUtil.isBlank(sql)) {
+			if (STU.isEmpty(sql)) {
 				final String m = "@" + ZQuery.class.getSimpleName() + "方法 [" + methodName
 						+ "] "
 						+ "sql属性必须设置，当前未设置，当前值为 ["
