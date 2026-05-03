@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.vo.common.STU;
+import com.vo.cache.STU;
 import com.vo.conn.ZDatasourceProperties.P;
-import com.vo.core.ZLog2;
 import com.vo.core.ZRC;
+import com.vo.log.core.ZLog2;
 
 
 /**
@@ -38,7 +38,7 @@ public class ZDatasourcePropertiesLoader {
 	}
 
 	private static ZDatasourceProperties initialize(final String dataSourceName) {
-		
+
 		final ZDatasourceProperties zDatasourceProperties = new ZDatasourceProperties();
 
 		try {
@@ -95,7 +95,7 @@ public class ZDatasourcePropertiesLoader {
 		read.setDatasourceUrl(url);
 
 		final String userName = px.getProperty("datasource.read.username[" + i + "]");
-		if (STU.isEmpty(userName) && !notNeedUserNameAndPassword) {
+		if (com.vo.cache.STU.isEmpty(userName) && !notNeedUserNameAndPassword) {
 			LOG.error("datasource.read.userName[" + i + "]不存在");
 			System.exit(0);
 		}
@@ -244,7 +244,7 @@ public class ZDatasourcePropertiesLoader {
 	}
 
 	private static Properties getProperties0(final String dataSourceName) {
-		
+
 		final Properties p1 = ZProperties.loadDirConfig(File.separator + "config" + File.separator);
 		if (p1 != null) {
 			return p1;

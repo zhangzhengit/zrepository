@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.vo.DBEnum;
 import com.vo.cache.STU;
 import com.vo.conn.ZDatasourceProperties.P;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 
 /**
  *

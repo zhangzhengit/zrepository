@@ -70,9 +70,9 @@ import com.vo.core.Page;
 import com.vo.core.RU;
 import com.vo.core.Sort;
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
 import com.vo.core.ZRC;
 import com.vo.exception.ZRepositoryException;
+import com.vo.log.core.ZLog2;
 import com.vo.transaction.ZIsolationEnum;
 import com.vo.transaction.ZTransactionAOP;
 
