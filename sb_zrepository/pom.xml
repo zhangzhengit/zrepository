@@ -30,6 +30,18 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>com.vo</groupId>
+			<artifactId>zframework_core</artifactId>
+			<version>1.0.0-SNAPSHOT-jdk21</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vo</groupId>
+			<artifactId>sb_zclass</artifactId>
+			<version>1.0.0-SNAPSHOT-jdk21</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
@@ -50,24 +62,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.9</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vo</groupId>
-			<artifactId>zframework_core</artifactId>
-			<version>1.0.0-SNAPSHOT-jdk21</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vo</groupId>
-			<artifactId>sb_zlog2</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vo</groupId>
-			<artifactId>sb_zclass</artifactId>
-			<version>1.0.0-SNAPSHOT-jdk21</version>
 		</dependency>
 
 	</dependencies>
