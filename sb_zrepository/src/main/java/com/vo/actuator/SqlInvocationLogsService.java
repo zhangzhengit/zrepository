@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.vo.core.ZContext;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 
 /**
  *

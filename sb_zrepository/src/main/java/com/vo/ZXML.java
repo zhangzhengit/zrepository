@@ -12,7 +12,7 @@ import org.dom4j.io.SAXReader;
 import org.springframework.util.ResourceUtils;
 
 import com.vo.cache.CU;
-import com.vo.common.STU;
+import com.vo.cache.STU;
 import com.vo.exception.ZRepositoryException;
 
 /**

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.vo.DBEnum;
 import com.vo.cache.STU;
 import com.vo.conn.ZDatasourceProperties.P;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 
 /**
  *
@@ -45,11 +45,11 @@ public class ZCPool {
 	private static final AtomicBoolean addShutdownHook = new AtomicBoolean(false);
 
 	private void initialize(final String dataSourceName) {
-		
+
 		this.create(dataSourceName);
 
 		if (!addShutdownHook.get()) {
-			
+
 			final ZCPoolJob job = new ZCPoolJob();
 			job.start();
 
@@ -79,7 +79,7 @@ public class ZCPool {
 		if (STU.isEmpty(dataSourceName)) {
 			throw new IllegalArgumentException("dataSourceName 不能为空");
 		}
-		
+
 		final ZCPool pool = poolMap.get(dataSourceName);
 		if (pool != null) {
 			return pool;
@@ -165,8 +165,7 @@ public class ZCPool {
 
 			for (int m = 1; m <= ms; m++) {
 
-				for (int i = 0; i < this.readVector.size(); i++) {
-					final ZConnection zc = this.readVector.get(i);
+				for (final ZConnection zc : this.readVector) {
 					if (!zc.getBusy()) {
 						zc.setBusy(true);
 						return zc;
@@ -190,8 +189,7 @@ public class ZCPool {
 		synchronized (this.writeLock) {
 
 			for (int m = 1; m <= ms; m++) {
-				for (int i = 0; i < this.writeVector.size(); i++) {
-					final ZConnection zc = this.writeVector.get(i);
+				for (final ZConnection zc : this.writeVector) {
 					if (!zc.getBusy()) {
 						zc.setBusy(true);
 						return zc;
@@ -264,8 +262,7 @@ public class ZCPool {
 
 		synchronized (this.readLock) {
 
-			for (int i = 0; i < this.readVector.size(); i++) {
-				final ZConnection zc = this.readVector.get(i);
+			for (final ZConnection zc : this.readVector) {
 				if (zc.getConnection() == zConnection.getConnection()) {
 					zc.setBusy(false);
 					this.readLock.notify();
@@ -289,8 +286,7 @@ public class ZCPool {
 	private ZConnection returnWrite(final ZConnection zConnection) {
 		synchronized (this.writeLock) {
 
-			for (int i = 0; i < this.writeVector.size(); i++) {
-				final ZConnection zc = this.writeVector.get(i);
+			for (final ZConnection zc : this.writeVector) {
 				if (zc.getConnection() == zConnection.getConnection()) {
 					// FIXME 2024年5月21日 下午3:07:13 zhangzhen: 测试出的问题：当server(armbian的panther x2
 					// mysql-8.0.34-0ubuntu0.22.04.1)硬盘满了，commit 会一直卡着没反应，也不报错，也没法设置超时时间，怎么办？
@@ -356,7 +352,7 @@ public class ZCPool {
 		if (zdp == null) {
 			return;
 		}
-		
+
 		final P write = zdp.getWrite();
 		this.newWriteConnection(write);
 
@@ -432,7 +428,7 @@ public class ZCPool {
 	}
 
 	public String getDataSourceName() {
-		return dataSourceName;
+		return this.dataSourceName;
 	}
 
 	public void setDataSourceName(final String dataSourceName) {

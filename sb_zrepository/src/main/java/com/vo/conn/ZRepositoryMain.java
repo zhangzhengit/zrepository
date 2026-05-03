@@ -76,7 +76,6 @@ import com.vo.cache.STU;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
 import com.vo.core.ZField;
-import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
@@ -87,6 +86,7 @@ import com.vo.exception.ParameterCountDeclarationException;
 import com.vo.exception.ParameterNameDeclarationException;
 import com.vo.exception.ParameterTypeDeclarationException;
 import com.vo.exception.ZRepositoryException;
+import com.vo.log.core.ZLog2;
 
 /**
  *

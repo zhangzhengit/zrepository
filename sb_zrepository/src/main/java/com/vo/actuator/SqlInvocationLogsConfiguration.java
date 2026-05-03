@@ -3,7 +3,7 @@ package com.vo.actuator;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConditional;
 import com.vo.anno.ZConfiguration;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 
 /**
  *

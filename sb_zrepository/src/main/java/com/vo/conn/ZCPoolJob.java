@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.vo.conn.ZDatasourceProperties.P;
-import com.vo.core.ZLog2;
+import com.vo.log.core.ZLog2;
 
 /**
  * 连接的定时任务 1、验证连接还是否可用，可用则保留，不可用则剔除 2、判断一个连接是否超过最大存储时间，超过则关闭并剔除
