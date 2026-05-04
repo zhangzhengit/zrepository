@@ -5,9 +5,9 @@ import java.util.Date;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.vo.core.RU;
 import com.vo.repository.anno.ZCreateTime;
 import com.vo.repository.anno.ZOrder;
+import com.vo.zframework.core.RU;
 
 /**
  * @ZCreateTime 字段 ZRepository.save 时的动作：如果字段值为null，则自动给一个初始值[当前时间]

@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.vo.core.ZRC;
 import com.vo.repository.anno.ZEntity;
 import com.vo.repository.conn.Mode;
 import com.vo.repository.conn.SU;
@@ -23,6 +22,7 @@ import com.vo.repository.conn.ZRepositoryMain;
 import com.vo.repository.enums.DBEnum;
 import com.vo.repository.enums.SQLOperatorEnum;
 import com.vo.repository.exception.ZRepositoryException;
+import com.vo.zframework.core.ZRC;
 
 /**
  * 查询条件,使用方法引用来动态构造查询条件.

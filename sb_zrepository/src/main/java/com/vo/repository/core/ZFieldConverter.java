@@ -2,7 +2,7 @@ package com.vo.repository.core;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.vo.cache.STU;
+import com.vo.zframework.cache.STU;
 
 /**
  * 数据库字段 <> java对象字段转换, 如： order_count <> orderCount

@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.vo.cache.STU;
-import com.vo.core.ZRC;
 import com.vo.log.core.ZLog2;
 import com.vo.repository.conn.ZDatasourceProperties.P;
+import com.vo.zframework.cache.STU;
+import com.vo.zframework.core.ZRC;
 
 
 /**
@@ -95,7 +95,7 @@ public class ZDatasourcePropertiesLoader {
 		read.setDatasourceUrl(url);
 
 		final String userName = px.getProperty("datasource.read.username[" + i + "]");
-		if (com.vo.cache.STU.isEmpty(userName) && !notNeedUserNameAndPassword) {
+		if (com.vo.zframework.cache.STU.isEmpty(userName) && !notNeedUserNameAndPassword) {
 			LOG.error("datasource.read.userName[" + i + "]不存在");
 			System.exit(0);
 		}

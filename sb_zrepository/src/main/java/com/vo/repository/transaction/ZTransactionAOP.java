@@ -9,10 +9,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import com.vo.aop.AOPParameter;
-import com.vo.aop.ZAOP;
-import com.vo.aop.ZIAOP;
-import com.vo.core.ZRC;
 import com.vo.repository.anno.ZCSourceEnum;
 import com.vo.repository.anno.ZRead;
 import com.vo.repository.conn.Mode;
@@ -22,6 +18,10 @@ import com.vo.repository.conn.ZDatasourcePropertiesLoader;
 import com.vo.repository.core.ZC2;
 import com.vo.repository.core.ZIDG;
 import com.vo.repository.enums.DBEnum;
+import com.vo.zframework.aop.AOPParameter;
+import com.vo.zframework.aop.ZAOP;
+import com.vo.zframework.aop.ZIAOP;
+import com.vo.zframework.core.ZRC;
 
 
 /**
