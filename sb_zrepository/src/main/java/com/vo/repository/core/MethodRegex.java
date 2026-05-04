@@ -10,8 +10,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.vo.cache.STU;
 import com.vo.repository.anno.ZQuery;
+import com.vo.zframework.cache.STU;
 
 /**
  * ZRepository 方法命名规则的正则表达式

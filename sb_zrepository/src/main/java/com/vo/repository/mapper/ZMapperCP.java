@@ -1,6 +1,6 @@
 package com.vo.repository.mapper;
 
-import com.vo.anno.ZConfigurationProperties;
+import com.vo.zframework.anno.ZConfigurationProperties;
 
 /**
  *

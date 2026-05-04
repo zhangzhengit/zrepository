@@ -1,9 +1,9 @@
 package com.vo.repository.actuator;
 
-import com.vo.anno.ZBean;
-import com.vo.anno.ZConditional;
-import com.vo.anno.ZConfiguration;
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.anno.ZBean;
+import com.vo.zframework.anno.ZConditional;
+import com.vo.zframework.anno.ZConfiguration;
 
 /**
  *

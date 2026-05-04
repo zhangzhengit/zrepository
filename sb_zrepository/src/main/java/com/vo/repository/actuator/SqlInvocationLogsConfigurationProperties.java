@@ -1,9 +1,9 @@
 package com.vo.repository.actuator;
 
-import com.vo.anno.ZConfigurationProperties;
-import com.vo.validator.ZMax;
-import com.vo.validator.ZMin;
-import com.vo.validator.ZNotNull;
+import com.vo.zframework.anno.ZConfigurationProperties;
+import com.vo.zframework.validator.ZMax;
+import com.vo.zframework.validator.ZMin;
+import com.vo.zframework.validator.ZNotNull;
 
 /**
  *

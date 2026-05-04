@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.vo.core.ZRC;
+import com.vo.zframework.core.ZRC;
 
 /**
  *
@@ -23,7 +23,7 @@ public class ClassMap {
 	}
 
 	public synchronized static Set<Class<?>> scanPackage(final String packageName) {
-		final Supplier<Set<Class<?>>> supplier = () -> com.vo.scanner.ClassMap.scanPackage(packageName);
+		final Supplier<Set<Class<?>>> supplier = () -> com.vo.zframework.scanner.ClassMap.scanPackage(packageName);
 		return ZRC.singleton().computeIfAbsent(packageName, supplier);
 	}
 }

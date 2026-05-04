@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.vo.anno.ZBean;
-import com.vo.anno.ZConfiguration;
+import com.vo.zframework.anno.ZBean;
+import com.vo.zframework.anno.ZConfiguration;
 
 /**
  *
