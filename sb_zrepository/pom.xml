@@ -40,6 +40,12 @@
 			<artifactId>sb_zclass</artifactId>
 			<version>1.0.0-SNAPSHOT-jdk21</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.vo</groupId>
+			<artifactId>sb_zlog2</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
