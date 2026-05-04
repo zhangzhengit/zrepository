@@ -1487,17 +1487,15 @@ public class SU {
 			Field field = null;
 			try {
 
-				field  = RU.getDeclaredField(returnType,javaFieldName);
-				//				field = returnType.getDeclaredField(javaFieldName);
+				field = returnType.getDeclaredField(javaFieldName);
 				field.setAccessible(true);
-			} catch (final SecurityException e1) {
+			} catch (final NoSuchFieldException e) {
 				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
 				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
 				// 有可能是手误多写了一个column，或者少写了一个Field等等情况
 				// 前者会导致多一点流量，后者导致逻辑不通会自己发现的
 				continue;
 			}
-
 
 			final Object columValue = getColumnValue(rs, i, field);
 			if (columValue == null) {
