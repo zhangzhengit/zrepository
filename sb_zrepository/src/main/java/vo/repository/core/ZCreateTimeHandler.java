@@ -27,7 +27,9 @@ public class ZCreateTimeHandler extends ZSaveHandler {
 		// XXX 2024年6月27日 下午9:46:08 zhangzhen : save 操作，就不取 @ZDateFormat 了，暂时还没发现有问题
 		final java.util.Date now = new Date();
 
-		final Field[] fs = RU.getDeclaredFields(sua.getEntityClass());
+//		final Field[] fs = RU.getDeclaredFields(sua.getEntityClass());
+		final Field[] fs = sua.getEntityClass().getDeclaredFields();
+
 		for (final Field f : fs) {
 			if (f.isAnnotationPresent(ZCreateTime.class)) {
 				f.setAccessible(true);
