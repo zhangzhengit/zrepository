@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
-import vo.zframework.core.ZRC;
+import vo.zframework.cache.ZRC;
 
 /**
  *	Function相关

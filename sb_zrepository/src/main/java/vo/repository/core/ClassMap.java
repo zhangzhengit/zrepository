@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import vo.zframework.core.ZRC;
+import vo.zframework.cache.ZRC;
 
 /**
  *

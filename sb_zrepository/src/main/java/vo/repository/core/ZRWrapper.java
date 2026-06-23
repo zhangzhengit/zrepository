@@ -22,7 +22,7 @@ import vo.repository.conn.ZRepositoryMain;
 import vo.repository.enums.DBEnum;
 import vo.repository.enums.SQLOperatorEnum;
 import vo.repository.exception.ZRepositoryException;
-import vo.zframework.core.ZRC;
+import vo.zframework.cache.ZRC;
 
 /**
  * 查询条件,使用方法引用来动态构造查询条件.

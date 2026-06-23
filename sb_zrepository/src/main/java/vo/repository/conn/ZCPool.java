@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import vo.log.core.ZLog2;
 import vo.repository.conn.ZDatasourceProperties.P;
 import vo.repository.enums.DBEnum;
-import vo.zframework.cache.STU;
+import vo.zframework.common.STU;
 
 /**
  *
