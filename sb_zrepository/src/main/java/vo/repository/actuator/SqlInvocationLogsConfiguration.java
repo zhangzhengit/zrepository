@@ -4,6 +4,7 @@ import vo.log.core.ZLog2;
 import vo.zframework.anno.ZBean;
 import vo.zframework.anno.ZConditional;
 import vo.zframework.anno.ZConfiguration;
+import vo.zframework.anno.ZOrder;
 
 /**
  *
@@ -13,6 +14,7 @@ import vo.zframework.anno.ZConfiguration;
  *
  */
 @ZConfiguration
+@ZOrder(value = Integer.MIN_VALUE + 4)
 public class SqlInvocationLogsConfiguration {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();

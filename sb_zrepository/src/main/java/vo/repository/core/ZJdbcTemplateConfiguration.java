@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import vo.zframework.anno.ZBean;
 import vo.zframework.anno.ZConfiguration;
+import vo.zframework.anno.ZOrder;
 
 /**
  *
@@ -15,6 +16,7 @@ import vo.zframework.anno.ZConfiguration;
  */
 @Configuration
 @ZConfiguration
+@ZOrder(value = Integer.MIN_VALUE + 2)
 public class ZJdbcTemplateConfiguration {
 
 	@Bean
