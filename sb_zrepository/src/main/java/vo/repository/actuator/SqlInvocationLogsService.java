@@ -7,7 +7,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import vo.log.core.ZLog2;
 import vo.zframework.core.ZContext;
-import vo.zframework.http.Task;
 
 /**
  *
@@ -48,8 +47,7 @@ public class SqlInvocationLogsService extends Thread {
 				r.saveAll(list);
 				this.queue.clear();
 			} catch (final Exception e) {
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("SqlInvocationLogs-saveAllJob-saveAll异常-continue,message={}", message);
+				LOG.error("SqlInvocationLogs-saveAllJob-saveAll异常-continue", e);
 				continue;
 			}
 
