@@ -1,6 +1,6 @@
 package vo.repository.core;
 
-import com.google.common.collect.HashBasedTable;
+import vo.zframework.common.ZHashBasedTable;
 
 /**
  * 存放生成的 ZR的子接口的实现类的方法对应的sql
@@ -14,7 +14,7 @@ public class ZRSqlMap {
 	/**
 	 * <ZR的子接口的名称,ZR的子接口的名称里的方法名,ZR的子接口的名称里的方法名对应的sql>
 	 */
-	static HashBasedTable<String, String, String> table = HashBasedTable.create();
+	static ZHashBasedTable<String, String, String> table = new ZHashBasedTable<>();
 
 	public static void put(final String zRepositorySubClassName,final String methodName,final String sqlTemplate) {
 		table.put(zRepositorySubClassName, methodName, sqlTemplate);
