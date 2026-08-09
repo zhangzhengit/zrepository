@@ -170,7 +170,7 @@ public class ZTransactionAOP implements ZIAOP {
 		zc2.getZConnection().resetToDefaultTransactionIsolationIfChanged();
 	}
 
-	@Pointcut("@annotation(com.vo.repository.transaction.ZTransaction)")
+	@Pointcut("@annotation(vo.repository.transaction.ZTransaction)")
 	public void pointcut() {
 
 	}
