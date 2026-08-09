@@ -1,6 +1,6 @@
 package vo.repository.core;
 
-import vo.zframework.common.ZHashBasedTable;
+import vo.vortex.common.ZHashBasedTable;
 
 /**
  * 存放生成的 ZR的子接口的实现类的方法对应的sql

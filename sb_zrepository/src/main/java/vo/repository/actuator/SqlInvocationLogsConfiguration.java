@@ -1,10 +1,10 @@
 package vo.repository.actuator;
 
 import vo.log.core.ZLog2;
-import vo.zframework.anno.ZBean;
-import vo.zframework.anno.ZConditional;
-import vo.zframework.anno.ZConfiguration;
-import vo.zframework.anno.ZOrder;
+import vo.vortex.anno.ZBean;
+import vo.vortex.anno.ZConditional;
+import vo.vortex.anno.ZConfiguration;
+import vo.vortex.anno.ZOrder;
 
 /**
  *

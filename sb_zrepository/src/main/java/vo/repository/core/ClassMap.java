@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import vo.zframework.cache.ZRC;
+import vo.vortex.cache.ZRC;
 
 /**
  *
@@ -23,7 +23,7 @@ public class ClassMap {
 	}
 
 	public synchronized static Set<Class<?>> scanPackage(final String packageName) {
-		final Supplier<Set<Class<?>>> supplier = () -> vo.zframework.scanner.ClassMap.scanPackage(packageName);
+		final Supplier<Set<Class<?>>> supplier = () -> vo.vortex.scanner.ClassMap.scanPackage(packageName);
 		return ZRC.singleton().computeIfAbsent(packageName, supplier);
 	}
 }

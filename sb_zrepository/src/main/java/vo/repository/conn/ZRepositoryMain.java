@@ -79,15 +79,15 @@ import vo.repository.exception.ParameterCountDeclarationException;
 import vo.repository.exception.ParameterNameDeclarationException;
 import vo.repository.exception.ParameterTypeDeclarationException;
 import vo.repository.exception.ZRepositoryException;
-import vo.zframework.cache.ZRC;
-import vo.zframework.common.CU;
-import vo.zframework.common.STU;
-import vo.zframework.core.ZContext;
-import vo.zframework.zclass.ZClass;
-import vo.zframework.zclass.ZField;
-import vo.zframework.zclass.ZMethod;
-import vo.zframework.zclass.ZMethodArg;
-import vo.zframework.zclass.ZPackage;
+import vo.vortex.cache.ZRC;
+import vo.vortex.common.CU;
+import vo.vortex.common.STU;
+import vo.vortex.core.ZContext;
+import vo.vortex.zclass.ZClass;
+import vo.vortex.zclass.ZField;
+import vo.vortex.zclass.ZMethod;
+import vo.vortex.zclass.ZMethodArg;
+import vo.vortex.zclass.ZPackage;
 
 /**
  *

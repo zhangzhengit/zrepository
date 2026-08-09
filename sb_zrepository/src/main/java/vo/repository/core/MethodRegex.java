@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import vo.repository.anno.ZQuery;
-import vo.zframework.common.STU;
+import vo.vortex.common.STU;
 
 /**
  * ZRepository 方法命名规则的正则表达式

@@ -11,7 +11,7 @@ import vo.log.core.ZLog2;
 import vo.repository.core.DataSourceDTO;
 import vo.repository.enums.DBEnum;
 import vo.repository.transaction.ZIsolationEnum;
-import vo.zframework.common.STU;
+import vo.vortex.common.STU;
 
 /**
  *

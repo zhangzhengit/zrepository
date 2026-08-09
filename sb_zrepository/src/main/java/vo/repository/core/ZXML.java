@@ -12,8 +12,8 @@ import org.dom4j.io.SAXReader;
 import org.springframework.util.ResourceUtils;
 
 import vo.repository.exception.ZRepositoryException;
-import vo.zframework.common.CU;
-import vo.zframework.common.STU;
+import vo.vortex.common.CU;
+import vo.vortex.common.STU;
 
 /**
  * 读取xml文件

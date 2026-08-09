@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import vo.zframework.zclass.ZMethod;
-import vo.zframework.zclass.ZMethodArg;
+import vo.vortex.zclass.ZMethod;
+import vo.vortex.zclass.ZMethodArg;
 
 /**
  * 为兼容janino而新增的几个方法

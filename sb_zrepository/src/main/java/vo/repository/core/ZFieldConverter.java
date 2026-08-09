@@ -3,7 +3,7 @@ package vo.repository.core;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import vo.zframework.common.STU;
+import vo.vortex.common.STU;
 
 /**
  * 数据库字段 <> java对象字段转换, 如： order_count <> orderCount

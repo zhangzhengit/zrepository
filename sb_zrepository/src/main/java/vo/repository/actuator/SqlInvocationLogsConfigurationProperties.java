@@ -1,9 +1,9 @@
 package vo.repository.actuator;
 
-import vo.zframework.anno.ZMax;
-import vo.zframework.anno.ZMin;
-import vo.zframework.anno.ZNotNull;
-import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.vortex.anno.ZMax;
+import vo.vortex.anno.ZMin;
+import vo.vortex.anno.ZNotNull;
+import vo.vortex.configuration.properties.ZConfigurationProperties;
 
 /**
  *

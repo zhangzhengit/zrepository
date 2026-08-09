@@ -4,18 +4,18 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.1</version>
-		<relativePath /> <!-- lookup parent from repository -->
-	</parent>
+	<!--	<parent>-->
+	<!--		<groupId>org.springframework.boot</groupId>-->
+	<!--		<artifactId>spring-boot-starter-parent</artifactId>-->
+	<!--		<version>3.2.1</version>-->
+	<!--		<relativePath />  lookup parent from repository -->
+	<!--	</parent>-->
 
 	<groupId>vo</groupId>
-	<artifactId>sb_zrepository</artifactId>
+	<artifactId>zrepository</artifactId>
 	<version>1.0.0-SNAPSHOT-jdk21</version>
-	<name>sb_zrepository</name>
-	<description>sb_zrepository</description>
+	<name>zrepository</name>
+	<description>zrepository</description>
 
 	<properties>
 		<java.version>21</java.version>
@@ -31,7 +31,7 @@
 
 		<dependency>
 			<groupId>vo</groupId>
-			<artifactId>zframework_core</artifactId>
+			<artifactId>vortex-core</artifactId>
 			<version>1.0.0-SNAPSHOT-jdk21</version>
 		</dependency>
 
@@ -44,6 +44,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
+			<version>3.3.0</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.dom4j/dom4j -->
@@ -56,6 +57,7 @@
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
+			<version>1.22.1</version>
 		</dependency>
 
 		<dependency>

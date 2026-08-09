@@ -69,11 +69,11 @@ import vo.repository.exception.ZQuerySQLException;
 import vo.repository.exception.ZRepositoryException;
 import vo.repository.transaction.ZIsolationEnum;
 import vo.repository.transaction.ZTransactionAOP;
-import vo.zframework.cache.ZRC;
-import vo.zframework.common.AU;
-import vo.zframework.common.CU;
-import vo.zframework.common.STU;
-import vo.zframework.core.ZContext;
+import vo.vortex.cache.ZRC;
+import vo.vortex.common.AU;
+import vo.vortex.common.CU;
+import vo.vortex.common.STU;
+import vo.vortex.core.ZContext;
 
 /**
  * @see ZRepository 接口和其子接口里的方法的具体实现

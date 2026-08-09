@@ -7,8 +7,8 @@ import java.util.Properties;
 
 import vo.log.core.ZLog2;
 import vo.repository.conn.ZDatasourceProperties.P;
-import vo.zframework.cache.ZRC;
-import vo.zframework.common.STU;
+import vo.vortex.cache.ZRC;
+import vo.vortex.common.STU;
 
 
 /**

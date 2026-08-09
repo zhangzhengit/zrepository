@@ -1,6 +1,6 @@
 package vo.repository.mapper;
 
-import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.vortex.configuration.properties.ZConfigurationProperties;
 
 /**
  *

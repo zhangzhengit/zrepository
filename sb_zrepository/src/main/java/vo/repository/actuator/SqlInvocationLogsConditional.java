@@ -1,7 +1,7 @@
 package vo.repository.actuator;
 
-import vo.zframework.anno.ZCondition;
-import vo.zframework.anno.ZConfigurationPropertiesRegistry;
+import vo.vortex.anno.ZCondition;
+import vo.vortex.anno.ZConfigurationPropertiesRegistry;
 
 /**
  *

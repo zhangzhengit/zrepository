@@ -18,10 +18,10 @@ import vo.repository.conn.ZDatasourcePropertiesLoader;
 import vo.repository.core.ZC2;
 import vo.repository.core.ZIDG;
 import vo.repository.enums.DBEnum;
-import vo.zframework.anno.ZAOP;
-import vo.zframework.aop.AOPParameter;
-import vo.zframework.aop.ZIAOP;
-import vo.zframework.cache.ZRC;
+import vo.vortex.anno.ZAOP;
+import vo.vortex.aop.AOPParameter;
+import vo.vortex.aop.ZIAOP;
+import vo.vortex.cache.ZRC;
 
 
 /**
