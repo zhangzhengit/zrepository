@@ -1,5 +1,6 @@
 package vo.repository.core;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -49,17 +50,20 @@ public class ZEntityHandlerScanner {
 
 	private static Set<ZEntityHandler> getZEntityHandlerSubClass(final Class<?> acls, final String... pas) {
 		final Set<ZEntityHandler> r = Sets.newHashSet();
+		final Set<Class<?>> cs = Sets.newHashSet();
 		for (final String pn : pas) {
 			for (final Class<?> cls : ClassMap.scanPackage(pn)) {
 				final Class<?> ia = cls.getSuperclass();
 				if (ia == null) {
 					continue;
 				}
-				final boolean isZRSubclass = ia.equals(acls);
-				if (isZRSubclass) {
+
+				if (ia.equals(acls)) {
 					try {
-						r.add((ZEntityHandler) cls.newInstance());
-					} catch (InstantiationException | IllegalAccessException e) {
+						if (cs.add(cls)) {
+							r.add((ZEntityHandler) cls.getDeclaredConstructor().newInstance());
+						}
+					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 						e.printStackTrace();
 					}
 				}
@@ -71,10 +75,10 @@ public class ZEntityHandlerScanner {
 
 	private static final HashMap<ZEHEnum, Set<ZEntityHandler>> m = Maps.newHashMap();
 
-	private static void set(final ZEHEnum zehEnum,final Set<ZEntityHandler> saveHS ) {
+	private static void set(final ZEHEnum zehEnum,final Set<ZEntityHandler> ehs ) {
 
-		if (saveHS.size() > 1) {
-			final Optional<ZEntityHandler> noZORDER = saveHS.stream().filter(h -> !h.getClass().isAnnotationPresent(ZOrder.class))
+		if (ehs.size() > 1) {
+			final Optional<ZEntityHandler> noZORDER = ehs.stream().filter(h -> !h.getClass().isAnnotationPresent(ZOrder.class))
 					.findAny();
 
 			if (noZORDER.isPresent()) {
@@ -90,35 +94,35 @@ public class ZEntityHandlerScanner {
 			}
 		}
 
-		final Map<String, List<ZEntityHandler>> pMap = saveHS.stream()
+		final Map<String, List<ZEntityHandler>> pMap = ehs.stream()
 				.collect(Collectors.groupingBy(h -> h.getClass().getSuperclass().getName()));
+
+		final Set<Integer> os = Sets.newHashSet();
 
 		final Set<Entry<String, List<ZEntityHandler>>> es = pMap.entrySet();
 		for (final Entry<String, List<ZEntityHandler>> e : es) {
 
-			final Set<Integer> os = Sets.newHashSet();
 			for (final ZEntityHandler h : e.getValue()) {
 				final ZOrder zo = h.getClass().getAnnotation(ZOrder.class);
 				if (zo == null) {
 					continue;
 				}
 
-				final int v = zo.value();
-				final boolean add = os.add(h.getClass().getAnnotation(ZOrder.class).value());
-				if (!add) {
+				final int zOrderValue = zo.value();
+				if (!os.add(zOrderValue)) {
 					final String s = e.getKey() + " 子类"
 							+ " ["
 							+ h.getClass().getName()
 							+ "] "
 							+ "的 @" + ZOrder.class.getName()
-							+ " 注解值 [" + v + "] 重复，请修改此值";
+							+ " 注解值 [" + zOrderValue + "] 重复，请修改此值";
 					throw new ZRepositoryException(s);
 				}
 			}
 		}
 
 
-		final List<ZEntityHandler> xl = Lists.newArrayList(saveHS);
+		final List<ZEntityHandler> xl = Lists.newArrayList(ehs);
 		xl.sort(Comparator.comparing(h -> h.getClass().getAnnotation(ZOrder.class).value()));
 		final LinkedHashSet<ZEntityHandler> vs = Sets.newLinkedHashSet(xl);
 
