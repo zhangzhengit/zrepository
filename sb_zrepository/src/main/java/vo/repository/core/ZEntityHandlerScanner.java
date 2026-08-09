@@ -27,46 +27,46 @@ import vo.repository.exception.ZRepositoryException;
  */
 public class ZEntityHandlerScanner {
 
-	public static void scan(final String packageName) {
-		final Set<ZEntityHandler> saveHS = getZEntityHandlerSubClass(packageName, ZSaveHandler.class);
+	public static void scan(final String... pas) {
+		final Set<ZEntityHandler> saveHS = getZEntityHandlerSubClass(ZSaveHandler.class, pas);
 		set(ZEHEnum.SAVE, saveHS);
 
-		final Set<ZEntityHandler> updateHS = getZEntityHandlerSubClass(packageName, ZUpdateHandler.class);
+		final Set<ZEntityHandler> updateHS = getZEntityHandlerSubClass(ZUpdateHandler.class, pas);
 		set(ZEHEnum.UPDATE, updateHS);
 
 
-		final Set<ZEntityHandler> DELETEDHS = getZEntityHandlerSubClass(packageName, ZDeleteByIdHandler.class);
+		final Set<ZEntityHandler> DELETEDHS = getZEntityHandlerSubClass(ZDeleteByIdHandler.class, pas);
 		set(ZEHEnum.DELETE_Logical, DELETEDHS);
 
-		final Set<ZEntityHandler> EXCLUDED_DELETEDHS = getZEntityHandlerSubClass(packageName, ZAllHandler.class);
+		final Set<ZEntityHandler> EXCLUDED_DELETEDHS = getZEntityHandlerSubClass(ZAllHandler.class, pas);
 		set(ZEHEnum.SELECT_EXCLUDED_DELETED, EXCLUDED_DELETEDHS);
 		// FIXME 2024年6月16日 上午5:07:55 zhangzhen : 继续写
 
-		final Set<ZEntityHandler> deleteHS = getZEntityHandlerSubClass(packageName, ZDeleteAllHandler.class);
+		final Set<ZEntityHandler> deleteHS = getZEntityHandlerSubClass(ZDeleteAllHandler.class, pas);
 		set(ZEHEnum.DELETE_ALL, deleteHS);
 
 	}
 
-	private static Set<ZEntityHandler> getZEntityHandlerSubClass(final String packageName, final Class<?> acls) {
-		final Set<ZEntityHandler> ssss = Sets.newHashSet();
-		for (final Class<?> cls : ClassMap.scanPackage(packageName)) {
-			final Class<?> ia = cls.getSuperclass();
-			if (ia == null) {
-				continue;
-			}
-			//			for (final Class<?> i : ia) {
-			final boolean isZRSubclass = ia.equals(acls);
-			if (isZRSubclass) {
-				try {
-					ssss.add((ZEntityHandler) cls.newInstance());
-				} catch (InstantiationException | IllegalAccessException e) {
-					e.printStackTrace();
+	private static Set<ZEntityHandler> getZEntityHandlerSubClass(final Class<?> acls, final String... pas) {
+		final Set<ZEntityHandler> r = Sets.newHashSet();
+		for (final String pn : pas) {
+			for (final Class<?> cls : ClassMap.scanPackage(pn)) {
+				final Class<?> ia = cls.getSuperclass();
+				if (ia == null) {
+					continue;
+				}
+				final boolean isZRSubclass = ia.equals(acls);
+				if (isZRSubclass) {
+					try {
+						r.add((ZEntityHandler) cls.newInstance());
+					} catch (InstantiationException | IllegalAccessException e) {
+						e.printStackTrace();
+					}
 				}
 			}
-			//			}
 		}
 
-		return ssss;
+		return r;
 	}
 
 	private static final HashMap<ZEHEnum, Set<ZEntityHandler>> m = Maps.newHashMap();

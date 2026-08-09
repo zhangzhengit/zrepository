@@ -192,16 +192,17 @@ public class ZRepositoryMain {
 
 	/**
 	 * 扫描接口 ZRepository 的子接口(自定义的继承了ZRepository的接口)
-	 *
-	 * @param packageName 扫描的包名，如： com.vo
+	 * @param pas TODO
 	 *
 	 * @return
 	 *
 	 */
-	public static Set<Class<?>> scanZRepositorySubinterface(final String packageName) {
+	public static Set<Class<?>> scanZRepositorySubinterface(final String... pas) {
 
 		final Set<Class<?>> zrSubclassSet = new HashSet<>();
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
+
+		final Set<Class<?>> clsSet = Arrays.stream(pas).flatMap(pn -> ClassMap.scanPackage(pn).stream()).collect(Collectors.toSet());
+
 		for (final Class<?> cls : clsSet) {
 
 			final Class<?>[] ia = cls.getInterfaces();
