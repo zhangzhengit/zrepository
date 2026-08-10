@@ -1,13 +1,13 @@
 
 # 使用说明：
-# 一  springboot 项目和 sb_zframework
-	直接引入 repository_starter 的maven依赖即可使用本工程的功能。
+# 一  springboot 项目和 vortex
+	直接引入 zrepository-starter 的maven依赖即可使用本工程的功能。
 	
 	1 新springboot项目 A ，引入
 		
 		<dependency>
 			<groupId>com.vo</groupId>
-			<artifactId>repository_starter</artifactId>
+			<artifactId>zrepository-starter</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 	

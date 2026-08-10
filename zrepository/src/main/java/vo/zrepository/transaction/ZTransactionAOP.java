@@ -181,7 +181,7 @@ public class ZTransactionAOP implements ZIAOP {
 	}
 
 	/**
-	 * zframework的 AOP方法，拦截：@ZAOP(interceptType = ZTransaction.class)
+	 * vortex 的 AOP方法，拦截：@ZAOP(interceptType = ZTransaction.class)
 	 * 本方法逻辑和springAOP public final Object around(final ProceedingJoinPoint proceedingJoinPoint)
 	 * 方法逻辑一致，都是在[一个或一组操作DB的目标方法]执行前获取一个ZConnection，然后这一组操作都使用
 	 * 这一个ZConnection，全部执行成功则commit，有一个执行异常则rollback.
