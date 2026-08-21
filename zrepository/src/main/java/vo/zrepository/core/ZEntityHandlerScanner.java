@@ -1,6 +1,7 @@
 package vo.zrepository.core;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -73,7 +74,7 @@ public class ZEntityHandlerScanner {
 		return r;
 	}
 
-	private static final HashMap<ZEHEnum, Set<ZEntityHandler>> m = Maps.newHashMap();
+	private static final HashMap<ZEHEnum, ArrayList<ZEntityHandler>> m = Maps.newHashMap();
 
 	private static void set(final ZEHEnum zehEnum,final Set<ZEntityHandler> ehs ) {
 
@@ -121,15 +122,12 @@ public class ZEntityHandlerScanner {
 			}
 		}
 
-
 		final List<ZEntityHandler> xl = Lists.newArrayList(ehs);
 		xl.sort(Comparator.comparing(h -> h.getClass().getAnnotation(ZOrder.class).value()));
-		final LinkedHashSet<ZEntityHandler> vs = Sets.newLinkedHashSet(xl);
-
-		m.put(zehEnum, vs);
+		m.put(zehEnum, new ArrayList<>(Sets.newLinkedHashSet(xl)));
 	}
 
-	public static Set<ZEntityHandler> get(final ZEHEnum zehEnum) {
+	public static ArrayList<ZEntityHandler> get(final ZEHEnum zehEnum) {
 		return m.get(zehEnum);
 	}
 

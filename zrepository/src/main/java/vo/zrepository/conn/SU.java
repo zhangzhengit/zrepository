@@ -281,10 +281,14 @@ public class SU {
 	}
 
 	private static SUA updateHandler(final Class<?> entityClass, final Object t, final String sqlF, final ZC2 zc2) {
-		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
+		final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
 		sua.setZc2(zc2);
-		sh.forEach(h -> h.handle(sua));
+
+		for (int i = 0, size = sh.size(); i < size; i++) {
+			final ZEntityHandler h = sh.get(i);
+			h.handle(sua);
+		}
 
 		return sua;
 	}
@@ -309,12 +313,15 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 
 
-		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_ALL);
+		final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_ALL);
 		final SUA sua = new SUA(entityClass, null, entityClass, sql, null);
 		sua.setZc2(zc);
 		sua.setZrSubClassName(zrSubClassName);
 		sua.setCallerMethodName(callerMethodName);
-		sh.forEach(h -> h.handle(sua));
+		for (int i = 0, size = sh.size(); i < size; i++) {
+			final ZEntityHandler h = sh.get(i);
+			h.handle(sua);
+		}
 
 		PreparedStatement ps =null;
 		try {
@@ -365,10 +372,14 @@ public class SU {
 
 			final String params = String.join(",", Collections.nCopies(idSet.size(), "?"));
 
-			final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
+			final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 			final SUA sua = new SUA(entityClass, null, null, sql, null);
 			sua.setZc2(zc);
-			sh.forEach(h -> ((ZDeleteByIdHandler) h).handle(sua));
+
+			for (int i = 0, size = sh.size(); i < size; i++) {
+				final ZEntityHandler h = sh.get(i);
+				h.handle(sua);
+			}
 
 			final String s2 = sua.getSql();
 			final String sqlT = s2.replace("?", params);
@@ -410,10 +421,13 @@ public class SU {
 		final Connection connection = zc.getZConnection().getConnection();
 
 
-		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
+		final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.DELETE_Logical);
 		final SUA sua = new SUA(entityClass, null, null, sql,new Object[] { id});
 		sua.setZc2(zc);
-		sh.forEach(h -> ((ZDeleteByIdHandler)h).handle(sua));
+		for (int i = 0, size = sh.size(); i < size; i++) {
+			final ZEntityHandler h = sh.get(i);
+			h.handle(sua);
+		}
 
 		final String s = sua.getSql();
 
@@ -655,9 +669,12 @@ public class SU {
 		try {
 
 			tList.parallelStream().forEach(t -> {
-				final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
+				final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
 				final SUA sua = new SUA(entityClass, t, entityClass, sql, null);
-				sh.forEach(h -> h.handle(sua));
+				for (int i = 0, size = sh.size(); i < size; i++) {
+					final ZEntityHandler h = sh.get(i);
+					h.handle(sua);
+				}
 			});
 
 			if (isShowSQL(dataSourceName)) {
@@ -835,10 +852,14 @@ public class SU {
 		final String sql2 = sql.replace(MethodRegex.COLUMNS, arg.toString()).replace(MethodRegex.COLUMN_VALUES,
 				joiner.toString());
 
-		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
+		final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SAVE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sql2, null);
 		sua.setZc2(zc2);
-		sh.forEach(h -> h.handle(sua));
+
+		for (int i = 0, size = sh.size(); i < size; i++) {
+			final ZEntityHandler h = sh.get(i);
+			h.handle(sua);
+		}
 
 		PreparedStatement ps;
 		if (isShowSQL(getDataSourceNameFromClassType(entityClass))) {
@@ -1357,11 +1378,15 @@ public class SU {
 
 	private static <T> SUA excludedDeletedHandler(final Class<T> entityClass, final Object entityObject, final Class returnClass,
 			final String sql, final Object[] arg, final ZC2 zc2) {
-		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SELECT_EXCLUDED_DELETED);
 		final SUA sua = new SUA(entityClass, entityObject, returnClass, sql, arg);
 		sua.setZc2(zc2);
 
-		sh.forEach(h -> ((ZAllHandler)h).handle(sua));
+		final ArrayList<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.SELECT_EXCLUDED_DELETED);
+		for (int i = 0, size = sh.size(); i < size; i++) {
+			final ZEntityHandler h = sh.get(i);
+			h.handle(sua);
+		}
+
 		return sua;
 	}
 
@@ -1374,9 +1399,10 @@ public class SU {
 				final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 				Field field = null;
 				try {
-					field = returnType.getDeclaredField(javaFieldName);
+					field = RU.getDeclaredField(returnType, javaFieldName);
+//					field = returnType.getDeclaredField(javaFieldName);
 					field.setAccessible(true);
-				} catch (final SecurityException | NoSuchFieldException e1) {
+				} catch (final SecurityException e1) {
 					e1.printStackTrace();
 				}
 
