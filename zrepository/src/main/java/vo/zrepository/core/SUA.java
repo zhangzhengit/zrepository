@@ -1,5 +1,8 @@
 package vo.zrepository.core;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+
 /**
  *
  *
@@ -10,6 +13,7 @@ package vo.zrepository.core;
 public class SUA {
 
 	Class<?> entityClass;
+	private final Field[] declaredFields;
 	Object entityObject;
 
 	Class<?> returnClass;
@@ -28,28 +32,30 @@ public class SUA {
 
 	public SUA(final Class<?> entityClass, final Object entityObject, final Class<?> returnClass, final String sql, final Object[] arg) {
 		this.entityClass = entityClass;
+
+		this.declaredFields = entityClass.getDeclaredFields();
+
 		this.entityObject = entityObject;
 		this.returnClass = returnClass;
 		this.sql = sql;
 		this.arg = arg;
 	}
 
-	public SUA(final Class<?> entityClass, final Object entityObject, final Class<?> returnClass, final String sql, final Object[] arg, final ZC2 zc2,
-			final String zrSubClassName, final String callerMethodName, final String where) {
-		super();
-		this.entityClass = entityClass;
-		this.entityObject = entityObject;
-		this.returnClass = returnClass;
-		this.sql = sql;
-		this.arg = arg;
-		this.zc2 = zc2;
-		this.zrSubClassName = zrSubClassName;
-		this.callerMethodName = callerMethodName;
-		this.where = where;
-	}
+//	public SUA(final Class<?> entityClass, final Object entityObject, final Class<?> returnClass, final String sql, final Object[] arg, final ZC2 zc2,
+//			final String zrSubClassName, final String callerMethodName, final String where) {
+//		this.entityClass = entityClass;
+//		this.entityObject = entityObject;
+//		this.returnClass = returnClass;
+//		this.sql = sql;
+//		this.arg = arg;
+//		this.zc2 = zc2;
+//		this.zrSubClassName = zrSubClassName;
+//		this.callerMethodName = callerMethodName;
+//		this.where = where;
+//	}
 
 	public Class<?> getEntityClass() {
-		return entityClass;
+		return this.entityClass;
 	}
 
 	public void setEntityClass(final Class<?> entityClass) {
@@ -57,7 +63,7 @@ public class SUA {
 	}
 
 	public Object getEntityObject() {
-		return entityObject;
+		return this.entityObject;
 	}
 
 	public void setEntityObject(final Object entityObject) {
@@ -65,7 +71,7 @@ public class SUA {
 	}
 
 	public Class<?> getReturnClass() {
-		return returnClass;
+		return this.returnClass;
 	}
 
 	public void setReturnClass(final Class<?> returnClass) {
@@ -73,7 +79,7 @@ public class SUA {
 	}
 
 	public String getSql() {
-		return sql;
+		return this.sql;
 	}
 
 	public void setSql(final String sql) {
@@ -81,7 +87,7 @@ public class SUA {
 	}
 
 	public Object[] getArg() {
-		return arg;
+		return this.arg;
 	}
 
 	public void setArg(final Object[] arg) {
@@ -89,7 +95,7 @@ public class SUA {
 	}
 
 	public ZC2 getZc2() {
-		return zc2;
+		return this.zc2;
 	}
 
 	public void setZc2(final ZC2 zc2) {
@@ -97,7 +103,7 @@ public class SUA {
 	}
 
 	public String getZrSubClassName() {
-		return zrSubClassName;
+		return this.zrSubClassName;
 	}
 
 	public void setZrSubClassName(final String zrSubClassName) {
@@ -105,7 +111,7 @@ public class SUA {
 	}
 
 	public String getCallerMethodName() {
-		return callerMethodName;
+		return this.callerMethodName;
 	}
 
 	public void setCallerMethodName(final String callerMethodName) {
@@ -113,11 +119,26 @@ public class SUA {
 	}
 
 	public String getWhere() {
-		return where;
+		return this.where;
 	}
 
 	public void setWhere(final String where) {
 		this.where = where;
 	}
-	
+
+	public Field[] getDeclaredFields() {
+		return this.declaredFields;
+	}
+
+	public Field isAnyFieldHasAnnotation(final Class<? extends Annotation> annoClass) {
+		final Field[] fs = this.getDeclaredFields();
+		for (final Field field : fs) {
+			if (field.isAnnotationPresent(annoClass)) {
+				return field;
+			}
+		}
+
+		return null;
+	}
+
 }

@@ -1,11 +1,8 @@
 package vo.zrepository.core;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Optional;
 
 import vo.zrepository.anno.ZEntity;
-import vo.zrepository.anno.ZID;
 import vo.zrepository.anno.ZLogicalDelete;
 import vo.zrepository.anno.ZOrder;
 
@@ -22,24 +19,22 @@ public class ZLogicalDeleteDeleteAllHandler extends ZDeleteAllHandler {
 
 	@Override
 	public SUA handle(final SUA sua) {
-		final Field[] fs = sua.getEntityClass().getDeclaredFields();
-		final Optional<Field> zldo = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZLogicalDelete.class))
-				.findFirst();
-		if (!zldo.isPresent()) {
+
+		final Field zldF = sua.isAnyFieldHasAnnotation(ZLogicalDelete.class);
+		if (zldF == null) {
 			return sua;
 		}
-
-		final Optional<Field> id = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZID.class)).findFirst();
-		final Field idf = id.get();
 
 		final Class<?> cls = sua.getEntityClass();
 		final String tableName = cls.getAnnotation(ZEntity.class).tableName();
 
 		final String update =
-				"UPDATE " + tableName + " SET "
-						+ ZFieldConverter.toDbField(zldo.get().getName())
+						"UPDATE "
+						+ tableName
+						+ " SET "
+						+ ZFieldConverter.toDbField(zldF.getName())
 						+ " = "
-						+ zldo.get().getAnnotation(ZLogicalDelete.class).deleted()
+						+ zldF.getAnnotation(ZLogicalDelete.class).deleted()
 						;
 
 		sua.setSql(update);
