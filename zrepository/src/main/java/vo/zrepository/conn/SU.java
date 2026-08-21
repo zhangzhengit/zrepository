@@ -1463,6 +1463,14 @@ public class SU {
 		return object;
 	}
 
+	/**
+	 * @param dbEnum
+	 * @param returnType
+	 * @param rs
+	 * @param resultSetMetaData
+	 * @param fieldCount
+	 * @return
+	 */
 	private static Object newT(
 			final DBEnum dbEnum,
 			final Class returnType,
@@ -1486,7 +1494,7 @@ public class SU {
 
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 
-			final Field field = RU.getDeclaredField(returnType, javaFieldName);
+			final Field field = ClassU.getField(returnType, javaFieldName);
 			if (field == null) {
 				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
 				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
