@@ -1,6 +1,7 @@
 package vo.zrepository.conn;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.ConcurrentHashMap;
 
 import vo.vortex.common.ZHashBasedTable;
 
@@ -15,7 +16,13 @@ public class ClassU {
 	/**
 	 * <Class,Field名,Field>
 	 */
-	static ZHashBasedTable<Class<?>, String, Field> table = new ZHashBasedTable<>();
+	private static final ZHashBasedTable<Class<?>, String, Field> table = new ZHashBasedTable<>();
+
+	private static final ConcurrentHashMap<Class<?>, Field[]> CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
+
+	public static Field[] getDeclaredFields(final Class<?> cls) {
+		return CLASS_DF_CACHE.computeIfAbsent(cls, Class::getDeclaredFields);
+	}
 
 	public static Field getField(final Class<?> cls, final String fieldName) {
 		final Field field = table.get(cls, fieldName);
@@ -25,7 +32,8 @@ public class ClassU {
 
 		synchronized (table) {
 			final Field df = getDF(fieldName, cls);
-			return table.put(cls, fieldName, df);
+			table.put(cls, fieldName, df);
+			return df;
 		}
 	}
 

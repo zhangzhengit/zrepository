@@ -24,7 +24,7 @@ public class ZVersionHandler extends ZSaveHandler {
 
 	@Override
 	public SUA handle(final SUA sua) {
-		final Field[] fs = sua.getEntityClass().getDeclaredFields();
+		final Field[] fs = sua.getDeclaredFields();
 		for (final Field f : fs) {
 			if (f.isAnnotationPresent(ZVersion.class)) {
 				f.setAccessible(true);

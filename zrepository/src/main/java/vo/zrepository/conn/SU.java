@@ -846,7 +846,8 @@ public class SU {
 			final Object t, final String sql, final Connection connection, final ZC2 zc2) throws SQLException {
 
 		final StringJoiner arg = new StringJoiner(",");
-		final Field[] fs = entityClass.getDeclaredFields();
+		final Field[] fs = ClassU.getDeclaredFields(entityClass);
+//		final Field[] fs = entityClass.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
 			if (field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class)
@@ -2033,7 +2034,8 @@ public class SU {
 	}
 
 	private static String gSelectFromReturnType0(final Class entityClass, final Class returnType) {
-		final Field[] declaredFields = returnType.getDeclaredFields();
+
+		final Field[] declaredFields = ClassU.getDeclaredFields(returnType);
 
 		final Field[] efs = entityClass.getDeclaredFields();
 		final StringJoiner joiner = new StringJoiner(ZRepositoryMain.DELIMITER);

@@ -1,8 +1,6 @@
 package vo.zrepository.core;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Optional;
 
 import vo.zrepository.anno.ZLogicalDelete;
 import vo.zrepository.anno.ZOrder;
@@ -21,16 +19,15 @@ public class ZLogicalDeleteSaveHandler extends ZSaveHandler {
 	@Override
 	public SUA handle(final SUA sua) {
 
-		final Optional<Field> zldf = Arrays.stream(sua.getEntityClass().getDeclaredFields()).filter(f -> f.isAnnotationPresent(ZLogicalDelete.class)).findAny();
-		if (!zldf.isPresent()) {
+		final Field zldf = sua.isAnyFieldHasAnnotation(ZLogicalDelete.class);
+		if (zldf == null) {
 			return sua;
 		}
 
-		final Field f = zldf.get();
-		f.setAccessible(true);
-		final int undeleted = f.getAnnotation(ZLogicalDelete.class).undeleted();
+		zldf.setAccessible(true);
+		final int undeleted = zldf.getAnnotation(ZLogicalDelete.class).undeleted();
 		try {
-			f.set(sua.getEntityObject(), undeleted);
+			zldf.set(sua.getEntityObject(), undeleted);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
