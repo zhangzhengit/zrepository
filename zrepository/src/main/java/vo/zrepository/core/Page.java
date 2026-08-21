@@ -63,12 +63,12 @@ public final class Page<T> {
 		return this.getList().size() > 0;
 	}
 
-	public Page(final int size, final long page, final long totalPage, final long totalCount, final List<T> listAAA) {
+	public Page(final int size, final long page, final long totalPage, final long totalCount, final List<T> list) {
 		this.size = size;
 		this.page = page;
 		this.totalPage = totalPage;
 		this.totalCount = totalCount;
-		this.list = listAAA;
+		this.list = list;
 	}
 
 	public int getSize() {
