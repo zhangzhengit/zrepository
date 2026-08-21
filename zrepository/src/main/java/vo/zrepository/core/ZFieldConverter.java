@@ -1,5 +1,7 @@
 package vo.zrepository.core;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -13,6 +15,15 @@ import vo.vortex.common.STU;
  *
  */
 public class ZFieldConverter {
+
+	/**
+	 * <javaField名称,DB字段名称>
+	 */
+	private static final ConcurrentHashMap<String, String> JAVAFIELDNAME_DBNAME_CACHE = new ConcurrentHashMap<>(16, 1F);
+	/**
+	 * <DB字段名称,javaField名称>
+	 */
+	private static final ConcurrentHashMap<String, String> DBNAME_JAVAFIELDNAME_CACHE = new ConcurrentHashMap<>(16, 1F);
 
 	public static final String UNDERSCORE = "_";
 	public static final Character UNDERSCORE_CHARACTER = '_';
@@ -38,7 +49,7 @@ public class ZFieldConverter {
 	}
 
 	public static String toJavaField(final String dbFieldName) {
-		return toJavaField0(dbFieldName);
+		return DBNAME_JAVAFIELDNAME_CACHE.computeIfAbsent(dbFieldName, ZFieldConverter::toJavaField0);
 	}
 
 	private static String toJavaField0(final String dbFieldName) {
@@ -60,27 +71,33 @@ public class ZFieldConverter {
 		if (STU.isEmpty(javaFieldName)) {
 			throw new IllegalArgumentException("javaFieldName 不能为空");
 		}
-		if (javaFieldName.length() == 1) {
-			return  String.valueOf(new char[] {javaFieldName.charAt(0)}).toLowerCase();
-		}
 
-		final StringBuilder x = new StringBuilder(javaFieldName).replace(0, 1,String.valueOf(new char[] {javaFieldName.charAt(0)}).toLowerCase());
-		final char[] charArray = x.toString().toCharArray();
-		int count = 0;
-		final StringBuilder n = new StringBuilder(x);
-		for (int i = 0; i < charArray.length; i++) {
-			final char c = charArray[i];
-			if (UPPERCASE_LETTER.contains(c)) {
-				if (i == 0) {
-					n.replace(i + count, i + count + 1, String.valueOf(c).toLowerCase());
-				} else {
-					n.replace(i + count, i + count + 1, UNDERSCORE + String.valueOf(c).toLowerCase());
-				}
-				count++;
+		final String v = JAVAFIELDNAME_DBNAME_CACHE.computeIfAbsent(javaFieldName, jfn -> {
+			if (jfn.length() == 1) {
+				return  String.valueOf(new char[] {jfn.charAt(0)}).toLowerCase();
 			}
-		}
 
-		return n.toString();
+			final StringBuilder x = new StringBuilder(jfn).replace(0, 1,String.valueOf(new char[] {jfn.charAt(0)}).toLowerCase());
+			final char[] charArray = x.toString().toCharArray();
+			int count = 0;
+			final StringBuilder n = new StringBuilder(x);
+			for (int i = 0; i < charArray.length; i++) {
+				final char c = charArray[i];
+				if (UPPERCASE_LETTER.contains(c)) {
+					if (i == 0) {
+						n.replace(i + count, i + count + 1, String.valueOf(c).toLowerCase());
+					} else {
+						n.replace(i + count, i + count + 1, UNDERSCORE + String.valueOf(c).toLowerCase());
+					}
+					count++;
+				}
+			}
+
+			return n.toString();
+		});
+
+
+		return v;
 	}
 
 }
