@@ -24,18 +24,16 @@ public class ZExcludedDeletedHandler extends ZAllHandler {
 	@Override
 	public SUA handle(final SUA sua) {
 
-		final Optional<Field> zld = Arrays.stream(sua.getEntityClass().getDeclaredFields()).filter(f -> f.isAnnotationPresent(ZLogicalDelete.class)).findAny();
-		if(!zld.isPresent()) {
+		final Field zldF = sua.isAnyFieldHasAnnotation(ZLogicalDelete.class);
+		if (zldF == null) {
 			return sua;
 		}
 
-		final Field zldf = zld.get();
-
 		final String v =
 				Sort.SPACE + MethodRegex.AND + Sort.SPACE
-				+ ZFieldConverter.toDbField(zldf.getName())
+				+ ZFieldConverter.toDbField(zldF.getName())
 				+ " = "
-				+ zldf.getAnnotation(ZLogicalDelete.class).undeleted()
+				+ zldF.getAnnotation(ZLogicalDelete.class).undeleted()
 				;
 		sua.setWhere(v);
 
