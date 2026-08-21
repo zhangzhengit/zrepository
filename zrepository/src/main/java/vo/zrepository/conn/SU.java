@@ -1463,12 +1463,14 @@ public class SU {
 		return object;
 	}
 
-	private static Object newT(final DBEnum dbEnum, final Class returnType, final ResultSet rs,
-//	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
-			final ResultSetMetaData metaData, final int fieldCount) {
+	private static Object newT(
+			final DBEnum dbEnum,
+			final Class returnType,
+			final ResultSet rs,
+			final ResultSetMetaData resultSetMetaData,
+			final int fieldCount) {
 
 		final Object object = RU.newInstance(returnType);
-
 
 		for (int i = 0; i < fieldCount; i++) {
 			String columnName = null;
@@ -1477,19 +1479,15 @@ public class SU {
 				// 读取到的 columnName 会是maxid ，导致匹配 returnType 中的字段时匹配不到，
 				// 所以统一自定义SQL AS 后面的写法使用下划线命名法.只要是下划线命名法就行了，不关心大小写，
 				// 在此统一为小写了
-				columnName = metaData.getColumnLabel(i + 1).toLowerCase();
+				columnName = resultSetMetaData.getColumnLabel(i + 1).toLowerCase();
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
 
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 
-			Field field = null;
-			try {
-
-				field = returnType.getDeclaredField(javaFieldName);
-				field.setAccessible(true);
-			} catch (final NoSuchFieldException e) {
+			final Field field = RU.getDeclaredField(returnType, javaFieldName);
+			if (field == null) {
 				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
 				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
 				// 有可能是手误多写了一个column，或者少写了一个Field等等情况
@@ -1516,6 +1514,8 @@ public class SU {
 		final String fieldName = field.getType().getName();
 
 		try {
+
+			field.setAccessible(true);
 
 			if (fieldName.equals(Byte.class.getName())) {
 				field.set(object, Byte.valueOf(String.valueOf(columValue)));
@@ -1643,14 +1643,15 @@ public class SU {
 	private static Object getColumnValue(final ResultSet rs, final int i, final Field field) {
 
 		final Class<?> type = field.getType();
-		if ((type == LocalTime.class) || (type == String.class) || (type == Time.class)) {
+		if ((type == LocalTime.class)
+		|| (type == String.class)
+		|| (type == Time.class)) {
 			try {
 				return rs.getObject(i + 1, type);
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
 		}
-
 
 		try {
 			return rs.getObject(i + 1);
