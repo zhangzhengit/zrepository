@@ -46,19 +46,6 @@ public class SUA {
 		this.arg = arg;
 	}
 
-//	public SUA(final Class<?> entityClass, final Object entityObject, final Class<?> returnClass, final String sql, final Object[] arg, final ZC2 zc2,
-//			final String zrSubClassName, final String callerMethodName, final String where) {
-//		this.entityClass = entityClass;
-//		this.entityObject = entityObject;
-//		this.returnClass = returnClass;
-//		this.sql = sql;
-//		this.arg = arg;
-//		this.zc2 = zc2;
-//		this.zrSubClassName = zrSubClassName;
-//		this.callerMethodName = callerMethodName;
-//		this.where = where;
-//	}
-
 	public Class<?> getEntityClass() {
 		return this.entityClass;
 	}
