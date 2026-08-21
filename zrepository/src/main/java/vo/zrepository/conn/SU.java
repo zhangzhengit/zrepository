@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -197,36 +196,8 @@ public class SU {
 		return new Page(size, Long.parseLong(String.valueOf(page)), 0L, 0L, new ArrayList<>());
 	}
 
-	private static Boolean isShowSQL(final String dataSourceName) {
+	private static boolean isShowSQL(final String dataSourceName) {
 		return ZDatasourcePropertiesLoader.getInstance(dataSourceName).getShowSql();
-	}
-
-	/**
-	 * 获取T对象里非空的字段，返回<字段名称,字段值>
-	 *
-	 * @param <T>
-	 * @param t
-	 * @return
-	 *
-	 */
-	private static <T> Map<String, Object> getNotNullFieldMap(final Object t) {
-		final Map<String, Object> fMap = new LinkedHashMap<>();
-		final Field[] fs = t.getClass().getDeclaredFields();
-		for (final Field f : fs) {
-			f.setAccessible(true);
-			try {
-				final Object v = f.get(t);
-				if (v == null) {
-					continue;
-				}
-
-				fMap.put(f.getName(), v);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return fMap;
 	}
 
 	public static boolean update(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -498,7 +469,7 @@ public class SU {
 
 		// select ZID,count(*) from TABLE_NAME where @ in (?) group by ZID;
 
-		final Field zidF = getZID(entityClass);
+		final Field zidF = ClassU.getZIDField(entityClass);
 		final String dbColumnName = ZFieldConverter.toDbField(zidF.getName());
 		final String sqlF = sql.replace(MethodRegex.ZID, dbColumnName);
 
@@ -662,7 +633,7 @@ public class SU {
 	private static <T> List<Object> saveAllMysqlAndPGSQL(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Class<T> entityClass, final String sqlParam, final List<T> tList) {
 
-		final Field[] declaredFields = entityClass.getDeclaredFields();
+		final Field[] declaredFields = ClassU.getDeclaredFields(entityClass);
 		final ArrayList<Field> aa = new ArrayList<>();
 		Collections.addAll(aa, declaredFields);
 		final Optional<Field> zid = aa.stream()
@@ -774,7 +745,9 @@ public class SU {
 		final Supplier<String> supplier = () -> {
 			final StringJoiner arg = new StringJoiner(",");
 			final StringJoiner v = new StringJoiner(",");
-			for (final Field field : cls.getDeclaredFields()) {
+
+			final Field[] fs = ClassU.getDeclaredFields(cls);
+			for (final Field field : fs) {
 				if (field.isAnnotationPresent(ZID.class) || field.isAnnotationPresent(ZTransient.class)) {
 					continue;
 				}
@@ -843,7 +816,6 @@ public class SU {
 
 		final StringJoiner arg = new StringJoiner(",");
 		final Field[] fs = ClassU.getDeclaredFields(entityClass);
-//		final Field[] fs = entityClass.getDeclaredFields();
 		int fieldCount = 0;
 		for (final Field field : fs) {
 			if (field.isAnnotationPresent(ZTransient.class) || (field.isAnnotationPresent(ZID.class)
@@ -2033,7 +2005,8 @@ public class SU {
 
 		final Field[] declaredFields = ClassU.getDeclaredFields(returnType);
 
-		final Field[] efs = entityClass.getDeclaredFields();
+		final Field[] efs = ClassU.getDeclaredFields(entityClass);
+
 		final StringJoiner joiner = new StringJoiner(ZRepositoryMain.DELIMITER);
 		for (final Field f : declaredFields) {
 
@@ -3888,16 +3861,6 @@ public class SU {
 		return updateOrDeleteOrInsert(zrSubClassName, callerMethodName, mode, entityTName, cls, sql, SUEnum.INSERT, arg);
 	}
 
-	private static Field getZID(final Class cls) {
-		final Field[] fs = cls.getDeclaredFields();
-		for (final Field f : fs) {
-			if(f.isAnnotationPresent(ZID.class)) {
-				return f;
-			}
-		}
-		return null;
-	}
-
 	// FIXME 2024年6月2日 下午9:57:46 zhangzhen : 测试
 	public static void createTable(final String dataSourceName, final String createTable) {
 
@@ -3933,7 +3896,7 @@ public class SU {
 			return t;
 		}
 
-		final Field[] fs = entityClass.getDeclaredFields();
+		final Field[] fs = ClassU.getDeclaredFields(entityClass);
 		final StringJoiner joiner = new StringJoiner("");
 		for (int i = 0; i < fs.length; i++) {
 			final Field field = fs[i];
