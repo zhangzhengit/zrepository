@@ -42,6 +42,7 @@ import vo.log.core.ZLog2;
 import vo.vortex.cache.ZRC;
 import vo.vortex.common.AU;
 import vo.vortex.common.CU;
+import vo.vortex.common.RU;
 import vo.vortex.common.STU;
 import vo.vortex.core.ZContext;
 import vo.zrepository.actuator.SqlInvocationLogsConfigurationProperties;
@@ -1448,7 +1449,7 @@ public class SU {
 	private static Object newT2(final DBEnum dbEnum, final Class returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int fieldCount,final FI fi) {
 
-		final Object object = newInstance(returnType);
+		final Object object = RU.newInstance(returnType);
 
 		for (int i = 0; i < fi.getFieldCount(); i++) {
 			final Object columValue = getColumnValue(rs, i, fi.getFieldArray()[i]);
@@ -1466,7 +1467,7 @@ public class SU {
 //	private static <T> T newT(final DBEnum dbEnum, final Class<T> returnType, final ResultSet rs,
 			final ResultSetMetaData metaData, final int fieldCount) {
 
-		final Object object = newInstance(returnType);
+		final Object object = RU.newInstance(returnType);
 
 
 		for (int i = 0; i < fieldCount; i++) {
@@ -1637,16 +1638,6 @@ public class SU {
 		} catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static Object newInstance(final Class returnType) {
-		Object object = null;
-		try {
-			object = returnType.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return object;
 	}
 
 	private static Object getColumnValue(final ResultSet rs, final int i, final Field field) {
