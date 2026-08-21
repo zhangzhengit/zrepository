@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 
 import vo.vortex.common.ZHashBasedTable;
+import vo.zrepository.anno.ZID;
 
 /**
  * 缓存Class的信息
@@ -19,6 +20,27 @@ public class ClassU {
 	private static final ZHashBasedTable<Class<?>, String, Field> table = new ZHashBasedTable<>();
 
 	private static final ConcurrentHashMap<Class<?>, Field[]> CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
+	private static final ConcurrentHashMap<Class<?>, Field> CLASS_ZID_FIELD_CACHE = new ConcurrentHashMap<>(16, 1F);
+
+	/**
+	 * 获取带有 @ZID 的 Field
+	 *
+	 * @param cls
+	 * @return
+	 */
+	public static Field getZIDField(final Class<?> cls) {
+		final Field zidF = CLASS_ZID_FIELD_CACHE.computeIfAbsent(cls, c -> {
+
+			for (final Field field : getDeclaredFields(c)) {
+				if (field.isAnnotationPresent(ZID.class)) {
+					return field;
+				}
+			}
+			return null;
+		});
+
+		return zidF;
+	}
 
 	public static Field[] getDeclaredFields(final Class<?> cls) {
 		return CLASS_DF_CACHE.computeIfAbsent(cls, Class::getDeclaredFields);

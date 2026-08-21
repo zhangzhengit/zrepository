@@ -229,29 +229,27 @@ public class SU {
 		return fMap;
 	}
 
-	public static <T> Boolean update(final String zrSubClassName, final String callerMethodName, final Mode mode,
-			final Class entityClass, final Object t, final String sql) {
+	public static boolean update(final String zrSubClassName, final String callerMethodName, final Mode mode,
+			final Class<?> entityClass, final Object t, final String sql) {
 
 		if (t == null) {
 			throw new ZRepositoryException(ZRepository.class.getSimpleName() + ".update方法: t 参数不能为null");
 		}
 
-		final Field[] fs = t.getClass().getDeclaredFields();
-		final List<Field> aa = new ArrayList<>();
-		Collections.addAll(aa, fs);
-		final Optional<Field> zidO = aa.stream().filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
-		if (!zidO.isPresent()) {
+		final Field zidF = ClassU.getZIDField(t.getClass());
+		if (zidF == null) {
 			throw new IllegalArgumentException(
 					"无 " + ZID.class.getSimpleName() + " 标记的属性，t = " + t.getClass().getName());
 		}
 
-		final Object idValue = getUpdateIdValue(t, zidO);
+		final Object idValue = getUpdateIdValue(t, zidF);
 		if (Objects.isNull(idValue)) {
 			throw new IllegalArgumentException("update方法参数 t 的 " + ZID.class.getSimpleName() + " 字段不能为空！t = " + t);
 		}
 
-
 		// update blobt set COLUMN where id = ?;
+		final Field[] fs = ClassU.getDeclaredFields(t.getClass());
+
 		final String gUpdateColumn = gUpdateColumn(t, fs);
 
 		final String sqlF = sql.replace(MethodRegex.COLUMN, gUpdateColumn);
@@ -311,7 +309,7 @@ public class SU {
 		return false;
 	}
 
-	private static <T> SUA updateHandler(final Class<T> entityClass, final Object t, final String sqlF, final ZC2 zc2) {
+	private static SUA updateHandler(final Class<?> entityClass, final Object t, final String sqlF, final ZC2 zc2) {
 		final Set<ZEntityHandler> sh = ZEntityHandlerScanner.get(ZEHEnum.UPDATE);
 		final SUA sua = new SUA(entityClass, t, entityClass, sqlF, null);
 		sua.setZc2(zc2);
@@ -320,13 +318,11 @@ public class SU {
 		return sua;
 	}
 
-	private static <T> Object getUpdateIdValue(final Object t, final Optional<Field> zidO) {
-		final Field idField = zidO.get();
-
-		idField.setAccessible(true);
+	private static <T> Object getUpdateIdValue(final Object t, final Field zidF) {
+		zidF.setAccessible(true);
 		Object idValue = null;
 		try {
-			idValue = idField.get(t);
+			idValue = zidF.get(t);
 		} catch (IllegalArgumentException | IllegalAccessException e1) {
 			e1.printStackTrace();
 		}
@@ -1115,7 +1111,7 @@ public class SU {
 		return Collections.emptyList();
 	}
 
-	private static <T> String getDataSourceNameFromClassType(final Class<T> cls) {
+	private static String getDataSourceNameFromClassType(final Class<?> cls) {
 		final ZEntity en = cls.getAnnotation(ZEntity.class);
 		return en.dataSourceName();
 	}
