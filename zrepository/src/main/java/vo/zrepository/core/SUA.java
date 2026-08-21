@@ -1,7 +1,9 @@
 package vo.zrepository.core;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -11,6 +13,9 @@ import java.lang.reflect.Field;
  *
  */
 public class SUA {
+
+	private static final ConcurrentHashMap<Class<?>, Field[] > CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
+
 
 	Class<?> entityClass;
 	private final Field[] declaredFields;
@@ -33,7 +38,7 @@ public class SUA {
 	public SUA(final Class<?> entityClass, final Object entityObject, final Class<?> returnClass, final String sql, final Object[] arg) {
 		this.entityClass = entityClass;
 
-		this.declaredFields = entityClass.getDeclaredFields();
+		this.declaredFields = CLASS_DF_CACHE.computeIfAbsent(entityClass, Class::getDeclaredFields);
 
 		this.entityObject = entityObject;
 		this.returnClass = returnClass;
