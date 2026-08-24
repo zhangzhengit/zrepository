@@ -1,5 +1,6 @@
 package vo.zrepository.conn;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,6 +41,18 @@ public class ClassU {
 		});
 
 		return zidF;
+	}
+
+
+	public static Field isAnyFieldHasAnnotation(final Class<?> cls, final Class<? extends Annotation> annoClass) {
+		final Field[] fs = getDeclaredFields(cls);
+		for (final Field field : fs) {
+			if (field.isAnnotationPresent(annoClass)) {
+				return field;
+			}
+		}
+
+		return null;
 	}
 
 	public static Field[] getDeclaredFields(final Class<?> cls) {

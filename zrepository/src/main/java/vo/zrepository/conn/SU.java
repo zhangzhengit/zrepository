@@ -645,12 +645,8 @@ public class SU {
 	private static <T> List<Object> saveAllMysqlAndPGSQL(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Class<T> entityClass, final String sqlParam, final List<T> tList) {
 
-		final Field[] declaredFields = ClassU.getDeclaredFields(entityClass);
-		final ArrayList<Field> aa = new ArrayList<>();
-		Collections.addAll(aa, declaredFields);
-		final Optional<Field> zid = aa.stream()
-				.filter(f -> f.isAnnotationPresent(ZID.class)).findAny();
-		if (!zid.isPresent()) {
+		final Field zidF = ClassU.isAnyFieldHasAnnotation(entityClass, ZID.class);
+		if (zidF == null) {
 			throw new IllegalArgumentException(
 					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + entityClass.getName());
 		}
@@ -681,35 +677,37 @@ public class SU {
 
 			ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-			final PreparedStatement ps2 = ps;
-			tList.forEach(t -> {
+			final Field[] declaredFields = ClassU.getDeclaredFields(entityClass);
+
+			final Field ztF = ClassU.isAnyFieldHasAnnotation(entityClass, ZTransient.class);
+
+			for (final T t : tList) {
+
 				int index = 1;
 				for (final Field f : declaredFields) {
-					if (f.isAnnotationPresent(ZID.class) || f.isAnnotationPresent(ZTransient.class)) {
+					if ((f == zidF) || (f == ztF)) {
 						continue;
 					}
+
 					try {
-						addPS(zConnection.getDbEnum(), t, ps2, index, f, SUMode.SAVE);
+						addPS(zConnection.getDbEnum(), t, ps, index, f, SUMode.SAVE);
 					} catch (final SQLException e) {
 						e.printStackTrace();
 					}
 					index++;
 				}
 				try {
-					ps2.addBatch();
+					ps.addBatch();
 				} catch (final SQLException e) {
 					e.printStackTrace();
 				}
-			});
 
-
+			}
 
 			ps.executeBatch();
-
 			rs = ps.getGeneratedKeys();
 
-			final Field idField = zid.get();
-			final Class<?> type = idField.getType();
+			final Class<?> type = zidF.getType();
 
 			final List<Object> r = new ArrayList<>();
 			while (rs.next()) {
@@ -883,7 +881,7 @@ public class SU {
 	}
 
 
-	private static <T> boolean addPS(final DBEnum dbEnum, final Object t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
+	private static boolean addPS(final DBEnum dbEnum, final Object t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
 			throws SQLException {
 
 		try {
