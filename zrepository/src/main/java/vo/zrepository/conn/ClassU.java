@@ -59,20 +59,20 @@ public class ClassU {
 		return CLASS_DF_CACHE.computeIfAbsent(cls, Class::getDeclaredFields);
 	}
 
-	public static Field getField(final Class<?> cls, final String fieldName) {
+	public static Field getDeclaredField(final Class<?> cls, final String fieldName) {
 		final Field field = table.get(cls, fieldName);
 		if (field != null) {
 			return field;
 		}
 
 		synchronized (table) {
-			final Field df = getDF(fieldName, cls);
+			final Field df = getDeclaredField(fieldName, cls);
 			table.put(cls, fieldName, df);
 			return df;
 		}
 	}
 
-	private static Field getDF(final String fieldName, final Class<?> cls) {
+	private static Field getDeclaredField(final String fieldName, final Class<?> cls) {
 		try {
 			return cls.getDeclaredField(fieldName);
 		} catch (NoSuchFieldException | SecurityException e) {

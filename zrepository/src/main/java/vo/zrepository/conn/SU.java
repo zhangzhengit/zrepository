@@ -1390,23 +1390,16 @@ public class SU {
 
 		final Field[] fieldArray = new Field[fieldCount];
 		for (int i = 0; i < fieldCount; i++) {
+			String columnName = null;
 			try {
-				final String columnName = metaData.getColumnLabel(i + 1).toLowerCase();
-				final String javaFieldName = ZFieldConverter.toJavaField(columnName);
-				Field field = null;
-				try {
-					field = RU.getDeclaredField(returnType, javaFieldName);
-//					field = returnType.getDeclaredField(javaFieldName);
-					field.setAccessible(true);
-				} catch (final SecurityException e1) {
-					e1.printStackTrace();
-				}
-
-				fieldArray[i] = field;
-
+				columnName = metaData.getColumnLabel(i + 1).toLowerCase();
 			} catch (final SQLException e) {
 				e.printStackTrace();
 			}
+
+			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
+			final Field field = ClassU.getDeclaredField(returnType,javaFieldName);
+			fieldArray[i] = field;
 		}
 
 		return new FI(fieldCount, null, fieldArray);
@@ -1437,8 +1430,8 @@ public class SU {
 
 	}
 
-	private static Object newT2(final DBEnum dbEnum, final Class returnType, final ResultSet rs,
-			final ResultSetMetaData metaData, final int fieldCount,final FI fi) {
+	private static Object newT2(final DBEnum dbEnum, final Class<?> returnType, final ResultSet rs,
+			final FI fi) {
 
 		final Object object = RU.newInstance(returnType);
 
@@ -1485,7 +1478,7 @@ public class SU {
 
 			final String javaFieldName = ZFieldConverter.toJavaField(columnName);
 
-			final Field field = ClassU.getField(returnType, javaFieldName);
+			final Field field = ClassU.getDeclaredField(returnType, javaFieldName);
 			if (field == null) {
 				// 到此就continue而非抛异常，因为SQL和returnType都可以是自定义的。
 				// 在此sql中的column匹配不到returnType中的Field，就直接忽略就行了
@@ -3516,7 +3509,7 @@ public class SU {
 			final int count = metaData.getColumnCount();
 			final FI tcInfo = getTCInfo(returnType, metaData, count);
 			while (rs.next()) {
-				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count, tcInfo);
+				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, tcInfo);
 				r.add(t);
 			}
 
@@ -3578,7 +3571,7 @@ public class SU {
 			final int count = metaData.getColumnCount();
 			final FI tcInfo = getTCInfo(returnType, metaData, count);
 			while (rs.next()) {
-				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count, tcInfo);
+				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, tcInfo);
 				r.add(t);
 			}
 
@@ -3636,7 +3629,7 @@ public class SU {
 			final int count = metaData.getColumnCount();
 			final FI tcInfo = getTCInfo(returnType, metaData, count);
 			while (rs.next()) {
-				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, metaData, count, tcInfo);
+				final Object t = newT2(zc.getZConnection().getDbEnum(), returnType, rs, tcInfo);
 				r.add(t);
 			}
 
