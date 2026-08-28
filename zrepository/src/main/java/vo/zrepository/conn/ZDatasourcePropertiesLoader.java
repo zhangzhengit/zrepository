@@ -3,10 +3,11 @@ package vo.zrepository.conn;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import vo.log.core.ZLog2;
-import vo.vortex.cache.ZRC;
 import vo.vortex.common.STU;
 import vo.zrepository.conn.ZDatasourceProperties.P;
 
@@ -32,9 +33,10 @@ public class ZDatasourcePropertiesLoader {
 	public static final String DATASOURCE_PROPERTIES_PATH_1 = "config/";
 	public static final String DATASOURCE_PROPERTIES_PATH_3 = "src/main/resources/";
 	public static final String DATASOURCE_PROPERTIES_PATH_4 = "src/main/resources/config/";
+	private static final Map<String, ZDatasourceProperties> ZDP_C = new ConcurrentHashMap<>();
 
 	public static ZDatasourceProperties getInstance(final String dataSourceName) {
-		return ZRC.singleton().computeIfAbsent(dataSourceName, () ->initialize(dataSourceName));
+		return ZDP_C.computeIfAbsent(dataSourceName, ZDatasourcePropertiesLoader::initialize);
 	}
 
 	private static ZDatasourceProperties initialize(final String dataSourceName) {
@@ -240,7 +242,7 @@ public class ZDatasourcePropertiesLoader {
 	}
 
 	private static Properties getProperties(final String dataSourceName) {
-		return ZRC.singleton().computeIfAbsent(dataSourceName, () -> getProperties0(dataSourceName));
+		return getProperties0(dataSourceName);
 	}
 
 	private static Properties getProperties0(final String dataSourceName) {

@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -96,6 +97,7 @@ public class SU {
 
 	private static final int NO_DELETE_OR_DELETE = -1;
 
+	private static final Map<String, String> rtCM = new ConcurrentHashMap<>();
 
 	// FIXME 2024年6月2日 上午12:09:26 zhangzhen : 本类所有方法都计入了className和callerMethodName,用来做sql执行统计功能用，待做
 
@@ -2011,9 +2013,7 @@ public class SU {
 	}
 
 	public static String gSelectFromReturnType(final Class entityClass, final Class returnType) {
-		final Supplier<String> supplier = () -> gSelectFromReturnType0(entityClass, returnType);
-		final String key = "gSelectFromReturnType" + entityClass.getComponentType() +"@" + returnType.getName();
-		return ZRC.singleton().computeIfAbsent(key, supplier);
+		return rtCM.computeIfAbsent(entityClass.getName() + "-" + returnType.getName(), x -> gSelectFromReturnType0(entityClass, returnType));
 	}
 
 	private static String gSelectFromReturnType0(final Class entityClass, final Class returnType) {
