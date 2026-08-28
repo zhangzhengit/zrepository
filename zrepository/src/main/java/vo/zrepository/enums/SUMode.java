@@ -9,5 +9,5 @@ package vo.zrepository.enums;
  */
 public enum SUMode {
 
-	SAVE,UPDATE;
+	SAVE, UPDATE;
 }

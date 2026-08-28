@@ -878,96 +878,90 @@ public class SU {
 			i++;
 			addPS(dbEunum, t, ps, i, field, SUMode.SAVE);
 		}
-		final int executeUpdate = ps.executeUpdate();
+
+		ps.executeUpdate();
 		final ResultSet rs = ps.getGeneratedKeys();
-		return new Object[] {rs,ps};
+		return new Object[] { rs, ps };
 	}
 
-
-	private static boolean addPS(final DBEnum dbEnum, final Object t, final PreparedStatement ps, final int i, final Field field, final SUMode mode)
+	private static void addPS(final DBEnum dbEnum, final Object t,
+			final PreparedStatement ps, final int i,
+			final Field field, final SUMode mode)
 			throws SQLException {
 
-		try {
-
-			field.setAccessible(true);
-			final Object v2 = field.get(t);
-			if (v2 == null) {
-				ps.setObject(i, null);
-				return false;
-			}
-
-			final String fn = field.getType().getName();
-
-			// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
-			if (fn.equals(Boolean.class.getName())) {
-				// XXX sqlite也暂时Boolean和tinyint 对应，和mysql一样
-				if ((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.SQLITE)) {
-					final boolean equals = Boolean.TRUE.equals(v2);
-					final byte vb = (byte) (equals ? 1 : 0);
-					ps.setByte(i, vb);
-				} else if (dbEnum == DBEnum.POSTGRESQL) {
-					ps.setBoolean(i, Boolean.parseBoolean(String.valueOf(v2)));
-				}
-			} else if (fn.equals(Character.class.getName())) {
-				// char 类型直接用String
-				ps.setString(i, String.valueOf(v2));
-			} else if (fn.equals(Byte.class.getName())) {
-				ps.setByte(i, (Byte) v2);
-			} else if (fn.equals(Short.class.getName())) {
-				ps.setShort(i, (Short) v2);
-			} else if (fn.equals(Integer.class.getName())) {
-				ps.setInt(i, (Integer) v2);
-			} else if (fn.equals(Long.class.getName())) {
-				ps.setLong(i, (Long) v2);
-			} else if (fn.equals(Double.class.getName())) {
-				ps.setDouble(i, (Double) v2);
-			} else if (fn.equals(String.class.getName())) {
-				ps.setString(i, String.valueOf(v2));
-			} else if (fn.equals(BigDecimal.class.getName())) {
-				ps.setBigDecimal(i, (BigDecimal) v2);
-			} else if (v2.getClass().isArray()) {
-				// blob类型
-				// FIXME 2024年5月5日 下午9:14:57 zhangzhen: saveAll
-				// 时，setBlob和setBinaryStream都会导致ps.excuteBatch NPE,所有在此用setObject
-				ps.setObject(i, v2);
-				// final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[])
-				// v2);
-				// ps.setBlob(i, inputStream);
-				// ps.setBinaryStream(i, inputStream);
-			} else if (fn.equals(java.util.Date.class.getName())) {
-				// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
-				// 日期时间的字段，新增注解：表示插入的格式
-				// ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
-				// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
-				ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
-			} else if (fn.equals(java.sql.Date.class.getName())) {
-				ps.setDate(i, (java.sql.Date) v2);
-			} else if (fn.equals(java.sql.Time.class.getName())) {
-				// FIXME 2025年1月8日 下午8:46:34 zhangzhen : 使用(java.sql.Time) v 会导致取出来的结果不一致？以后再查什么原因
-				ps.setTime(i, Time.valueOf(v2.toString()));
-			} else if (fn.equals(LocalTime.class.getName())) {
-				ps.setObject(i, v2);
-			} else if (fn.equals(LocalDate.class.getName())) {
-				ps.setDate(i, java.sql.Date.valueOf((LocalDate) v2));
-			} else if (fn.equals(LocalDateTime.class.getName())) {
-				final LocalDateTime localDateTime = (LocalDateTime) v2;
-				final ZonedDateTime atZone = localDateTime.atZone(ZoneId.systemDefault());
-				final Timestamp timestamp = Timestamp.from(atZone.toInstant());
-				ps.setTimestamp(i, timestamp);
-			} else if (fn.equals(Timestamp.class.getName())) {
-				ps.setTimestamp(i, (Timestamp) v2);
-			} else {
-				// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
-				// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
-				// throw new IllegalArgumentException("size 必须大于0！size = " + size);
-			}
-
-			return true;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+		final Object v2 = RU.getFiledValue(t, field);
+		if (v2 == null) {
+			ps.setObject(i, null);
+			return;
 		}
 
-		return false;
+		final String fn = field.getType().getName();
+
+		// FIXME 2024年5月3日 下午9:51:23 zhangzhen: 各种类型，考虑好要不要特殊处理，继续测试
+		if (fn.equals(Boolean.class.getName())) {
+			// XXX sqlite也暂时Boolean和tinyint 对应，和mysql一样
+			if ((dbEnum == DBEnum.MYSQL) || (dbEnum == DBEnum.SQLITE)) {
+				final boolean equals = Boolean.TRUE.equals(v2);
+				final byte vb = (byte) (equals ? 1 : 0);
+				ps.setByte(i, vb);
+			} else if (dbEnum == DBEnum.POSTGRESQL) {
+				ps.setBoolean(i, Boolean.parseBoolean(String.valueOf(v2)));
+			}
+		} else if (fn.equals(Character.class.getName())) {
+			// char 类型直接用String
+			ps.setString(i, String.valueOf(v2));
+		} else if (fn.equals(Byte.class.getName())) {
+			ps.setByte(i, (Byte) v2);
+		} else if (fn.equals(Short.class.getName())) {
+			ps.setShort(i, (Short) v2);
+		} else if (fn.equals(Integer.class.getName())) {
+			ps.setInt(i, (Integer) v2);
+		} else if (fn.equals(Long.class.getName())) {
+			ps.setLong(i, (Long) v2);
+		} else if (fn.equals(Double.class.getName())) {
+			ps.setDouble(i, (Double) v2);
+		} else if (fn.equals(String.class.getName())) {
+			ps.setString(i, String.valueOf(v2));
+		} else if (fn.equals(BigDecimal.class.getName())) {
+			ps.setBigDecimal(i, (BigDecimal) v2);
+		} else if (v2.getClass().isArray()) {
+			// blob类型
+			// FIXME 2024年5月5日 下午9:14:57 zhangzhen: saveAll
+			// 时，setBlob和setBinaryStream都会导致ps.excuteBatch NPE,所有在此用setObject
+			ps.setObject(i, v2);
+			// final ByteArrayInputStream inputStream = new ByteArrayInputStream((byte[])
+			// v2);
+			// ps.setBlob(i, inputStream);
+			// ps.setBinaryStream(i, inputStream);
+		} else if (fn.equals(java.util.Date.class.getName())) {
+			// FIXME 2023年8月1日 下午8:50:26 zhanghen: TODO
+			// 日期时间的字段，新增注解：表示插入的格式
+			// ps.setDate(i, new java.sql.Date(((Date) v2).getTime()));
+			// FIXME 2024年5月19日 下午9:23:37 zhangzhen: 考虑好sql.date 要不要对应DATE
+			ps.setTimestamp(i, new java.sql.Timestamp(((Date) v2).getTime()));
+		} else if (fn.equals(java.sql.Date.class.getName())) {
+			ps.setDate(i, (java.sql.Date) v2);
+		} else if (fn.equals(java.sql.Time.class.getName())) {
+			// FIXME 2025年1月8日 下午8:46:34 zhangzhen : 使用(java.sql.Time) v
+			// 会导致取出来的结果不一致？以后再查什么原因
+			ps.setTime(i, Time.valueOf(v2.toString()));
+		} else if (fn.equals(LocalTime.class.getName())) {
+			ps.setObject(i, v2);
+		} else if (fn.equals(LocalDate.class.getName())) {
+			ps.setDate(i, java.sql.Date.valueOf((LocalDate) v2));
+		} else if (fn.equals(LocalDateTime.class.getName())) {
+			final LocalDateTime localDateTime = (LocalDateTime) v2;
+			final ZonedDateTime atZone = localDateTime.atZone(ZoneId.systemDefault());
+			final Timestamp timestamp = Timestamp.from(atZone.toInstant());
+			ps.setTimestamp(i, timestamp);
+		} else if (fn.equals(Timestamp.class.getName())) {
+			ps.setTimestamp(i, (Timestamp) v2);
+		} else {
+			// FIXME 2024年5月4日 下午2:41:05 zhangzhen: TODO
+			// 暂时只支持上面这些类型，在程序启动时就校验字段类型是否支持，而不是在此提示，在此提示太晚了（程序已经开始运行了）
+			// throw new IllegalArgumentException("size 必须大于0！size = " + size);
+		}
+
 	}
 
 	private static ZC2 getZCAndSetAutoCommitFALSEIfPG(final Mode mode, final String dataSourceName) {
