@@ -1,5 +1,6 @@
 package vo.zrepository.conn;
 
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1332,7 +1333,7 @@ public class SU {
 	}
 
 	public static Object findById(final String zrSubClassName, final String callerMethodName,final Mode mode,
-			final Object id, final Class entityClass, final String sql) {
+			final Object id, final Class<?> entityClass, final String sql) {
 
 		if (id == null) {
 			return null;
@@ -1452,15 +1453,15 @@ public class SU {
 	/**
 	 * @param dbEnum
 	 * @param returnType
-	 * @param rs
+	 * @param resultSet
 	 * @param resultSetMetaData
 	 * @param fieldCount
 	 * @return
 	 */
 	private static Object newT(
 			final DBEnum dbEnum,
-			final Class returnType,
-			final ResultSet rs,
+			final Class<?> returnType,
+			final ResultSet resultSet,
 			final ResultSetMetaData resultSetMetaData,
 			final int fieldCount) {
 
@@ -1489,7 +1490,7 @@ public class SU {
 				continue;
 			}
 
-			final Object columValue = getColumnValue(rs, i, field);
+			final Object columValue = getColumnValue(resultSet, i, field);
 			if (columValue == null) {
 				continue;
 			}
@@ -1505,132 +1506,134 @@ public class SU {
 			return;
 		}
 
+		setFieldValue0(dbEnum, object, field, columValue);
+	}
+
+	private static <T> void setFieldValue0(final DBEnum dbEnum,
+			final T object,
+			final Field field,
+			final Object columValue) {
+
+		final VarHandle varHandle = RU.getVarHandle(field);
 		final String fieldName = field.getType().getName();
 
-		try {
-
-			field.setAccessible(true);
-
-			if (fieldName.equals(Byte.class.getName())) {
-				field.set(object, Byte.valueOf(String.valueOf(columValue)));
-			} else if (fieldName.equals(Short.class.getName())) {
-				field.set(object, Short.valueOf(String.valueOf(columValue)));
-			} else if (fieldName.equals(Integer.class.getName())) {
-				field.set(object, Integer.valueOf(String.valueOf(columValue)));
-			} else if (fieldName.equals(Long.class.getName())) {
-				field.set(object, Long.valueOf(String.valueOf(columValue)));
-			} else if (fieldName.equals(Double.class.getName())) {
-				field.set(object, Double.valueOf(String.valueOf(columValue)));
-			} else if (fieldName.equals(BigDecimal.class.getName())) {
-				field.set(object, new BigDecimal(String.valueOf(columValue)));
-			} else if (fieldName.equals(Boolean.class.getName())) {
-				field.set(object, (Integer.valueOf(1).equals(columValue) ? Boolean.TRUE : Boolean.FALSE));
-			} else if (fieldName.equals(Character.class.getName())) {
-				field.set(object, Character.valueOf(String.valueOf(columValue).charAt(0)));
-			} else if (fieldName.equals(String.class.getName())) {
-				field.set(object, String.valueOf(columValue));
-			} else if (fieldName.equals(java.util.Date.class.getName())) {
-				if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
-					// sqlite 中此值为long类型
-					final java.util.Date date = new Date((long) columValue);
-					field.set(object, date);
-				} else {
-					// FIXME 2024年6月14日 下午8:58:41 zhangzhen : mysql datetime 对应java LocalDateTime
-					final boolean equals = columValue.getClass().equals(LocalDateTime.class);
-					if (equals) {
-						final Date newDate = Date
-								.from(((LocalDateTime) (columValue)).atZone(ZoneId.systemDefault()).toInstant());
-						field.set(object, newDate);
-					} else {
-						field.set(object, columValue);
-					}
-				}
-			} else if (fieldName.equals(java.sql.Date.class.getName())) {
-				if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
-					// sqlite 中此值为long类型
-					final java.sql.Date date = new java.sql.Date((long) columValue);
-					field.set(object, date);
-				} else {
-					field.set(object, columValue);
-				}
-			} else if (fieldName.equals(java.sql.Timestamp.class.getName())) {
-				final DBEnum db = dbEnum;
-				if (columValue.getClass().equals(Timestamp.class)) {
-					field.set(object, columValue);
-				} else if (columValue.getClass() == Long.class) {
-					// sqlite 中此值为long类型
-					final Timestamp time = new Timestamp((long) columValue);
-					field.set(object, time);
-				}
-			}  else if (fieldName.equals(LocalDate.class.getName())) {
-				if (columValue.getClass() == Long.class) {
-					// sqlite 为Long类型
-					final Instant instant = Instant.ofEpochMilli((Long) columValue);
-					final LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
-					field.set(object, localDate);
-				} else {
-					final java.sql.Date d = (java.sql.Date) columValue;
-					final LocalDate localDate = d.toLocalDate();
-					field.set(object, localDate);
-				}
-			}  else if (fieldName.equals(LocalTime.class.getName())) {
-				if (columValue.getClass().equals(Time.class)) {
-					final Time t1 = (Time) columValue;
-					final Calendar c = Calendar.getInstance();
-					c.clear();
-					c.setTimeInMillis(t1.getTime());
-
-					final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
-							c.get(Calendar.SECOND));
-					field.set(object, of);
-				} else if (columValue.getClass() == LocalTime.class) {
-					field.set(object, columValue);
-				} else if (columValue.getClass() == Integer.class) {
-
-					final Time time = new Time((int) columValue);
-					final Calendar c = Calendar.getInstance();
-					c.clear();
-					c.setTimeInMillis(time.getTime());
-
-					final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
-							c.get(Calendar.SECOND));
-					field.set(object, of);
-
-				} else if (columValue.getClass() == Long.class) {
-					// sqlite 中此值为long类型
-					final Time time = new Time((long) columValue);
-					field.set(object, time);
-				}
-
-			} else if (fieldName.equals(java.sql.Time.class.getName())) {
-				final DBEnum db = dbEnum;
-				if (columValue.getClass().equals(Time.class)) {
-					field.set(object, columValue);
-				} else if (columValue.getClass() == Integer.class) {
-					final Time time = new Time((int) columValue);
-					field.set(object, time);
-				} else if (columValue.getClass() == Long.class) {
-					// sqlite 中此值为long类型
-					final Time time = new Time((long) columValue);
-					field.set(object, time);
-				}
-			} else if (fieldName.equals(java.time.LocalDateTime.class.getName())) {
-				if (columValue.getClass() == Long.class) {
-					// sqlite 中此值为long类型
-					final Instant ins = Instant.ofEpochMilli((long) columValue);
-					final LocalDateTime localDateTime = ins.atZone(ZoneId.systemDefault()).toLocalDateTime();
-					field.set(object, localDateTime);
-				} else {
-					final Timestamp timestamp = (Timestamp) columValue;
-					final LocalDateTime localDateTime = timestamp.toLocalDateTime();
-					field.set(object, localDateTime);
-				}
-			} else if (field.getClass().isArray()) {
+		if (fieldName.equals(Byte.class.getName())) {
+			varHandle.set(object, Byte.valueOf(String.valueOf(columValue)));
+		} else if (fieldName.equals(Short.class.getName())) {
+			varHandle.set(object, Short.valueOf(String.valueOf(columValue)));
+		} else if (fieldName.equals(Integer.class.getName())) {
+			varHandle.set(object, Integer.valueOf(String.valueOf(columValue)));
+		} else if (fieldName.equals(Long.class.getName())) {
+			varHandle.set(object, Long.valueOf(String.valueOf(columValue)));
+		} else if (fieldName.equals(Double.class.getName())) {
+			varHandle.set(object, Double.valueOf(String.valueOf(columValue)));
+		} else if (fieldName.equals(BigDecimal.class.getName())) {
+			varHandle.set(object, new BigDecimal(String.valueOf(columValue)));
+		} else if (fieldName.equals(Boolean.class.getName())) {
+			varHandle.set(object, (Integer.valueOf(1).equals(columValue) ? Boolean.TRUE : Boolean.FALSE));
+		} else if (fieldName.equals(Character.class.getName())) {
+			varHandle.set(object, Character.valueOf(String.valueOf(columValue).charAt(0)));
+		} else if (fieldName.equals(String.class.getName())) {
+			varHandle.set(object, String.valueOf(columValue));
+		} else if (fieldName.equals(java.util.Date.class.getName())) {
+			if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
+				// sqlite 中此值为long类型
+				final java.util.Date date = new Date((long) columValue);
+				varHandle.set(object, date);
 			} else {
-				field.set(object, columValue);
+				// FIXME 2024年6月14日 下午8:58:41 zhangzhen : mysql datetime 对应java LocalDateTime
+				final boolean equals = columValue.getClass().equals(LocalDateTime.class);
+				if (equals) {
+					final Date newDate = Date
+							.from(((LocalDateTime) (columValue)).atZone(ZoneId.systemDefault()).toInstant());
+					varHandle.set(object, newDate);
+				} else {
+					varHandle.set(object, columValue);
+				}
 			}
-		} catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+		} else if (fieldName.equals(java.sql.Date.class.getName())) {
+			if ((dbEnum == DBEnum.SQLITE) && (columValue.getClass() == Long.class)) {
+				// sqlite 中此值为long类型
+				final java.sql.Date date = new java.sql.Date((long) columValue);
+				varHandle.set(object, date);
+			} else {
+				varHandle.set(object, columValue);
+			}
+		} else if (fieldName.equals(java.sql.Timestamp.class.getName())) {
+			final DBEnum db = dbEnum;
+			if (columValue.getClass().equals(Timestamp.class)) {
+				varHandle.set(object, columValue);
+			} else if (columValue.getClass() == Long.class) {
+				// sqlite 中此值为long类型
+				final Timestamp time = new Timestamp((long) columValue);
+				varHandle.set(object, time);
+			}
+		} else if (fieldName.equals(LocalDate.class.getName())) {
+			if (columValue.getClass() == Long.class) {
+				// sqlite 为Long类型
+				final Instant instant = Instant.ofEpochMilli((Long) columValue);
+				final LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+				varHandle.set(object, localDate);
+			} else {
+				final java.sql.Date d = (java.sql.Date) columValue;
+				final LocalDate localDate = d.toLocalDate();
+				varHandle.set(object, localDate);
+			}
+		} else if (fieldName.equals(LocalTime.class.getName())) {
+			if (columValue.getClass().equals(Time.class)) {
+				final Time t1 = (Time) columValue;
+				final Calendar c = Calendar.getInstance();
+				c.clear();
+				c.setTimeInMillis(t1.getTime());
+
+				final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
+						c.get(Calendar.SECOND));
+				varHandle.set(object, of);
+			} else if (columValue.getClass() == LocalTime.class) {
+				varHandle.set(object, columValue);
+			} else if (columValue.getClass() == Integer.class) {
+
+				final Time time = new Time((int) columValue);
+				final Calendar c = Calendar.getInstance();
+				c.clear();
+				c.setTimeInMillis(time.getTime());
+
+				final LocalTime of = LocalTime.of(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
+						c.get(Calendar.SECOND));
+				varHandle.set(object, of);
+
+			} else if (columValue.getClass() == Long.class) {
+				// sqlite 中此值为long类型
+				final Time time = new Time((long) columValue);
+				varHandle.set(object, time);
+			}
+
+		} else if (fieldName.equals(java.sql.Time.class.getName())) {
+			final DBEnum db = dbEnum;
+			if (columValue.getClass().equals(Time.class)) {
+				varHandle.set(object, columValue);
+			} else if (columValue.getClass() == Integer.class) {
+				final Time time = new Time((int) columValue);
+				varHandle.set(object, time);
+			} else if (columValue.getClass() == Long.class) {
+				// sqlite 中此值为long类型
+				final Time time = new Time((long) columValue);
+				varHandle.set(object, time);
+			}
+		} else if (fieldName.equals(java.time.LocalDateTime.class.getName())) {
+			if (columValue.getClass() == Long.class) {
+				// sqlite 中此值为long类型
+				final Instant ins = Instant.ofEpochMilli((long) columValue);
+				final LocalDateTime localDateTime = ins.atZone(ZoneId.systemDefault()).toLocalDateTime();
+				varHandle.set(object, localDateTime);
+			} else {
+				final Timestamp timestamp = (Timestamp) columValue;
+				final LocalDateTime localDateTime = timestamp.toLocalDateTime();
+				varHandle.set(object, localDateTime);
+			}
+		} else if (varHandle.getClass().isArray()) {
+		} else {
+			varHandle.set(object, columValue);
 		}
 	}
 
