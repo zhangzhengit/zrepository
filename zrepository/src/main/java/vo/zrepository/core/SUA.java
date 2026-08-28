@@ -1,9 +1,10 @@
 package vo.zrepository.core;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
+
+import vo.zrepository.conn.ClassU;
 
 /**
  *
@@ -123,14 +124,7 @@ public class SUA {
 	}
 
 	public Field isAnyFieldHasAnnotation(final Class<? extends Annotation> annoClass) {
-		final Field[] fs = this.getDeclaredFields();
-		for (final Field field : fs) {
-			if (field.isAnnotationPresent(annoClass)) {
-				return field;
-			}
-		}
-
-		return null;
+		return ClassU.isAnyFieldHasAnnotation(this.entityClass, annoClass);
 	}
 
 }
