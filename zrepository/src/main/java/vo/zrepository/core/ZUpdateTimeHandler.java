@@ -2,10 +2,12 @@ package vo.zrepository.core;
 
 import java.lang.reflect.Field;
 import java.util.Date;
+import java.util.List;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import vo.vortex.common.RU;
 import vo.zrepository.anno.ZOrder;
 import vo.zrepository.anno.ZUpdateTime;
 
@@ -26,14 +28,10 @@ public class ZUpdateTimeHandler extends ZUpdateHandler {
 	public SUA handle(final SUA sua) {
 		// XXX 2024年6月27日 下午9:46:08 zhangzhen : update 操作，也不取 @ZDateFormat 了，暂时还没发现有问题
 		final java.util.Date now = new Date();
-		final Field f = sua.isAnyFieldHasAnnotation(ZUpdateTime.class);
-		if (f != null) {
-			f.setAccessible(true);
-			try {
-				f.set(sua.getEntityObject(), now);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
+
+		final List<Field> zutfL = sua.findAllFieldHasAnnotation(ZUpdateTime.class);
+		for (final Field field : zutfL) {
+			RU.setFiledValue(field, sua.getEntityObject(), now);
 		}
 
 		return sua;

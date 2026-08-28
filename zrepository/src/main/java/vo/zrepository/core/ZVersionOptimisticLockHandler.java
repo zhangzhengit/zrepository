@@ -1,9 +1,9 @@
 package vo.zrepository.core;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
 
+import vo.vortex.common.RU;
 import vo.zrepository.anno.ZCSourceEnum;
 import vo.zrepository.anno.ZOrder;
 import vo.zrepository.anno.ZVersion;
@@ -24,46 +24,26 @@ public class ZVersionOptimisticLockHandler extends ZUpdateHandler {
 		final ZC2 zc = sua.getZc2();
 
 		if (zc.getSourceEnum() == ZCSourceEnum.ZTRANSACTION) {
+			final List<Field> zvfL = sua.findAllFieldHasAnnotation(ZVersion.class);
 
-			final Field[] fs = sua.getEntityClass().getDeclaredFields();
-			final Optional<Field> zvf = Arrays.stream(fs).filter(f -> f.isAnnotationPresent(ZVersion.class)).findAny();
-			if (zvf.isPresent()) {
-				final Field vf = zvf.get();
-				final Long oldVV = incrementZVersionValue(sua.getEntityObject(), vf);
-				if (vf != null) {
-					final String versionColumnName = ZFieldConverter.toDbField(vf.getName());
-					final String version = versionColumnName + " = " + oldVV;
-					final String replace = sua.getSql().replace(MethodRegex.WHERE,
-							MethodRegex.WHERE + Sort.SPACE + version + Sort.SPACE + MethodRegex.AND);
-					sua.setSql(replace);
-				}
+			for (final Field field : zvfL) {
+				final Long oldVV = incrementZVersionValue(sua.getEntityObject(), field);
+				final String versionColumnName = ZFieldConverter.toDbField(field.getName());
+				final String version = versionColumnName + " = " + oldVV;
+				final String replace = sua.getSql().replace(MethodRegex.WHERE,
+						MethodRegex.WHERE + Sort.SPACE + version + Sort.SPACE + MethodRegex.AND);
+				sua.setSql(replace);
 			}
 		}
 
 		return sua;
 	}
 
-	private static <T> void setZVersionValue(final T t, final Field vf, final Long versionValue) {
-		vf.setAccessible(true);
-		try {
-			vf.set(t, versionValue);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}
-
 	private static <T> Long incrementZVersionValue(final T t, final Field vf) {
-		try {
-			vf.setAccessible(true);
-			final Object versionValue = vf.get(t);
-
-			final Long nVV = (Long) versionValue + 1L;
-			setZVersionValue(t, vf, nVV);
-			return (Long) versionValue;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return null;
+		final Object versionValue = RU.getFiledValue(t, vf);
+		final Long nVV = (Long) versionValue + 1L;
+		RU.setFiledValue(vf, t, nVV);
+		return (Long) versionValue;
 	}
 
 }

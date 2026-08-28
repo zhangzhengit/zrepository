@@ -251,7 +251,6 @@ public class SU {
 					continue;
 				}
 
-				f.setAccessible(true);
 				index++;
 				addPS(zc.getZConnection().getDbEnum(), t, ps, index, f, SUMode.UPDATE);
 			}
@@ -294,15 +293,8 @@ public class SU {
 		return sua;
 	}
 
-	private static <T> Object getUpdateIdValue(final Object t, final Field zidF) {
-		zidF.setAccessible(true);
-		Object idValue = null;
-		try {
-			idValue = zidF.get(t);
-		} catch (IllegalArgumentException | IllegalAccessException e1) {
-			e1.printStackTrace();
-		}
-		return idValue;
+	private static Object getUpdateIdValue(final Object t, final Field zidF) {
+		return RU.getFiledValue(t, zidF);
 	}
 
 	public static <T> boolean deleteAll(final String zrSubClassName, final String callerMethodName, final Mode mode,
@@ -3911,34 +3903,18 @@ public class SU {
 			joiner.add(field.getName()).add("=");
 
 			final boolean array = field.getType().isArray();
+			final Object v = RU.getFiledValue(t, field);
 			if (array) {
-				try {
-
-					field.setAccessible(true);
-					final Object v = field.get(t);
-					if(v !=null) {
-						joiner.add("[二进制内容]");
-					}
-				} catch (IllegalArgumentException | IllegalAccessException e1) {
-					e1.printStackTrace();
+				if (v != null) {
+					joiner.add("[二进制内容]");
 				}
-
 			} else {
-
-				try {
-
-					field.setAccessible(true);
-					final Object v = field.get(t);
-					joiner.add(String.valueOf(v));
-				} catch (IllegalArgumentException | IllegalAccessException e1) {
-					e1.printStackTrace();
-				}
+				joiner.add(String.valueOf(v));
 			}
 
 			if (i < (fs.length - 1)) {
 				joiner.add(",");
 			}
-
 		}
 
 		return joiner.toString();

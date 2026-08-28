@@ -21,12 +21,12 @@ public class ZLogicalDeleteByIdHandler extends ZDeleteByIdHandler {
 	@Override
 	public SUA handle(final SUA sua) {
 
-		final Field zldF = sua.isAnyFieldHasAnnotation(ZLogicalDelete.class);
+		final Field zldF = sua.findAnyFieldHasAnnotation(ZLogicalDelete.class);
 		if (zldF == null) {
 			return sua;
 		}
 
-		final Field idf = sua.isAnyFieldHasAnnotation(ZID.class);
+		final Field idf = sua.findAnyFieldHasAnnotation(ZID.class);
 		final String idColumnName = ZFieldConverter.toDbField(idf.getName());
 
 		final Class<?> cls = sua.getEntityClass();

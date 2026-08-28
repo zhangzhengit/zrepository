@@ -1,10 +1,12 @@
 package vo.zrepository.core;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import vo.vortex.common.RU;
 import vo.zrepository.anno.ZOrder;
 import vo.zrepository.anno.ZVersion;
 
@@ -24,20 +26,12 @@ public class ZVersionHandler extends ZSaveHandler {
 
 	@Override
 	public SUA handle(final SUA sua) {
-		final Field[] fs = sua.getDeclaredFields();
-		for (final Field f : fs) {
-			if (f.isAnnotationPresent(ZVersion.class)) {
-				f.setAccessible(true);
-				try {
-					final Object zvv = f.get(sua.getEntityObject());
-					if (zvv == null) {
-						f.set(sua.getEntityObject(), ZVERSION_INITIAL_VALUE);
-					}
-				} catch (IllegalArgumentException | IllegalAccessException e) {
-					e.printStackTrace();
-				}
-			}
+
+		final List<Field> zvfL = sua.findAllFieldHasAnnotation(ZVersion.class);
+		for (final Field field : zvfL) {
+			RU.setFiledValue(field, sua.getEntityObject(), ZVERSION_INITIAL_VALUE);
 		}
+
 		return sua;
 	}
 

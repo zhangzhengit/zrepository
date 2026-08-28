@@ -1,6 +1,7 @@
 package vo.zrepository.core;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import vo.zrepository.anno.ZEntity;
 import vo.zrepository.anno.ZLogicalDelete;
@@ -20,7 +21,7 @@ public class ZLogicalDeleteDeleteAllHandler extends ZDeleteAllHandler {
 	@Override
 	public SUA handle(final SUA sua) {
 
-		final Field zldF = sua.isAnyFieldHasAnnotation(ZLogicalDelete.class);
+		final Field zldF = sua.findAnyFieldHasAnnotation(ZLogicalDelete.class);
 		if (zldF == null) {
 			return sua;
 		}
