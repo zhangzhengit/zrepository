@@ -3669,32 +3669,28 @@ public class SU {
 	/**
 	 * 给update方法生成 COLUMN 部分，不管t中字段是否null，都生成 column = ?的形式，在后续的ps.setXX时区分null
 	 *
-	 * @param <T>
 	 * @param t
 	 * @param fs
 	 * @return
 	 */
-	private static <T> String gUpdateColumn(final Object t, final Field[] fs) {
-		final StringBuilder column =new StringBuilder();
+	private static String gUpdateColumn(final Object t, final Field[] fs) {
+		final Field ztF = ClassU.isAnyFieldHasAnnotation(t.getClass(), ZTransient.class);
+		final Field zidF = ClassU.isAnyFieldHasAnnotation(t.getClass(), ZID.class);
+
+		final StringBuilder column = new StringBuilder();
+
 		for (int i = 0; i < fs.length; i++) {
 			final Field f = fs[i];
 
 			// 兼顾pgsql，@ZID字段不可以update
-			if (f.isAnnotationPresent(ZTransient.class) || f.isAnnotationPresent(ZID.class)) {
+			if ((f == ztF) || (f == zidF)) {
 				continue;
 			}
 
-			f.setAccessible(true);
-			try {
-				final Object value = f.get(t);
-				final String dbName = ZFieldConverter.toDbField(f.getName());
-				column.append(dbName).append('=').append('?');
-				if (i < (fs.length - 1)) {
-					column.append(',');
-				}
-
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
+			final String dbName = ZFieldConverter.toDbField(f.getName());
+			column.append(dbName).append('=').append('?');
+			if (i < (fs.length - 1)) {
+				column.append(',');
 			}
 		}
 

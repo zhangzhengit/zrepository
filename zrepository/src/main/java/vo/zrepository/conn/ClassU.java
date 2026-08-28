@@ -2,6 +2,7 @@ package vo.zrepository.conn;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 import vo.vortex.common.ZHashBasedTable;
@@ -21,6 +22,7 @@ public class ClassU {
 	private static final ZHashBasedTable<Class<?>, String, Field> table = new ZHashBasedTable<>();
 
 	private static final ConcurrentHashMap<Class<?>, Field[]> CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
+	private static final ConcurrentHashMap<String, Field> isAnyFieldHasAnnotation_C = new ConcurrentHashMap<>(16, 1F);
 	private static final ConcurrentHashMap<Class<?>, Field> CLASS_ZID_FIELD_CACHE = new ConcurrentHashMap<>(16, 1F);
 
 	/**
@@ -45,14 +47,11 @@ public class ClassU {
 
 
 	public static Field isAnyFieldHasAnnotation(final Class<?> cls, final Class<? extends Annotation> annoClass) {
-		final Field[] fs = getDeclaredFields(cls);
-		for (final Field field : fs) {
-			if (field.isAnnotationPresent(annoClass)) {
-				return field;
-			}
-		}
 
-		return null;
+		final Field f = isAnyFieldHasAnnotation_C
+				.computeIfAbsent(cls.getName() + '-' + annoClass.getName(), x -> Arrays
+				.stream(getDeclaredFields(cls)).filter(f1 -> f1.isAnnotationPresent(annoClass)).findAny().orElse(null));
+		return f;
 	}
 
 	public static Field[] getDeclaredFields(final Class<?> cls) {
