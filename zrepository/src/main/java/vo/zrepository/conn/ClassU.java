@@ -23,7 +23,6 @@ public class ClassU {
 
 	private static final ConcurrentHashMap<Class<?>, Field[]> CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
 	private static final ConcurrentHashMap<String, Field> isAnyFieldHasAnnotation_C = new ConcurrentHashMap<>(16, 1F);
-	private static final ConcurrentHashMap<Class<?>, Field> CLASS_ZID_FIELD_CACHE = new ConcurrentHashMap<>(16, 1F);
 
 	/**
 	 * 获取带有 @ZID 的 Field
@@ -32,19 +31,8 @@ public class ClassU {
 	 * @return
 	 */
 	public static Field getZIDField(final Class<?> cls) {
-		final Field zidF = CLASS_ZID_FIELD_CACHE.computeIfAbsent(cls, c -> {
-
-			for (final Field field : getDeclaredFields(c)) {
-				if (field.isAnnotationPresent(ZID.class)) {
-					return field;
-				}
-			}
-			return null;
-		});
-
-		return zidF;
+		return isAnyFieldHasAnnotation(cls, ZID.class);
 	}
-
 
 	public static Field isAnyFieldHasAnnotation(final Class<?> cls, final Class<? extends Annotation> annoClass) {
 
