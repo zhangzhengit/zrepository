@@ -3,7 +3,6 @@ package vo.zrepository.core;
 import java.util.List;
 
 import vo.zrepository.conn.Mode;
-import vo.zrepository.conn.SU;
 import vo.zrepository.enums.SQLEMode;
 
 /**

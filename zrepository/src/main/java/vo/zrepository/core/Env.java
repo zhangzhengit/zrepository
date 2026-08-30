@@ -1,4 +1,6 @@
-package vo.zrepository.conn;
+package vo.zrepository.core;
+
+import vo.zrepository.enums.EnvEnum;
 
 /**
  * 当前运行此程序的环境

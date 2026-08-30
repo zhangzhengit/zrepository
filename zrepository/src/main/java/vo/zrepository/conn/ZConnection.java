@@ -222,7 +222,7 @@ public class ZConnection {
 		this.pwd = pwd;
 	}
 
-	Connection getConnection() {
+	public Connection getConnection() {
 		return this.connection;
 	}
 

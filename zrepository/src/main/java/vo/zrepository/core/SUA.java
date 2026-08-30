@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import vo.zrepository.conn.ClassU;
-
 /**
  *
  *
@@ -126,7 +124,7 @@ public class SUA {
 	}
 
 	public Field findAnyFieldHasAnnotation(final Class<? extends Annotation> annoClass) {
-		return ClassU.isAnyFieldHasAnnotation(this.entityClass, annoClass);
+		return ClassU.getAnyFieldHasAnnotation(this.entityClass, annoClass);
 	}
 
 	public List<Field> findAllFieldHasAnnotation(final Class<? extends Annotation> annoClass) {

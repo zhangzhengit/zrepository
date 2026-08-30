@@ -1,4 +1,4 @@
-package vo.zrepository.conn;
+package vo.zrepository.enums;
 
 /**
  * 

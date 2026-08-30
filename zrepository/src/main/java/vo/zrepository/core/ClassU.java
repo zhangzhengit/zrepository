@@ -1,9 +1,10 @@
-package vo.zrepository.conn;
+package vo.zrepository.core;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 import vo.vortex.common.ZHashBasedTable;
 import vo.zrepository.anno.ZID;
@@ -24,6 +25,8 @@ public class ClassU {
 	private static final ConcurrentHashMap<Class<?>, Field[]> CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
 	private static final ConcurrentHashMap<String, Field> isAnyFieldHasAnnotation_C = new ConcurrentHashMap<>(16, 1F);
 
+	private static final Field NULL_FIELD = getDeclaredField(Null.class, "nullField");
+
 	/**
 	 * 获取带有 @ZID 的 Field
 	 *
@@ -31,15 +34,14 @@ public class ClassU {
 	 * @return
 	 */
 	public static Field getZIDField(final Class<?> cls) {
-		return isAnyFieldHasAnnotation(cls, ZID.class);
+		return getAnyFieldHasAnnotation(cls, ZID.class);
 	}
 
-	public static Field isAnyFieldHasAnnotation(final Class<?> cls, final Class<? extends Annotation> annoClass) {
-
-		final Field f = isAnyFieldHasAnnotation_C
-				.computeIfAbsent(cls.getName() + '-' + annoClass.getName(), x -> Arrays
-				.stream(getDeclaredFields(cls)).filter(f1 -> f1.isAnnotationPresent(annoClass)).findAny().orElse(null));
-		return f;
+	public static Field getAnyFieldHasAnnotation(final Class<?> cls, final Class<? extends Annotation> annoClass) {
+		final String key = cls.getName() + '-' + annoClass.getName();
+		final Field f = isAnyFieldHasAnnotation_C.computeIfAbsent(key, x -> Arrays.stream(getDeclaredFields(cls))
+				.filter(f1 -> f1.isAnnotationPresent(annoClass)).findAny().orElse(NULL_FIELD));
+		return f == NULL_FIELD ? null : f;
 	}
 
 	public static Field[] getDeclaredFields(final Class<?> cls) {

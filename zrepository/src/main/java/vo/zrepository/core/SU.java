@@ -1,4 +1,4 @@
-package vo.zrepository.conn;
+package vo.zrepository.core;
 
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
@@ -55,16 +55,11 @@ import vo.zrepository.anno.ZEntity;
 import vo.zrepository.anno.ZID;
 import vo.zrepository.anno.ZQuery;
 import vo.zrepository.anno.ZTransient;
-import vo.zrepository.core.MethodRegex;
-import vo.zrepository.core.Page;
-import vo.zrepository.core.SUA;
-import vo.zrepository.core.Sort;
-import vo.zrepository.core.ZC2;
-import vo.zrepository.core.ZEntityHandler;
-import vo.zrepository.core.ZEntityHandlerScanner;
-import vo.zrepository.core.ZFieldConverter;
-import vo.zrepository.core.ZRWrapper;
-import vo.zrepository.core.ZRepository;
+import vo.zrepository.conn.Mode;
+import vo.zrepository.conn.ZCPool;
+import vo.zrepository.conn.ZConnection;
+import vo.zrepository.conn.ZDatasourcePropertiesLoader;
+import vo.zrepository.conn.ZRepositoryMain;
 import vo.zrepository.enums.DBEnum;
 import vo.zrepository.enums.SQLEMode;
 import vo.zrepository.enums.SUEnum;
@@ -640,7 +635,7 @@ public class SU {
 	private static <T> List<Object> saveAllMysqlAndPGSQL(final String zrSubClassName, final String callerMethodName, final Mode mode,
 			final Class<T> entityClass, final String sqlParam, final List<T> tList) {
 
-		final Field zidF = ClassU.isAnyFieldHasAnnotation(entityClass, ZID.class);
+		final Field zidF = ClassU.getAnyFieldHasAnnotation(entityClass, ZID.class);
 		if (zidF == null) {
 			throw new IllegalArgumentException(
 					"类中无 " + ZID.class.getSimpleName() + " 字段，cls = " + entityClass.getName());
@@ -674,7 +669,7 @@ public class SU {
 
 			final Field[] declaredFields = ClassU.getDeclaredFields(entityClass);
 
-			final Field ztF = ClassU.isAnyFieldHasAnnotation(entityClass, ZTransient.class);
+			final Field ztF = ClassU.getAnyFieldHasAnnotation(entityClass, ZTransient.class);
 
 			for (final T t : tList) {
 
@@ -3660,8 +3655,8 @@ public class SU {
 	 * @return
 	 */
 	private static String gUpdateColumn(final Object t, final Field[] fs) {
-		final Field ztF = ClassU.isAnyFieldHasAnnotation(t.getClass(), ZTransient.class);
-		final Field zidF = ClassU.isAnyFieldHasAnnotation(t.getClass(), ZID.class);
+		final Field ztF = ClassU.getAnyFieldHasAnnotation(t.getClass(), ZTransient.class);
+		final Field zidF = ClassU.getAnyFieldHasAnnotation(t.getClass(), ZID.class);
 
 		final StringBuilder column = new StringBuilder();
 
