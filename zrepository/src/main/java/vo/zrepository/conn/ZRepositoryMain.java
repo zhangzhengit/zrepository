@@ -299,6 +299,11 @@ public class ZRepositoryMain {
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		} finally {
+			try {
+				connection.setAutoCommit(true);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
 			getPoolInstance(dataSourceName).returnZConnectionAndCommit(zc);
 		}
 	}
@@ -462,6 +467,11 @@ public class ZRepositoryMain {
 				e1.printStackTrace();
 			}
 		} finally {
+			try {
+				connection.setAutoCommit(true);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
 			getPoolInstance(dataSourceName).returnZConnectionAndCommit(zc);
 			SU.close(rs);
 		}
@@ -3343,6 +3353,11 @@ public class ZRepositoryMain {
 				e1.printStackTrace();
 			}
 		} finally {
+			try {
+				connection.setAutoCommit(true);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
 			getPoolInstance(typeClass.getAnnotation(ZEntity.class).dataSourceName()).returnZConnectionAndCommit(zConnection);
 		}
 
@@ -3599,6 +3614,11 @@ public class ZRepositoryMain {
 				e1.printStackTrace();
 			}
 		} finally {
+			try {
+				connection.setAutoCommit(true);
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
 			getPoolInstance(dataSourceName).returnZConnectionAndCommit(zConnection);
 		}
 	}
