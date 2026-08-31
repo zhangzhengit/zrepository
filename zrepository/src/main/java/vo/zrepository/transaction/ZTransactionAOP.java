@@ -110,21 +110,17 @@ public class ZTransactionAOP implements ZIAOP {
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
 		try {
-			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitFalse();
-
-			final Object v = proceedingJoinPoint.proceed();
-			commit();
-			return v;
+			return proceedingJoinPoint.proceed();
 		} catch (final Throwable e) {
 			e.printStackTrace();
 			rollback();
 		} finally {
 
-			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
-			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
-
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+
+			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
 
 			ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
 
@@ -150,21 +146,23 @@ public class ZTransactionAOP implements ZIAOP {
 					zTransaction.isolation();
 		zc2.setIsolationEnum(isolationEnum);
 
-		// 加入 connection.setAutoCommit(true);
-		// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
-		// 不能在事务交易过程中改变事物交易隔绝等级。
-		if (zc2.getZConnection().getDbEnum() == DBEnum.POSTGRESQL) {
-			zc2.getZConnection().setAutoCommitTrue();
-		}
 
 		// FIXME 2025年2月4日 下午7:11:01 zhangzhen :  pg mysql sqlite 都试了，似乎这行重置也没必要，暂时注释掉
 		//				resetToDefaultTransactionIsolationAndSetAutoCommitFalse(zc2);
 
 		if ((isolationEnum != null) && (isolationEnum != ZIsolationEnum.DEFAULT)
 				&& (zc2.getZConnection().getTransactionIsolation() != isolationEnum.getIsolation())) {
+			// 加入 connection.setAutoCommit(true);
+			// 这行是为了兼容pgsql，不加会偶发性报错：org.postgresql.util.PSQLException:
+			// 不能在事务交易过程中改变事物交易隔绝等级。
+			if (zc2.getZConnection().getDbEnum() == DBEnum.POSTGRESQL) {
+				zc2.getZConnection().setAutoCommitTrue();
+			}
 			zc2.getZConnection().setTransactionIsolation(isolationEnum);
 			zc2.getZConnection().setTransactionIsolationChanged(true);
 		}
+
+		zc2.getZConnection().setAutoCommitFalse();
 
 		ZCONNECTION_THREADLOCAL.set(zc2);
 
@@ -199,23 +197,18 @@ public class ZTransactionAOP implements ZIAOP {
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
 		try {
-
-			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitFalse();
-
-			final Object v = aopParameter.invoke();
-			commit();
-			return v;
+			return aopParameter.invoke();
 		} catch (final Throwable e) {
 			e.printStackTrace();
 			rollback();
 
 		} finally {
 
-			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
-			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
-
 			ZCPool.getInstance(defaultDatsourceName)
 			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+
+			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
 
 			ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
 
