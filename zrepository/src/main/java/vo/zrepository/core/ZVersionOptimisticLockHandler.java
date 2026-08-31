@@ -4,9 +4,9 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import vo.vortex.common.RU;
-import vo.zrepository.anno.ZCSourceEnum;
 import vo.zrepository.anno.ZOrder;
 import vo.zrepository.anno.ZVersion;
+import vo.zrepository.transaction.ZTransactionAOP;
 
 /**
  * @ZVersion 字段 ZRepository.update 时的动作：实现乐观锁
@@ -23,17 +23,17 @@ public class ZVersionOptimisticLockHandler extends ZUpdateHandler {
 
 		final ZC2 zc = sua.getZc2();
 
-		if (zc.getSourceEnum() == ZCSourceEnum.ZTRANSACTION) {
-			final List<Field> zvfL = sua.findAllFieldHasAnnotation(ZVersion.class);
+		ZTransactionAOP.setZConnection(zc);
 
-			for (final Field field : zvfL) {
-				final Long oldVV = incrementZVersionValue(sua.getEntityObject(), field);
-				final String versionColumnName = ZFieldConverter.toDbField(field.getName());
-				final String version = versionColumnName + " = " + oldVV;
-				final String replace = sua.getSql().replace(MethodRegex.WHERE,
-						MethodRegex.WHERE + Sort.SPACE + version + Sort.SPACE + MethodRegex.AND);
-				sua.setSql(replace);
-			}
+		final List<Field> zvfL = sua.findAllFieldHasAnnotation(ZVersion.class);
+
+		for (final Field field : zvfL) {
+			final Long oldVV = incrementZVersionValue(sua.getEntityObject(), field);
+			final String versionColumnName = ZFieldConverter.toDbField(field.getName());
+			final String version = versionColumnName + " = " + oldVV;
+			final String replace = sua.getSql().replace(MethodRegex.WHERE,
+					MethodRegex.WHERE + Sort.SPACE + version + Sort.SPACE + MethodRegex.AND);
+			sua.setSql(replace);
 		}
 
 		return sua;

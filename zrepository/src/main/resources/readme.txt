@@ -89,17 +89,13 @@
 			e.setName("这是测试 version乐观锁而改的,updateTime = " + new Date());
 			final boolean update = this.bbbbbbbbbbbb.update(e);
 			if (!update) {
-				// 下面两种选择一种即可
-				// 1
-				// ZTransactionAOP.rollback();
-				// 2
-				throw new NullPointerException("更新失败");
+				// 以下方式可以回滚事务：
+				抛异常
 			}
 		}
 		
-		执行出现异常会自动回滚事务。如上例子需要特殊判断是否回滚的，有两种方式可以回滚事务：
-			1、ZTransactionAOP.rollback();
-			2、抛出一个异常
+		执行出现异常会自动回滚事务。如上例子需要特殊判断是否回滚的，以下方式可以回滚事务：
+			抛异常
 		
 	7 逻辑删除：@ZLogicalDelete 
 		在 @ZEntity里的字段上使用本注解，如：

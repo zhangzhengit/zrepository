@@ -45,7 +45,7 @@ import vo.zrepository.enums.DBEnum;
     	   5个步骤都不会执行，也就没有前面的配置事务隔离级别和后面的回滚/提交事务等等
  *
  * 4、第3步执行正常结束，则在try代码块末尾执行 connection.commit() 来提交事务
- * 	  第3步执行出现异常(代码自动抛出异常/手动抛出异常/ZTransactionAOP.rollback())，
+ * 	  第3步执行出现异常(代码自动抛出异常/手动抛出异常)，
  * 			则try代码块剩下代码不再执行，直接跳往catch代码块里
  *    		执行 connection.rollback() 来回滚事务
  *
@@ -82,9 +82,14 @@ public class ZTransactionAOP implements ZIAOP {
 	/**
 	 * 回滚当前事务
 	 */
-	public static void rollback() {
+	private static void rollback() {
 		ZCONNECTION_THREADLOCAL.get().getZConnection().rollback();
 	}
+
+	public static void setZConnection(final ZC2 zc2) {
+		ZCONNECTION_THREADLOCAL.set(zc2);
+	}
+
 
 	/**
 	 * 提交当前事务
