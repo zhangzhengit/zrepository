@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SUA {
 
-	private static final ConcurrentHashMap<Class<?>, Field[] > CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
-
+	private static final ConcurrentHashMap<Class<?>, Field[]> CLASS_DF_CACHE = new ConcurrentHashMap<>(16, 1F);
+	private static final ConcurrentHashMap<String, List<Field>> ALL_ANNOCLASS_CACHE = new ConcurrentHashMap<>(16, 1F);
 
 	Class<?> entityClass;
 	private final Field[] declaredFields;
@@ -128,15 +128,21 @@ public class SUA {
 	}
 
 	public List<Field> findAllFieldHasAnnotation(final Class<? extends Annotation> annoClass) {
-		final Field[] fs = this.getDeclaredFields();
-		final List<Field> fl = new ArrayList<>();
-		for (final Field field : fs) {
-			if (field.isAnnotationPresent(annoClass)) {
-				fl.add(field);
-			}
-		}
 
-		return fl;
+		final String key = this.entityClass.getName() + '-' + annoClass.getName();
+
+		final List<Field> v = ALL_ANNOCLASS_CACHE.computeIfAbsent(key, x -> {
+			final Field[] fs = this.getDeclaredFields();
+			final List<Field> fl = new ArrayList<>();
+			for (final Field field : fs) {
+				if (field.isAnnotationPresent(annoClass)) {
+					fl.add(field);
+				}
+			}
+			return fl;
+		});
+
+		return v;
 	}
 
 }
