@@ -2983,7 +2983,15 @@ public class SU {
 	private static void returnZConnectionAndCommitAndSetACTrueIfZCPool(final String dataSourceName, final ZC2 zc) {
 		if (zc.getSourceEnum() == ZCSourceEnum.ZCPOOL) {
 			ZCPool.getInstance(dataSourceName).returnZConnectionAndCommit(zc.getZConnection());
-			zc.getZConnection().setAutoCommitTrue();
+
+			try {
+				if (!zc.getZConnection().getConnection().getAutoCommit()) {
+					zc.getZConnection().setAutoCommitTrue();
+				}
+			} catch (final SQLException e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
