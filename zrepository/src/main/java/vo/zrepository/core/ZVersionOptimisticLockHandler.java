@@ -3,10 +3,10 @@ package vo.zrepository.core;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import vo.log.common.CU;
 import vo.vortex.common.RU;
 import vo.zrepository.anno.ZOrder;
 import vo.zrepository.anno.ZVersion;
-import vo.zrepository.transaction.ZTransactionAOP;
 
 /**
  * @ZVersion 字段 ZRepository.update 时的动作：实现乐观锁
@@ -21,11 +21,10 @@ public class ZVersionOptimisticLockHandler extends ZUpdateHandler {
 	@Override
 	public SUA handle(final SUA sua) {
 
-		final ZC2 zc = sua.getZc2();
-
-		ZTransactionAOP.setZConnection(zc);
-
 		final List<Field> zvfL = sua.findAllFieldHasAnnotation(ZVersion.class);
+		if (CU.isEmpty(zvfL)) {
+			return sua;
+		}
 
 		for (final Field field : zvfL) {
 			final Long oldVV = incrementZVersionValue(sua.getEntityObject(), field);

@@ -179,14 +179,10 @@ public class SU {
 
 		} catch (final SQLException | IllegalArgumentException  e1) {
 			e1.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e) {
-				e.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(ps, rs, psc, pscRS);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return new Page(size, Long.parseLong(String.valueOf(page)), 0L, 0L, new ArrayList<>());
@@ -262,14 +258,10 @@ public class SU {
 
 		} catch (final Exception e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -328,14 +320,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -389,14 +377,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -435,14 +419,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -509,14 +489,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		for (final Object id : idNotNullList) {
@@ -564,14 +540,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return false;
@@ -614,7 +586,7 @@ public class SU {
 				}
 			}
 
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc2);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc2);
 			return idl;
 
 		case MYSQL:
@@ -727,17 +699,11 @@ public class SU {
 
 		} catch (final Exception e) {
 			e.printStackTrace();
-			try {
-				// XXX sqlite 在16GB的傲腾上面测试连续批量insert，硬盘满了会报错：[SQLITE_FULL] Insertion failed because database is full (database or disk is full)
-				// mysql和pgsql还没测
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -802,13 +768,9 @@ public class SU {
 
 		} catch (final SQLException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return null;
@@ -966,8 +928,8 @@ public class SU {
 		final ZConnection zConnection = ZCPool.getInstance(dataSourceName).getZConnection(mode);
 		if (zConnection.getDbEnum() == DBEnum.POSTGRESQL) {
 			zConnection.setAutoCommitTrue();
-			zConnection.setAutoCommitFalse();
 		}
+//		zConnection.setAutoCommitFalse();
 
 		final ZC2 zc2 = new ZC2(zConnection, ZCSourceEnum.ZCPOOL);
 		ZTransactionAOP.resetToDefaultTransactionIsolation(zc2);
@@ -1018,14 +980,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1065,20 +1023,16 @@ public class SU {
 				final Object t = newT(zc.getZConnection().getDbEnum(), entityClass, rs, metaData, count);
 				r.add(t);
 			}
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 			return r;
 
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1171,14 +1125,10 @@ public class SU {
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
 
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc2);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc2);
 		}
 
 		return Collections.emptyList();
@@ -1340,7 +1290,7 @@ public class SU {
 						((ZEntity) entityClass.getAnnotation(ZEntity.class)).tableName(), id);
 				return t;
 			} finally {
-				returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+				returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 			}
 		};
 
@@ -1689,14 +1639,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1751,14 +1697,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1811,14 +1753,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1871,14 +1809,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1929,14 +1863,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -1983,14 +1913,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2074,14 +2000,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2132,14 +2054,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2186,14 +2104,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2262,15 +2176,11 @@ public class SU {
 			return r;
 		} catch (SQLException
 				| SecurityException e) {
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 			e.printStackTrace();
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(getDataSourceNameFromClassType(entityClass), zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(getDataSourceNameFromClassType(entityClass), zc);
 		}
 
 		return Collections.emptyList();
@@ -2373,14 +2283,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 
@@ -2421,14 +2327,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
@@ -2470,14 +2372,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2522,14 +2420,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
@@ -2577,14 +2471,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2635,14 +2525,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2692,14 +2578,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2749,14 +2631,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2802,14 +2680,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2854,14 +2728,10 @@ public class SU {
 			return r;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 		return Collections.emptyList();
 	}
@@ -2902,14 +2772,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -2994,14 +2860,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3055,14 +2917,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3106,14 +2964,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3126,21 +2980,10 @@ public class SU {
 	 * @param dataSourceName
 	 * @param zc
 	 */
-	private static void returnZConnectionAndCommitIfZCPool(final String dataSourceName, final ZC2 zc) {
+	private static void returnZConnectionAndCommitAndSetACTrueIfZCPool(final String dataSourceName, final ZC2 zc) {
 		if (zc.getSourceEnum() == ZCSourceEnum.ZCPOOL) {
 			ZCPool.getInstance(dataSourceName).returnZConnectionAndCommit(zc.getZConnection());
-		}
-	}
-
-	/**
-	 * ZConnection 来自于ZCPool的归还连接;
-	 * 来自SpringAOP的就不管了
-	 * @param dataSourceName
-	 * @param zc
-	 */
-	private static void returnZConnectionIfZCPool(final String dataSourceName, final ZC2 zc) {
-		if (zc.getSourceEnum() == ZCSourceEnum.ZCPOOL) {
-			ZCPool.getInstance(dataSourceName).returnZConnection(zc.getZConnection());
+			zc.getZConnection().setAutoCommitTrue();
 		}
 	}
 
@@ -3191,14 +3034,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3244,14 +3083,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3295,14 +3130,10 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3335,14 +3166,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc2);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc2);
 		}
 
 		return 0L;
@@ -3390,17 +3217,23 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return 0L;
+	}
+
+	private static void rollbackIfAutoCommitFalse(final Connection connection) {
+		try {
+			if (!connection.getAutoCommit()) {
+				connection.rollback();
+			}
+		} catch (final SQLException e1) {
+			e1.printStackTrace();
+		}
 	}
 
 	public static <T> Long countingByXX(final String zrSubClassName, final String callerMethodName,final Mode mode,
@@ -3436,14 +3269,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return 0L;
@@ -3501,14 +3330,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException  e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3563,14 +3388,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException  e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3621,14 +3442,10 @@ public class SU {
 
 		} catch (SQLException | SecurityException  e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3775,14 +3592,10 @@ public class SU {
 			return ra;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return Collections.emptyList();
@@ -3832,14 +3645,10 @@ public class SU {
 			return executeUpdate;
 		} catch (SQLException | SecurityException e) {
 			e.printStackTrace();
-			try {
-				connection.rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(prepareStatement);
-			returnZConnectionAndCommitIfZCPool(dataSourceName, zc);
+			returnZConnectionAndCommitAndSetACTrueIfZCPool(dataSourceName, zc);
 		}
 
 		return NO_DELETE_OR_DELETE;

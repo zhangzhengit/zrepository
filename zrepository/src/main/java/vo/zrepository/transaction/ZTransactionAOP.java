@@ -86,15 +86,10 @@ public class ZTransactionAOP implements ZIAOP {
 		ZCONNECTION_THREADLOCAL.get().getZConnection().rollback();
 	}
 
-	public static void setZConnection(final ZC2 zc2) {
-		ZCONNECTION_THREADLOCAL.set(zc2);
-	}
-
-
 	/**
 	 * 提交当前事务
 	 */
-	public static void commit() {
+	private static void commit() {
 		ZCONNECTION_THREADLOCAL.get().getZConnection().commitIfAutoCommitFalse();
 	}
 
@@ -108,26 +103,42 @@ public class ZTransactionAOP implements ZIAOP {
 		final Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
-
+		final ZC2 zc2 = getCurrentZConnection();
 		try {
-			return proceedingJoinPoint.proceed();
+			zc2.getZConnection().setAutoCommitFalse();
+			final Object v = proceedingJoinPoint.proceed();
+			commit();
+			return v;
 		} catch (final Throwable e) {
 			e.printStackTrace();
 			rollback();
 		} finally {
-
-			ZCPool.getInstance(defaultDatsourceName)
-			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
-
-			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
-			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
-
-			ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
-
-			clear();
+			finallyB(defaultDatsourceName, zc2);
 		}
 
 		return null;
+	}
+
+	private static void finallyB(final String defaultDatsourceName, final ZC2 zc2) {
+		// 1
+//		ZCPool.getInstance(defaultDatsourceName)
+//		.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
+//
+//		resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
+//		ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
+//
+//		ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
+
+		// 2
+		ZCPool.getInstance(defaultDatsourceName)
+		.returnZConnectionAndCommit(zc2.getZConnection());
+
+		resetToDefaultTransactionIsolation(zc2);
+//		zc2.getZConnection().setAutoCommitTrue();
+
+		ZRC.singleton().clear(zc2.getKeyList());
+
+		clear();
 	}
 
 	private static String before(final Method method) {
@@ -196,23 +207,18 @@ public class ZTransactionAOP implements ZIAOP {
 		final Method method = aopParameter.getMethod();
 		final String defaultDatsourceName = ZTransactionAOP.before(method);
 
+		final ZC2 zc2 = getCurrentZConnection();
+
 		try {
-			return aopParameter.invoke();
+			zc2.getZConnection().setAutoCommitFalse();
+			final Object v = aopParameter.invoke();
+			commit();
+			return v;
 		} catch (final Throwable e) {
 			e.printStackTrace();
 			rollback();
-
 		} finally {
-
-			ZCPool.getInstance(defaultDatsourceName)
-			.returnZConnectionAndCommit(ZCONNECTION_THREADLOCAL.get().getZConnection());
-
-			resetToDefaultTransactionIsolation(ZCONNECTION_THREADLOCAL.get());
-			ZCONNECTION_THREADLOCAL.get().getZConnection().setAutoCommitTrue();
-
-			ZRC.singleton().clear(ZCONNECTION_THREADLOCAL.get().getKeyList());
-
-			clear();
+			finallyB(defaultDatsourceName, zc2);
 		}
 
 		return null;
