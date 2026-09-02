@@ -1196,11 +1196,7 @@ public class SU {
 		} catch (SQLException
 				| SecurityException e) {
 			e.printStackTrace();
-			try {
-				zc.getConnection().rollback();
-			} catch (final SQLException e1) {
-				e1.printStackTrace();
-			}
+			rollbackIfAutoCommitFalse(zc.getConnection());
 		} finally {
 			close(rs, ps);
 		}
@@ -2176,8 +2172,8 @@ public class SU {
 			return r;
 		} catch (SQLException
 				| SecurityException e) {
-			rollbackIfAutoCommitFalse(connection);
 			e.printStackTrace();
+			rollbackIfAutoCommitFalse(connection);
 		} finally {
 			close(rs, ps);
 			returnZConnectionAndCommitAndSetACTrueIfZCPool(getDataSourceNameFromClassType(entityClass), zc);
