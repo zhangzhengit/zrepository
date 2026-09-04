@@ -134,7 +134,7 @@ public class ZTransactionAOP implements ZIAOP {
 		.returnZConnectionAndCommit(zc2.getZConnection());
 
 		resetToDefaultTransactionIsolation(zc2);
-//		zc2.getZConnection().setAutoCommitTrue();
+		zc2.getZConnection().setAutoCommitTrue();
 
 		ZRC.singleton().clear(zc2.getKeyList());
 
